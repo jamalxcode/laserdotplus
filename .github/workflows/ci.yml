@@ -1,0 +1,154 @@
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # A commit is tested once: main is fast-forwarded to a commit that passed
+  # on its branch, and main's run reuses that result. Documents alone need
+  # no build.
+  tested:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      already: ${{ steps.check.outputs.already }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          already=false
+          before="${{ github.event.before }}"
+          if [ "${{ github.event_name }}" = push ] && [ -n "$before" ] && [ "$before" != 0000000000000000000000000000000000000000 ]; then
+            files=$(gh api "repos/${{ github.repository }}/compare/$before...${{ github.sha }}" --jq '.files[].filename' || echo "?")
+            if [ -n "$files" ] && ! echo "$files" | grep -vqE '^(docs/|issues/)|^(README|CLAUDE)\.md$'; then
+              already=true
+              echo "only documents changed"
+            fi
+          fi
+          if [ "$already" = false ] && [ "${{ github.event_name }}" = push ] && [ "${{ github.ref }}" = refs/heads/main ]; then
+            n=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&status=success&per_page=20" \
+                  --jq '[.workflow_runs[] | select(.id != ${{ github.run_id }} and .event == "push")] | length')
+            if [ "${n:-0}" -gt 0 ]; then already=true; fi
+          fi
+          echo "already=$already" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: tested
+    if: needs.tested.outputs.already != 'true'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - name: go test
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            go test ./...
+            go test -race ./internal/watch ./internal/scan ./internal/sandbox ./internal/daemon
+          else
+            go test -race ./...
+          fi
+
+  app:
+    needs: tested
+    if: needs.tested.outputs.already != 'true'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build laserdotd, the CLI and the app's registry
+        run: app/scripts/build-go.sh
+      - name: The committed registry is current
+        run: git diff --exit-code app/Sources/LaserdotKit/Registry.generated.swift
+      - name: No network code anywhere in the app (Laserdot+ has no updater)
+        run: |
+          if grep -rnE 'URLSession|NWConnection|CFNetwork|CFSocket|import Network|WKWebView' app/Sources --include='*.swift'; then
+            echo "::error::network code in the app"
+            exit 1
+          fi
+      - name: Nothing in the app uses Quick Look thumbnails (they are cached on this Mac)
+        run: |
+          if grep -rn 'QLThumbnailGenerator' app/Sources --include='*.swift'; then
+            echo "::error::QLThumbnailGenerator writes thumbnails to a system cache"
+            exit 1
+          fi
+      - name: Build the app
+        working-directory: app
+        run: swift build
+      - name: Swift tests (Swift → Unix socket → laserdotd, network denied)
+        working-directory: app
+        env:
+          LASERDOTD: ${{ github.workspace }}/app/build/go/laserdotd
+        run: swift test
+      - name: ffmpeg (LGPL, no network) — cached
+        uses: actions/cache@v4
+        with:
+          path: app/build/ffmpeg
+          key: ffmpeg-7.1-lgpl-nonet-${{ runner.os }}-${{ runner.arch }}-v1
+      - name: Build ffmpeg (only when not cached)
+        run: app/scripts/build-ffmpeg.sh
+      - name: Bundle Laserdot+.app and the disk image
+        run: |
+          app/scripts/bundle.sh
+          test -x "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus"
+          test -x "app/build/Laserdot+.app/Contents/MacOS/laserdotd"
+          plutil -lint "app/build/Laserdot+.app/Contents/Info.plist"
+          for t in ffprobe ffmpeg; do
+            protos=$("app/build/Laserdot+.app/Contents/MacOS/$t" -hide_banner -protocols | tr -d ' ' | grep -vE '^(Supportedfileprotocols:|Input:|Output:)$' | sort -u | tr '\n' ' ')
+            [ "$protos" = "file pipe " ] || { echo "::error::$t supports more than file and pipe: $protos"; exit 1; }
+          done
+          app/scripts/make-dmg.sh "$PWD/LaserdotPlus.dmg"
+      - name: Self-test of the real app (index, search, filters, grid, details, trash and undo, a drive)
+        run: |
+          fx="$(mktemp -d)/fixtures"
+          mkdir -p "$fx/Trips/2023" "$fx/Trips/2024" "$fx/Photos" "$fx/Films" "$fx/Docs"
+          for i in 1 2 3 4; do sips -z $((200 + i * 40)) $((300 + i * 40)) app/Resources/AppIcon.png --out "$fx/Photos/IMG_000$i.png" >/dev/null; done
+          sips -s format jpeg -z 256 256 app/Resources/AppIcon.png --out "$fx/Photos/beach trip.jpg" >/dev/null
+          cp internal/media/testdata/dupes/clip.mp4 "$fx/Films/VID_2034.mp4"
+          cp internal/media/testdata/pal.mkv "$fx/Films/reel.mkv"
+          echo rome > "$fx/Trips/2023/rome trip.txt"
+          echo paris > "$fx/Trips/2024/paris trip.txt"
+          printf 'region,amount\nnorth,1\nsouth,2\n' > "$fx/Docs/sales.csv"
+          echo trash me > "$fx/trashme.txt"
+          # A drive plugged in: indexed by itself, its index on the drive.
+          d=$(mktemp -d)
+          hdiutil create -type SPARSE -size 1g -fs APFS -volname LDPlus "$d/drive" >/dev/null
+          for i in 1 2 3 4 5; do hdiutil attach "$d/drive.sparseimage" && break; sleep $((i * 3)); done
+          mkdir -p /Volumes/LDPlus/Movies && cp internal/media/testdata/vp9.webm /Volumes/LDPlus/Movies/holiday.webm
+          out="$(mktemp -d)/selftest"
+          export LASERDOT_DB="$(mktemp -d)/data/index.db"
+          LASERDOT_SELFTEST="$out" LASERDOT_SELFTEST_FOLDER="$fx" "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > app.log 2>&1 || true
+          echo "--- the drive's own folder (its index lives there):"; ls -la /Volumes/LDPlus/.laserdot || true
+          cat "$out/report.json" || { cat app.log; exit 1; }
+          for f in "$out"/*.png; do echo "=== SCREENSHOT $(basename "$f")"; base64 -i "$f" | tr -d '\n'; echo; done
+          mkdir -p selftest && cp -R "$out"/* selftest/
+          python3 app/scripts/check-selftest.py "$out/report.json" /Volumes/LDPlus "$(dirname "$LASERDOT_DB")"
+          hdiutil detach /Volumes/LDPlus -force || true
+      - name: Keep the disk image and the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laserdotplus-${{ github.sha }}
+          path: |
+            LaserdotPlus.dmg
+            selftest/
+          if-no-files-found: ignore

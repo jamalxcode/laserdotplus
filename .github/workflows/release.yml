@@ -1,0 +1,85 @@
+name: Release
+# When CI passes on main and CHANGELOG.md's newest version has no release
+# yet, builds Laserdot+.app from exactly that commit, packs it as
+# LaserdotPlus-<version>.dmg, checks it launches, and publishes it.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 0.1.0'
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  decide:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      sha: ${{ steps.v.outputs.sha }}
+      go: ${{ steps.v.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${{ github.event.inputs.version }}"
+          if [ -z "$v" ]; then v=$(awk '/^## [0-9]+\.[0-9]+\.[0-9]+/ {print $2; exit}' CHANGELOG.md); fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          go=true
+          if [ -z "$v" ] || { [ "${{ github.event_name }}" = workflow_run ] && gh release view "v$v" -R "${{ github.repository }}" >/dev/null 2>&1; }; then go=false; fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+  release:
+    needs: decide
+    if: needs.decide.outputs.go == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decide.outputs.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: ffmpeg (LGPL, no network) — cached
+        uses: actions/cache@v4
+        with:
+          path: app/build/ffmpeg
+          key: ffmpeg-7.1-lgpl-nonet-${{ runner.os }}-${{ runner.arch }}-v1
+      - name: Build ffmpeg (only when not cached)
+        run: app/scripts/build-ffmpeg.sh
+      - name: Build
+        run: |
+          VERSION=${{ needs.decide.outputs.version }} app/scripts/build-go.sh universal
+          VERSION=${{ needs.decide.outputs.version }} BUILD=${{ github.run_number }} app/scripts/bundle.sh
+          app/scripts/make-dmg.sh "$PWD/LaserdotPlus-${{ needs.decide.outputs.version }}.dmg"
+      - name: The packaged app launches
+        run: |
+          d=$(mktemp -d)
+          export LASERDOT_DB="$d/data/index.db"
+          "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > "$d/app.log" 2>&1 &
+          pid=$!
+          sleep 8
+          kill -0 "$pid" || { cat "$d/app.log"; echo "::error::Laserdot+ exited at launch"; exit 1; }
+          kill "$pid"
+          pkill -f "Laserdot+.app/Contents/MacOS/laserdotd" || true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${{ needs.decide.outputs.version }}
+          { awk -v h="## $v" '$0 == h {on=1; next} /^## / {on=0} on' CHANGELOG.md; echo
+            echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). Laserdot+ never connects to the internet, so new versions are downloaded from this page."; } > notes.md
+          gh release create "v$v" "LaserdotPlus-$v.dmg" --target "${{ needs.decide.outputs.sha }}" --title "Laserdot+ $v" --notes-file notes.md \
+            || gh release upload "v$v" "LaserdotPlus-$v.dmg" --clobber

@@ -1,0 +1,6 @@
+app/build/
+app/.build/
+.build/
+__pycache__/
+*.dmg
+.DS_Store

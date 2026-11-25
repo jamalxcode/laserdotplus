@@ -1,0 +1,46 @@
+# Laserdot+ — design
+
+A Mac app with one window for reviewing a large collection of files on whatever drives are plugged in: see quickly
+what a file is when its name doesn't say, clear out junk, remove duplicates to save space. No menu-bar icon, no
+global hotkey: it opens and quits like any app. Built on Laserdot's engine (`jamalxcode/laserdot-go`).
+
+## Ground rules
+
+1. **Privacy:** what the app knows about a drive's files stays on that drive (below).
+2. **No network, no AI.**
+3. **Never deletes:** everything goes to the Trash or a folder, after a preview, with Undo.
+4. **Never waits on a disk:** a sleeping or slow drive never freezes the window.
+5. **Only what's plugged in:** a drive appears when connected and disappears when ejected.
+
+## Privacy
+
+1. Each drive keeps everything about itself on itself, in `.laserdot` at its top: the index of names and details,
+   thumbnails and frames (later phases), duplicate fingerprints (later phases), histories, saved views, settings.
+2. This Mac's own disk works the same way: its index is on this Mac's disk, in the app's own folder.
+3. Nothing about files is written anywhere else: logs carry no names or paths; no search history, recent files or
+   window contents are kept; the app's settings hold only the view mode, sort and thumbnail size.
+4. Thumbnails are made by the app (ImageIO, PDFKit, macOS's video reader, the bundled ffmpeg) and kept in memory:
+   macOS's Quick Look thumbnails would be kept in a system cache on this Mac.
+5. Read-only drives can't hold an index: theirs is kept on this Mac only until the drive is ejected, then deleted.
+   They are indexed only when asked.
+6. Optional passphrase per drive (the engine's encrypted drive index).
+7. What the app can't control: opening a file in another app may add it to that app's or macOS's Recent lists.
+
+## The window
+
+Sidebar (places — everything plugged in, This Mac, each drive with its state, space and Eject — and the filter panel:
+every choice the current files have, with counts; several ticks in a group mean any of them) · the files (a list with
+sortable columns, or thumbnails; videos flip under the pointer) · the details panel (a large preview, a 12-frame
+storyboard for videos, and everything read from the file: tracks, languages, subtitles, chapters, HDR, camera, GPS,
+author, the app that made it, a data file's columns). Search box in the toolbar (plain words or the engine's
+filters: `res:4k`, `kind:video since:30d`…). Click, ⌘-click, ⇧-click select; right-click acts on the selection.
+
+## Phases
+
+1. **The window** (0.1): sidebar with places, drives and filters; list and thumbnails; details panel with storyboard;
+   Open, Show in Finder, Copy Path, Quick Look, Move to Trash with Undo; drives indexed by themselves; the privacy rules.
+2. **Review:** contact sheet, timeline, places (GPS groups), folder covers, review mode (← → with keep/trash/move
+   keys into a tray), saved views and tabs (stored on their drive).
+3. **Clean-up:** junk finder, names that say nothing + suggested names from the file's details, smarter duplicates
+   (whole folders, the same film in several qualities, photo bursts, songs), the clean-up tray (dry run, one
+   confirmation, one Undo).
