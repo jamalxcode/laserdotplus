@@ -158,16 +158,20 @@ final class SelfTestRunner {
     private func thisMac() {
         model.place = .thisMac
         let gone = folder + "/Trips/2023/rome trip.txt"
-        waitFor(10, { self.model.results.contains { $0.path == gone } }) { _ in
+        // Matched by its end: the engine may spell the folder differently
+        // (/var or /private/var).
+        let isGone: (Hit) -> Bool = { $0.path.hasSuffix("/Trips/2023/rome trip.txt") }
+        waitFor(10, { self.model.results.contains(where: isGone) }) { _ in
             self.report["this_mac_count"] = self.model.results.count
             // The chosen place shows in the search box as a pill.
             self.report["place_pill"] = self.model.pills.first { $0.isPlace }?.label ?? ""
             self.shot("place")
             self.report["drives"] = self.drives.drives.map(\.name)
             // Deleted behind the app's back (as in Finder): it leaves the list.
-            self.report["external_listed"] = self.model.results.contains { $0.path == gone }
+            self.report["external_listed"] = self.model.results.contains(where: isGone)
+            self.report["external_paths"] = self.model.results.map(\.path).filter { $0.contains("trip") }
             try? FileManager.default.removeItem(atPath: gone)
-            self.waitFor(25, { !self.model.results.contains { $0.path == gone } }) { ok in
+            self.waitFor(25, { !self.model.results.contains(where: isGone) }) { ok in
                 self.report["external_delete"] = ok
                 self.finish("")
             }
