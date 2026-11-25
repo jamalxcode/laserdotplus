@@ -69,3 +69,6 @@
   holds it for minutes): the mount is reserved in `attaching`, listed as `opening`, and a second request returns at
   once. The app sends it on a connection of its own (`Engine.driveAttach`) and asks for status one request at a time,
   so a slow engine never piles up threads or freezes the window.
+- **Quitting** hides the window, stops the engine in the background and answers AppKit's "should terminate" through the
+  run loop (`performSelector(onMainThread:modes:)`), never `DispatchQueue.main`, which is busy when the quit began in a
+  main-queue block. CI samples the app's threads if the self-test has not ended after five minutes.

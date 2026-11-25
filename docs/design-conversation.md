@@ -126,3 +126,7 @@ the shared connection meanwhile, so its status checks (every 3 s) queued up behi
 the app starved and froze. Decided: a drive's index is opened without the writer lock (the mount is reserved instead;
 the drive is listed as "opening" with the hourglass); the app opens a drive on a connection of its own, and asks for
 status one request at a time.
+Also found while testing it (a stack sample from CI): quitting could wait for itself for ever. The engine is stopped in
+the background and the "quit now" answer was sent back through the main queue — busy, when the quit itself started
+in a main-queue block (Install and Relaunch, the self-test). The answer now goes through the run loop, in the modes
+AppKit waits in. CI now samples a hung self-test after five minutes, so a freeze shows where it is.

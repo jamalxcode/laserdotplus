@@ -92,10 +92,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let engine = self.engine
         DispatchQueue.global(qos: .userInitiated).async {
             engine.shutdown(waitForExit: false)
-            DispatchQueue.main.async { NSApp.reply(toApplicationShouldTerminate: true) }
+            // Not DispatchQueue.main: when the quit started inside a main-queue
+            // block (Install and Relaunch, the self-test), that queue is busy
+            // until the quit ends and the answer never came — a beachball and
+            // no quitting. The run loop, in the modes AppKit waits in, always
+            // takes it.
+            self.performSelector(onMainThread: #selector(AppDelegate.replyTerminate), with: nil, waitUntilDone: false,
+                                 modes: [RunLoop.Mode.common.rawValue, RunLoop.Mode.modalPanel.rawValue,
+                                         RunLoop.Mode.eventTracking.rawValue])
         }
         return .terminateLater
     }
+
+    @objc func replyTerminate() { NSApp.reply(toApplicationShouldTerminate: true) }
 
     // Quick Look (Space, ⌘Y) finds its controller here.
     override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool { true }

@@ -7,7 +7,7 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 - **A drive opens straight away, and the window never freezes waiting for it.** Opening a drive's index (the T5 EVO
   stayed on "Opening its index…") no longer waits for Laserdot+ to finish reading this Mac's home folder, which can
   take many minutes the first time; and the window no longer locks up (and refuses to quit) when the engine is slow
-  to answer.
+  to answer. Quitting can no longer hang on its own answer either (it could, after an update or from the self-test).
 - **A drive shows up at once, with an hourglass while it gets ready.** A drive whose index is still opening (or that
   is being indexed for the first time) appears straight away in the places and, once chosen, in the search box — with
   an hourglass and what it is waiting for ("Opening its index…"); its files appear by themselves when it is ready.
