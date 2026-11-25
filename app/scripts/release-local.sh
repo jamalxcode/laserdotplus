@@ -74,7 +74,10 @@ pkill -f "Laserdot+.app/Contents/MacOS/laserdotd" || true
 rm -rf "$d"
 
 echo "== Publish"
-git push --quiet origin main
+# The release points at a commit GitHub already has (main was pulled at the
+# start; nothing is pushed, so new commits there in the meantime don't matter).
+git fetch --quiet origin main
+git merge-base --is-ancestor "$sha" origin/main || { echo "${sha:0:7} is not on GitHub's main" >&2; exit 1; }
 { awk -v h="## $v" '$0 == h {on=1; next} /^## / {on=0} on' CHANGELOG.md; echo
   echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). Laserdot+ ▸ Check for Updates… tells you when a newer version is out (it asks GitHub for the version number only)."; } >"$out/notes.md"
 # Also under a fixed name: the README links to releases/latest/download/LaserdotPlus.dmg.
