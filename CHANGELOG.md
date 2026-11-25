@@ -6,8 +6,9 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 - **Laserdot's compact choices are back:** the filters sit above the files as shaded bands of chips with counts
   (kind, type, folder, size, date, resolution, length, camera…), a few rows high, with **More choices** for the rest.
-  Click a chip to narrow, ⌥-click to leave it out; chosen ones become pills in the search box (✕ takes one out). The
-  sidebar now holds just the places and drives.
+  Click a chip to narrow, ⌥-click to leave it out; chosen ones become pills in the search box (✕ takes one out).
+- **Places on top, as in Laserdot:** the left pane is gone — Everything plugged in, This Mac and each drive (with how
+  far its index has got) are a band over the files; right-click a drive to eject, index or unlock it.
 - **Select All** (the status bar's "Select all N", or ⌥⌘A): every file in the place — choose a drive first to select
   the whole drive, then review it, add it to the tray or move it to the Trash.
 - With one file selected, the status bar shows its **full path** (select it to copy).

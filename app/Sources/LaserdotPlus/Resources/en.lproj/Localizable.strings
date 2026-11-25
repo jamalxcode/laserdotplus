@@ -233,3 +233,4 @@
 "results.selectAll" = "Select all %llu";
 "notice.selectingAll" = "Selecting every file…";
 "menu.selectAll" = "Select All Files";
+"drive.index" = "Index This Drive";

@@ -29,8 +29,8 @@ global hotkey: it opens and quits like any app. Built on Laserdot's engine (`jam
 
 ## The window
 
-Sidebar (places — everything plugged in, This Mac, each drive with its state, space and Eject) · Laserdot's compact
-choice bands above the files (every choice the current files have, with counts; several in a group mean any of them;
+Over the files, as in Laserdot: the places band (everything plugged in, This Mac, each drive with its state; right-
+click a drive to eject, index or unlock it) and Laserdot's compact choice bands (every choice the current files have, with counts; several in a group mean any of them;
 chosen ones are pills in the search box) · the files (a list with
 sortable columns, or thumbnails; videos flip under the pointer) · the details panel (a large preview, a 12-frame
 storyboard for videos, and everything read from the file: tracks, languages, subtitles, chapters, HDR, camera, GPS,

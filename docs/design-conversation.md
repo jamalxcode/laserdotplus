@@ -59,3 +59,9 @@ that back", then "when a file is selected, have the full path shown on the botto
 (status bar and ⌥⌘A) selects every file of the place — the whole drive when a drive is chosen; the sidebar's tall
 filter list became Laserdot's choice bands above the files, with pills in the search box; the status bar shows the
 selected file's full path.
+
+## 9. Places over the files (0.1.2)
+
+"The left pane would be better placed over the main window, similar to Laserdot original." The sidebar became a
+places band over the files, in the same style as the choice bands: Everything plugged in, This Mac and each drive
+(its state beside its name; right-click to eject, index or unlock). The window is now two panes: files and details.

@@ -35,7 +35,8 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
 17. **Smarter duplicates** (whole folders, the same film in several qualities, photo bursts, songs) [yes]. *Phase 3.*
 18. **Space map of each drive** [no need]. *Not doing.*
 19. **Clean-up tray** [yes]. *Done 0.1.0* (review mode feeds it).
-20. **Drives in the sidebar** with progress, space, Eject and settings [yes]. *Done 0.1.0* (per-drive settings later).
+20. **Drives in the sidebar** with progress, space, Eject and settings [yes]. *Done 0.1.0*; in 0.1.2 they moved to the
+    places band over the files (the owner's request). Per-drive settings later.
 
 ## Asked for since
 
@@ -43,3 +44,4 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
 22. **Select the whole drive** [asked for]. *Done 0.1.2* (Select All in a drive's place).
 23. **Laserdot's compact choice bands instead of the sidebar list** [asked for]. *Done 0.1.2.*
 24. **The selected file's full path in the status bar** [asked for]. *Done 0.1.2.*
+25. **Places over the main window, as in Laserdot** [asked for]. *Done 0.1.2* (the sidebar became a band).

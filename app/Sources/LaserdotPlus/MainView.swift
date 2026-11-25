@@ -8,14 +8,12 @@ struct MainView: View {
     @ObservedObject var drives: DrivesModel
 
     var body: some View {
-        // A plain three-pane layout (not NavigationSplitView: its sidebar is
-        // drawn in a way window captures — the self-test's screenshots —
-        // cannot see).
+        // Two panes: the files (places and choices over them, as in Laserdot)
+        // and the details. HSplitView, not NavigationSplitView (whose sidebar
+        // window captures — the self-test's screenshots — cannot see).
         HSplitView {
-            SidebarView(model: model, drives: drives)
-                .frame(minWidth: 220, idealWidth: 260, maxWidth: 380)
-            ResultsView(model: model)
-                .frame(minWidth: 420, idealWidth: 700, maxWidth: .infinity)
+            ResultsView(model: model, drives: drives)
+                .frame(minWidth: 480, idealWidth: 860, maxWidth: .infinity)
             DetailsView(model: model)
                 .frame(minWidth: 260, idealWidth: 320, maxWidth: 480)
         }
@@ -101,10 +99,12 @@ struct SearchBox: View {
 /// The middle: the files as a list or a grid, a status line under them.
 struct ResultsView: View {
     @ObservedObject var model: LibraryModel
+    @ObservedObject var drives: DrivesModel
     @Environment(\.undoManager) private var undo
 
     var body: some View {
         VStack(spacing: 0) {
+            PlacesBar(model: model, drives: drives)
             ChoiceBands(model: model)
             Group {
                 if model.results.isEmpty && !model.searching {

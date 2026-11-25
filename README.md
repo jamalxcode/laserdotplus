@@ -5,8 +5,8 @@ plugged in. See what a file is when its name doesn't say, clear out junk, and re
 
 **[Download the latest version](https://github.com/jamalxcode/laserdotplus/releases/latest)** (macOS 14 or later).
 
-- **One window:** places and filters on the left, the files in the middle, everything about the selected file on the
-  right — a storyboard of twelve frames for a video, its tracks, languages and subtitles, a photo's camera and place,
+- **One window, as compact as Laserdot:** places (everything plugged in, This Mac, each drive) and choice bands with
+  counts over the files, everything about the selected file on the right — a storyboard of twelve frames for a video, its tracks, languages and subtitles, a photo's camera and place,
   a document's author, a spreadsheet's columns.
 - **Four ways to look:** a list with sortable columns, big thumbnails (videos flip through under the pointer), a
   contact sheet (a strip of frames per video, to tell films apart at a glance) and a timeline by month.

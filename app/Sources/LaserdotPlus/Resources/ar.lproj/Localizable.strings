@@ -233,3 +233,4 @@
 "results.selectAll" = "تحديد الكل %llu";
 "notice.selectingAll" = "يجري تحديد كل الملفات…";
 "menu.selectAll" = "تحديد كل الملفات";
+"drive.index" = "فهرسة هذا القرص";
