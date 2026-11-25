@@ -35,6 +35,10 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // A solid background: the translucent sidebar material does not show
+        // in the self-test's screenshots (nor behind some windows).
+        .scrollContentBackground(.hidden)
+        .background(Color(nsColor: .underPageBackgroundColor))
     }
 
     private func placeRow(_ p: Place, _ title: String, _ symbol: String, _ detail: String?) -> some View {

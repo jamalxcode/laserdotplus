@@ -22,7 +22,7 @@ check(r.get("error") == "", f"the self-test ran to the end (error {r.get('error'
 check(r.get("network_denied") is True, "the engine runs with the network denied by macOS")
 check(r.get("all_count", 0) >= 8, f"every file shows with nothing typed (got {r.get('all_count')})")
 check("kind" in r.get("groups", []), f"the filter sidebar offers kinds (got {r.get('groups')})")
-check(r.get("typed") == ["beach trip.jpg", "paris trip.txt", "rome trip.txt"], f"typing narrows by name (got {r.get('typed')})")
+check(r.get("typed") == ["Trips", "beach trip.jpg", "paris trip.txt", "rome trip.txt"], f"typing narrows by name, folders included (got {r.get('typed')})")
 check(r.get("filtered_kinds") == ["image"], f"ticking Pictures shows only pictures (got {r.get('filtered_kinds')})")
 check("kind:image" in r.get("filtered_query", ""), f"the tick becomes a filter (got {r.get('filtered_query')!r})")
 check("video" in r.get("details_sections", []) and "general" in r.get("details_sections", []),

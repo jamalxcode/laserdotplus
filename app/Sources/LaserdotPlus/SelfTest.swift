@@ -45,7 +45,7 @@ final class SelfTestRunner {
 
     private func steps() {
         model.schedule(now: true)
-        waitFor(30, { self.model.results.count >= 3 }) { _ in
+        waitFor(30, { self.model.results.count >= 3 && !self.model.groups.isEmpty }) { _ in
             self.report["all_count"] = self.model.results.count
             self.report["groups"] = self.model.groups.map(\.id)
             self.shot("list")
