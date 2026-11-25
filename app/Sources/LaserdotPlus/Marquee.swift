@@ -11,20 +11,23 @@ struct MarqueeSelect: ViewModifier {
     @State private var box: CGRect?
     @State private var base: Set<String> = []
     @State private var state = MarqueeState.idle
-    /// Where the picture view is in the window (the self-test drags there).
-    static var lastFrame: CGRect = .zero
+    /// Where the tiles on screen are (the self-test draws a box over them).
+    static var lastFrames: [String: CGRect] = [:]
+
+    /// The files a box touches.
+    static func touched(_ frames: [String: CGRect], by box: CGRect) -> [String] {
+        frames.filter { $0.value.intersects(box) }.map(\.key)
+    }
 
     func body(content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .contentShape(Rectangle())
             .coordinateSpace(.named(TileFrames.space))
-            .background(GeometryReader { g in
-                Color.clear
-                    .onAppear { MarqueeSelect.lastFrame = g.frame(in: .global) }
-                    .onChange(of: g.frame(in: .global)) { _, f in MarqueeSelect.lastFrame = f }
-            })
-            .onPreferenceChange(TileFramesKey.self) { frames.frames = $0 }
+            .onPreferenceChange(TileFramesKey.self) {
+                frames.frames = $0
+                MarqueeSelect.lastFrames = $0
+            }
             .simultaneousGesture(
                 DragGesture(minimumDistance: 4, coordinateSpace: .named(TileFrames.space))
                     .onChanged(step)
@@ -60,7 +63,7 @@ struct MarqueeSelect: ViewModifier {
         let r = CGRect(x: min(v.startLocation.x, v.location.x), y: min(v.startLocation.y, v.location.y),
                        width: abs(v.location.x - v.startLocation.x), height: abs(v.location.y - v.startLocation.y))
         box = r
-        let touched = frames.frames.filter { $0.value.intersects(r) }.map(\.key)
+        let touched = Self.touched(frames.frames, by: r)
         let next = base.union(touched)
         if next != model.selection { model.selection = next }
     }

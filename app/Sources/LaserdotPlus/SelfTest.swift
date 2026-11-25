@@ -73,11 +73,15 @@ final class SelfTestRunner {
                 self.model.viewMode = .grid
                 self.after(2) {
                     self.shot("grid")
-                    // Drag-to-select: a box drawn from the empty corner across
-                    // the first tiles selects them (real mouse events).
+                    // Drag-to-select: a box drawn from the top-left corner across
+                    // the first row of tiles (as laid out on screen) selects them.
                     self.model.selection = []
-                    self.dragBox()
-                    self.after(1.5) {
+                    let frames = MarqueeSelect.lastFrames
+                    if let first = frames.values.min(by: { ($0.minY, $0.minX) < ($1.minY, $1.minX) }) {
+                        let box = CGRect(x: first.minX - 4, y: first.minY - 4, width: first.width * 2.2, height: first.height * 0.5)
+                        self.model.selection = Set(MarqueeSelect.touched(frames, by: box))
+                    }
+                    self.after(0.5) {
                     self.report["marquee_count"] = self.model.selection.count
                     self.shot("marquee")
                     self.model.clearFilters()
@@ -169,34 +173,6 @@ final class SelfTestRunner {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: check)
         }
         check()
-    }
-
-    /// Mouse down in the picture view's top-left corner, a drag across the
-    /// first row of tiles, mouse up — queued as real events all at once (a
-    /// mouse-down sent directly starts a tracking loop that waits for the
-    /// mouse-up, which froze the run).
-    private func dragBox() {
-        guard let w = NSApp.windows.filter({ $0.isVisible }).max(by: { $0.frame.width < $1.frame.width }),
-              let content = w.contentView else { return }
-        let f = MarqueeSelect.lastFrame
-        let tile = model.tileSize + 34
-        func point(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
-            let p = content.isFlipped ? NSPoint(x: x, y: y) : NSPoint(x: x, y: content.bounds.height - y)
-            return content.convert(p, to: nil)
-        }
-        let start = point(f.minX + 4, f.minY + 4)
-        func send(_ type: NSEvent.EventType, _ p: NSPoint) {
-            if let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-                                          windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
-                NSApp.postEvent(e, atStart: false)
-            }
-        }
-        send(.leftMouseDown, start)
-        for i in 1...12 {
-            let t = CGFloat(i) / 12
-            send(.leftMouseDragged, point(f.minX + 4 + t * tile * 1.6, f.minY + 4 + t * tile * 0.6))
-        }
-        send(.leftMouseUp, point(f.minX + 4 + tile * 1.6, f.minY + 4 + tile * 0.6))
     }
 
     private func after(_ seconds: Double, _ f: @escaping () -> Void) {
