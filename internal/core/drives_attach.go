@@ -378,6 +378,11 @@ func (ld *Laserdot) EjectDrive(mount string) error {
 // SyncDrives follows mounts: drives that went away are detached; mounted
 // drives with an index (and a known passphrase, if encrypted) attach.
 func (ld *Laserdot) SyncDrives() (attached, gone []string) {
+	// Tests that run on a real Mac set this so the drives plugged into it
+	// (and their files) stay out of the test's results.
+	if os.Getenv("LASERDOT_NO_DRIVES") != "" {
+		return nil, nil
+	}
 	// Looking at the drives happens without the lock: a drive that stops
 	// answering must not hold searches up.
 	ld.mu.RLock()

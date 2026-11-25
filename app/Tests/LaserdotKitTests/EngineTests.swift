@@ -6,6 +6,14 @@ import XCTest
 /// Features the daemon does not have yet (it answers `unsupported`) are
 /// skipped, not failed.
 final class EngineTests: XCTestCase {
+    /// The daemons these tests start (they inherit the environment) leave
+    /// this Mac's plugged-in drives alone, so their files stay out of the
+    /// results when the tests run on a real Mac.
+    override class func setUp() {
+        super.setUp()
+        setenv("LASERDOT_NO_DRIVES", "1", 1)
+    }
+
     /// The daemon built by scripts/build-go.sh.
     private var daemonPath: String {
         if let p = ProcessInfo.processInfo.environment["LASERDOTD"], !p.isEmpty { return p }
