@@ -35,8 +35,6 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        // A solid background: the translucent sidebar material does not show
-        // in the self-test's screenshots (nor behind some windows).
         .scrollContentBackground(.hidden)
         .background(Color(nsColor: .underPageBackgroundColor))
     }
