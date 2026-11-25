@@ -224,3 +224,12 @@
 "updates.current.help" = "You have the latest version, %@.";
 "updates.failed" = "Couldn't check for updates";
 "updates.failed.help" = "GitHub didn't answer. Check the internet connection and try again.";
+"choices.more" = "More choices (%d)";
+"choices.fewer" = "Fewer choices";
+"choices.help" = "Show only %@ (⌥-click leaves it out)";
+"choices.leaveOut" = "Leave Out";
+"choices.not" = "not %@";
+"choices.remove" = "Take out";
+"results.selectAll" = "Select all %llu";
+"notice.selectingAll" = "Selecting every file…";
+"menu.selectAll" = "Select All Files";

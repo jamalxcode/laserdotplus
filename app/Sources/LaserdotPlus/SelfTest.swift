@@ -110,6 +110,9 @@ final class SelfTestRunner {
         undo.undo()
         report["restored"] = FileManager.default.fileExists(atPath: victim)
         // Review mode: T marks for the Trash (into the tray), K keeps.
+        // Select All: every file of the place, loaded first if need be.
+        model.selectAll()
+        report["select_all"] = model.selection.count == Int(model.total) && model.total > 0
         model.selection = []
         model.startReview()
         model.reviewDecide(.trash)

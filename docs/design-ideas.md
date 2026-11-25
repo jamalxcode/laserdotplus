@@ -8,7 +8,8 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
    *Done 0.1.0.*
 2. **Browse drives that aren't plugged in** (an offline catalog) [no: only what's plugged in, indexed automatically].
    *Not doing.* Drives index themselves when plugged in (0.1.0).
-3. **A filter sidebar** with every relevant choice and counts [yes]. *Done 0.1.0.*
+3. **A filter sidebar** with every relevant choice and counts [yes]. *Done 0.1.0*; became Laserdot's compact choice
+   bands above the files in 0.1.2 (the owner's request).
 4. **Views made for media** [yes to all]:
    - contact sheet — *done 0.1.0*;
    - photo grid with a zoom slider — *done 0.1.0*;
@@ -39,3 +40,6 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
 ## Asked for since
 
 21. **Check for updates** [asked for]. *Done 0.1.2* (version number from GitHub only; the browser downloads).
+22. **Select the whole drive** [asked for]. *Done 0.1.2* (Select All in a drive's place).
+23. **Laserdot's compact choice bands instead of the sidebar list** [asked for]. *Done 0.1.2.*
+24. **The selected file's full path in the status bar** [asked for]. *Done 0.1.2.*

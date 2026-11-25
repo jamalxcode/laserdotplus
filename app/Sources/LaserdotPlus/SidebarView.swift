@@ -1,9 +1,8 @@
 import LaserdotKit
 import SwiftUI
 
-/// Places (everything, this Mac, each drive plugged in) and the filters:
-/// every choice the current files have, with counts. Several ticks in one
-/// group show files with any of them; groups narrow each other.
+/// Places: everything plugged in, this Mac, each drive (the filters are the
+/// compact choice bands above the files, as in Laserdot).
 struct SidebarView: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
@@ -14,24 +13,6 @@ struct SidebarView: View {
                 placeRow(.everywhere, L("place.everywhere"), "square.stack.3d.up", nil)
                 placeRow(.thisMac, L("place.thisMac"), "laptopcomputer", nil)
                 ForEach(drives.drives, id: \.mount) { d in driveRow(d) }
-            }
-            Section {
-                if model.groups.isEmpty {
-                    Text(L("filters.none")).foregroundStyle(.secondary).font(.callout)
-                }
-                ForEach(model.groups, id: \.id) { g in
-                    FilterGroupView(model: model, group: g)
-                }
-            } header: {
-                HStack {
-                    Text(L("sidebar.filters"))
-                    Spacer()
-                    if model.hasFilters {
-                        Button(L("filters.clear")) { model.clearFilters() }
-                            .buttonStyle(.link)
-                            .font(.caption)
-                    }
-                }
             }
         }
         .listStyle(.sidebar)
@@ -91,45 +72,5 @@ struct SidebarView: View {
             .help(L("drive.eject"))
         }
         .listRowBackground(chosen ? Color.accentColor.opacity(0.18) : Color.clear)
-    }
-}
-
-/// One group of choices ("Resolution": 4K 12 · 1080p 40 …), open by default.
-struct FilterGroupView: View {
-    @ObservedObject var model: LibraryModel
-    let group: RefineGroup
-    @State private var open = true
-
-    var body: some View {
-        DisclosureGroup(isExpanded: $open) {
-            ForEach(group.options, id: \.token) { o in
-                Toggle(isOn: Binding(get: { model.isOn(group.id, o.token) }, set: { _ in model.toggle(group.id, o.token) })) {
-                    HStack {
-                        Text(label(o)).lineLimit(1)
-                        Spacer()
-                        if o.count > 0 {
-                            Text("\(o.count)").monospacedDigit().foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .toggleStyle(.checkbox)
-                .disabled(o.count == 0 && !model.isOn(group.id, o.token))
-            }
-        } label: {
-            Text(groupTitle).font(.callout.weight(.semibold))
-        }
-    }
-
-    private var groupTitle: String {
-        let s = L("refine.group." + group.id)
-        return s == "refine.group." + group.id ? group.id.capitalized : s
-    }
-
-    private func label(_ o: RefineOption) -> String {
-        if let k = o.key {
-            let s = L("refine." + k)
-            if s != "refine." + k { return s }
-        }
-        return o.label
     }
 }

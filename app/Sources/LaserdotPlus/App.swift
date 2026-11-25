@@ -22,6 +22,10 @@ struct LaserdotPlusApp: App {
                 Button(L("updates.check")) { Updates.shared.check() }
                 Toggle(L("updates.daily"), isOn: $updates.daily)
             }
+            CommandGroup(after: .pasteboard) {
+                Button(L("menu.selectAll")) { delegate.model.selectAll() }
+                    .keyboardShortcut("a", modifiers: [.command, .option])
+            }
             CommandGroup(after: .newItem) {
                 Button(L("menu.indexFolder")) { delegate.model.chooseFolderToIndex() }
                     .keyboardShortcut("i", modifiers: [.command, .shift])

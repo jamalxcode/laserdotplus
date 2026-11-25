@@ -29,8 +29,16 @@ final class LibraryModel: ObservableObject {
 
     @Published var text = "" { didSet { if text != oldValue { schedule() } } }
     @Published var place: Place = .everywhere { didSet { if place != oldValue { filters = [:]; schedule(now: true) } } }
-    /// Ticked filter values, by group (several in a group: any of them).
+    /// Chosen filter values, by group (several in a group: any of them).
     @Published private(set) var filters: [String: [String]] = [:]
+    /// Values left out (⌥-click): each is a "-" word.
+    @Published private(set) var excluded: [String] = []
+    /// How each chosen value reads, for its pill.
+    private var labels: [String: String] = [:]
+    /// More choices: every value of every group (remembered).
+    @Published var allChoices = UserDefaults.standard.bool(forKey: "allChoices") {
+        didSet { UserDefaults.standard.set(allChoices, forKey: "allChoices") }
+    }
     @Published var sort: SortKey = SortKey(rawValue: UserDefaults.standard.string(forKey: "sort") ?? "") ?? .modified {
         didSet { UserDefaults.standard.set(sort.rawValue, forKey: "sort"); if sort != oldValue { schedule(now: true) } }
     }
@@ -137,25 +145,95 @@ final class LibraryModel: ObservableObject {
         for g in groups.map(\.id) + filters.keys.filter({ id in !groups.contains { $0.id == id } }).sorted() {
             if let toks = filters[g], !toks.isEmpty { parts.append(toks.joined(separator: " OR ")) }
         }
+        parts += excluded.map { "-" + $0 }
         if typed.isEmpty { parts.append("-kind:folder") }
         return parts.joined(separator: " ")
     }
 
     func isOn(_ group: String, _ token: String) -> Bool { filters[group]?.contains(token) ?? false }
 
-    func toggle(_ group: String, _ token: String) {
+    func toggle(_ group: String, _ token: String, label: String? = nil) {
+        if let label { labels[token] = label }
         var toks = filters[group] ?? []
         if let i = toks.firstIndex(of: token) { toks.remove(at: i) } else { toks.append(token) }
         filters[group] = toks.isEmpty ? nil : toks
         schedule(now: true)
     }
 
-    func clearFilters() {
-        filters = [:]
+    func exclude(_ group: String, _ token: String, label: String) {
+        labels[token] = label
+        if var toks = filters[group], let i = toks.firstIndex(of: token) {
+            toks.remove(at: i)
+            filters[group] = toks.isEmpty ? nil : toks
+        }
+        if !excluded.contains(token) { excluded.append(token) }
         schedule(now: true)
     }
 
-    var hasFilters: Bool { !filters.isEmpty }
+    func clearFilters() {
+        filters = [:]
+        excluded = []
+        schedule(now: true)
+    }
+
+    var hasFilters: Bool { !filters.isEmpty || !excluded.isEmpty }
+
+    struct Pill { let group: String?; let token: String; let label: String; let excluded: Bool }
+
+    /// The chosen and left-out values, as pills in the search box.
+    var pills: [Pill] {
+        let chosen = filters.keys.sorted().flatMap { g in (filters[g] ?? []).map { Pill(group: g, token: $0, label: labels[$0] ?? $0, excluded: false) } }
+        return chosen + excluded.map { Pill(group: nil, token: $0, label: labels[$0] ?? $0, excluded: true) }
+    }
+
+    func removePill(_ p: Pill) {
+        if p.excluded {
+            excluded.removeAll { $0 == p.token }
+            schedule(now: true)
+        } else if let g = p.group {
+            toggle(g, p.token)
+        }
+    }
+
+    /// The choices still open: chosen values are pills, not chips.
+    var openGroups: [RefineGroup] {
+        let on = Set(filters.values.flatMap { $0 } + excluded)
+        return groups.compactMap { g in
+            let opts = g.options.filter { !on.contains($0.token) && !$0.isSelected && !$0.isExcluded }
+            return opts.isEmpty ? nil : RefineGroup(id: g.id, family: g.family, options: opts)
+        }
+    }
+
+    // MARK: select all
+
+    /// Every file in the current place and search — with a drive chosen,
+    /// the whole drive (the owner: "a way to select the whole drive"): the
+    /// rest is loaded first (up to 200,000 files).
+    func selectAll() {
+        guard canLoadMore else {
+            selection = Set(results.map(\.path))
+            return
+        }
+        let gen = generation
+        let q = effectiveQuery
+        let (sort, reverse, engine, start, total) = (self.sort, self.reverse, self.engine, results.count, self.total)
+        notice = L("notice.selectingAll")
+        searchQueue.async { [weak self] in
+            var more: [Hit] = []
+            var offset = start
+            while UInt64(offset) < total, offset < 200_000,
+                  let r = try? engine.search(query: q, limit: 5000, offset: offset, sort: sort, reverse: reverse), !r.hits.isEmpty {
+                more += r.hits
+                offset += r.hits.count
+            }
+            DispatchQueue.main.async {
+                guard let self, gen == self.generation else { return }
+                self.results += more
+                self.selection = Set(self.results.map(\.path))
+                self.notice = nil
+            }
+        }
+    }
 
     /// Searches shortly after typing stops (at once for clicks).
     func schedule(now: Bool = false, keepSelection: Bool = false) {

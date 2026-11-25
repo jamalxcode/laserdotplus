@@ -224,3 +224,12 @@
 "updates.current.help" = "لديك أحدث إصدار، %@.";
 "updates.failed" = "تعذر التحقق من التحديثات";
 "updates.failed.help" = "لم يجب GitHub. تحقق من الاتصال بالإنترنت وحاول مجددًا.";
+"choices.more" = "خيارات أكثر (%d)";
+"choices.fewer" = "خيارات أقل";
+"choices.help" = "اعرض %@ فقط (⌥-نقر لاستبعاده)";
+"choices.leaveOut" = "استبعاد";
+"choices.not" = "ليس %@";
+"choices.remove" = "إزالة";
+"results.selectAll" = "تحديد الكل %llu";
+"notice.selectingAll" = "يجري تحديد كل الملفات…";
+"menu.selectAll" = "تحديد كل الملفات";

@@ -51,8 +51,8 @@ struct MainView: View {
                     Label(L("sort.by"), systemImage: "arrow.up.arrow.down")
                 }
                 .help(L("sort.by"))
-                SearchBox(text: $model.text)
-                    .frame(minWidth: 160, idealWidth: 240, maxWidth: 260)
+                SearchBox(model: model)
+                    .frame(minWidth: 200, idealWidth: 320, maxWidth: 420)
             }
         }
         .navigationTitle("Laserdot+")
@@ -74,16 +74,21 @@ struct MainView: View {
 
 /// The search box: plain words or filters (`res:4k`, `kind:video since:30d`).
 struct SearchBox: View {
-    @Binding var text: String
+    @ObservedObject var model: LibraryModel
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField(L("search.prompt"), text: $text)
+            FilterPills(model: model)
+            TextField(model.pills.isEmpty ? L("search.prompt") : "", text: $model.text)
                 .textFieldStyle(.plain)
-            if !text.isEmpty {
-                Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+            if !model.text.isEmpty || model.hasFilters {
+                Button {
+                    model.text = ""
+                    model.clearFilters()
+                } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
                     .buttonStyle(.plain)
+                    .help(L("filters.clear"))
             }
         }
         .padding(.horizontal, 7)
@@ -100,6 +105,7 @@ struct ResultsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            ChoiceBands(model: model)
             Group {
                 if model.results.isEmpty && !model.searching {
                     emptyState
@@ -147,6 +153,20 @@ struct ResultsView: View {
             }
             if model.canLoadMore {
                 Button(L("results.more")) { model.loadMore() }.buttonStyle(.link)
+            }
+            if model.total > 0 {
+                Button(String(format: L("results.selectAll"), model.total)) { model.selectAll() }.buttonStyle(.link)
+            }
+            // One file selected: its full path (selectable, to copy).
+            if model.selection.count == 1, let path = model.selection.first {
+                Divider().frame(height: 12)
+                Text(path)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                    .help(path)
+                    .layoutPriority(-1)
             }
             Spacer()
             if let n = model.notice {

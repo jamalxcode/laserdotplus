@@ -51,3 +51,11 @@ Laserdot's: a separate bundled helper asks github.com only which release is the 
 cache, nothing about the user or files sent), on request or once a day if the owner turns that on (off by default).
 A newer version's page opens in the browser; the app itself downloads and installs nothing. CI checks no other code
 uses the network and the helper names no other host.
+
+## 8. Whole drive, compact choices, full path (0.1.2)
+
+"I need a way to select the whole drive, also the search tag arrangement of Laserdot is nice and compact, let's have
+that back", then "when a file is selected, have the full path shown on the bottom window bar". Decided: Select All
+(status bar and ⌥⌘A) selects every file of the place — the whole drive when a drive is chosen; the sidebar's tall
+filter list became Laserdot's choice bands above the files, with pills in the search box; the status bar shows the
+selected file's full path.

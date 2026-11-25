@@ -11,8 +11,12 @@
   indexing by itself (not an installer disk image); read-only, locked and detached drives show what they need.
 - **Search:** the toolbar's words, plus the place (`volume:local` or `volume:"<drive>"`), plus each filter group's
   ticks joined with OR; with nothing typed, every file (`-kind:folder`). Results come 500 at a time; the engine sorts.
-- **Filters:** the engine's `refine` answer for the current search (kind, type, size, date, resolution, length,
-  codec, camera, place, artist, author, columns…), each value with its count.
+- **Filters:** the engine's `refine` answer for the current search, shown as Laserdot's compact choice bands above
+  the files (`ChoiceBands`: one band per family, Okabe–Ito colour and icon; chips with counts in a `FlowLayout`; the
+  calm view `RefineLogic.compact`, More choices for the rest). Click narrows (several in a group: OR), ⌥-click leaves
+  out (a `-` word); chosen and left-out values are pills in the search box (`FilterPills`).
+- **Select All** (status bar, ⌥⌘A): loads the rest of the results (up to 200,000) and selects them — with a drive
+  chosen, the whole drive. One file selected: its full path in the status bar.
 - **Details:** the engine's `details` call reads the file's header on request and returns sections of key/value
   rows; nothing is stored. Videos get a 12-frame storyboard (macOS's reader, else the bundled ffmpeg).
 - **Pictures:** icons from the file's type (no disk read); thumbnails through ImageIO / PDFKit / video frames, three
