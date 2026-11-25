@@ -312,7 +312,11 @@ public final class Engine: @unchecked Sendable {
     /// request stuck on a busy daemon is not waited for (the lock is given
     /// one second), the daemon is asked to stop on a connection of its own,
     /// then ended, then killed.
-    public func shutdown() {
+    /// `waitForExit` false (quitting the app): ask the daemon to stop and
+    /// return once it answered — it finishes saving on its own; nothing
+    /// waits for it (the owner saw a beachball while quitting). One that
+    /// does not answer is sent the usual terminate signal.
+    public func shutdown(waitForExit: Bool = true) {
         var c: DaemonClient?
         let p = child
         if lock.lock(before: Date().addingTimeInterval(1)) {
@@ -328,7 +332,11 @@ public final class Engine: @unchecked Sendable {
             c = try? DaemonClient(socketPath: socketPath, timeout: 2)
         }
         c?.setTimeout(2)
-        _ = try? c?.call(.shutdown, as: String.self)
+        let answered = (try? c?.call(.shutdown, as: String.self)) != nil
+        if !waitForExit {
+            if !answered, p.isRunning { p.terminate() }
+            return
+        }
         var deadline = Date().addingTimeInterval(5)
         while p.isRunning && Date() < deadline { usleep(20_000) }
         if p.isRunning { p.terminate() }

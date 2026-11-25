@@ -78,8 +78,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
-    func applicationWillTerminate(_ notification: Notification) {
-        engine.shutdown()
+    /// Quitting never waits on the engine on the main thread (it showed a
+    /// beachball): the window goes at once, the engine is asked to stop in
+    /// the background (it finishes saving on its own), then the app quits.
+    private var stopping = false
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if stopping { return .terminateNow }
+        stopping = true
+        NSApp.windows.forEach { $0.orderOut(nil) }
+        let engine = self.engine
+        DispatchQueue.global(qos: .userInitiated).async {
+            engine.shutdown(waitForExit: false)
+            DispatchQueue.main.async { NSApp.reply(toApplicationShouldTerminate: true) }
+        }
+        return .terminateLater
     }
 
     // Quick Look (Space, ⌘Y) finds its controller here.

@@ -72,3 +72,9 @@ places band over the files, in the same style as the choice bands: Everything pl
 being viewed, it also needs to be removed." The engine already kept its indexes current; the window did not search
 again. Decided: the engine counts the changes it applies and reports the count; the app searches again when it moves.
 The self-test deletes a file behind the app's back and checks it leaves the list.
+
+## 11. Quitting without a beachball (0.1.3)
+
+"When I quit Laserdot+ I get a beachball for a few seconds before quitting." The app waited on its main thread for the
+engine to finish shutting down. Decided: the window goes at once, the engine is asked to stop in the background and
+finishes saving on its own; the app does not wait for it.

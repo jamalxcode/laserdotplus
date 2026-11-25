@@ -6,6 +6,8 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 - **The list follows Finder:** a file deleted, moved away or renamed outside Laserdot+ leaves the list (or changes)
   by itself within a few seconds, and new files appear — on this Mac and on drives.
+- **Quitting is instant:** no more spinning beachball for a few seconds — the window goes at once and the engine
+  finishes saving on its own.
 
 ## 0.1.2
 
