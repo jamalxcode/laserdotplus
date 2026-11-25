@@ -64,6 +64,7 @@ func TestAppContentsLeaveAnOlderIndex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	ld.background.Wait() // the start-up cleanup reads the opaque extensions too
 	saved := scan.DefaultOpaqueExts
 	scan.DefaultOpaqueExts = nil // as before 0.3
 	defer func() { scan.DefaultOpaqueExts = saved }()
