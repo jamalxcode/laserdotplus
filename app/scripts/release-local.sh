@@ -79,7 +79,7 @@ echo "== Publish"
 git fetch --quiet origin main
 git merge-base --is-ancestor "$sha" origin/main || { echo "${sha:0:7} is not on GitHub's main" >&2; exit 1; }
 { awk -v h="## $v" '$0 == h {on=1; next} /^## / {on=0} on' CHANGELOG.md; echo
-  echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). From 0.1.4 on, Laserdot+ updates itself: Install and Relaunch when it says a newer version is out."; } >"$out/notes.md"
+  echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). From 0.1.5 on, Laserdot+ updates itself: Install and Relaunch when it says a newer version is out."; } >"$out/notes.md"
 # Also under a fixed name: the README links to releases/latest/download/LaserdotPlus.dmg.
 cp "$out/LaserdotPlus-$v.dmg" "$out/LaserdotPlus.dmg"
 gh release create "v$v" "$out/LaserdotPlus-$v.dmg" "$out/LaserdotPlus.dmg" \

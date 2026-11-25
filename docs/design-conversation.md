@@ -100,7 +100,7 @@ clearing the search, goes back to everything plugged in. The place bar above sti
 selection box — drag across tiles to select them (⌘/⇧ add to the selection); a drag that starts on a selected file
 drags it out to Finder or Mail, as before. The list already selects by dragging.
 
-## 15. Updates install themselves (0.1.4)
+## 15. Updates install themselves (0.1.5)
 
 "If there is an update, I want it to self update, not send me to a downloads page." This widens the network exception
 (the owner's call): the bundled helper may now download the latest release's disk image from GitHub (and GitHub's
@@ -109,7 +109,7 @@ app (same bundle, that version) before Laserdot+ quits, then puts the old copy i
 reopens it. The daily check is now on by default. Still nothing about the user or their files is sent, and the app and
 engine keep no network code.
 
-## 16. A drive that is still opening (0.1.4)
+## 16. A drive that is still opening (0.1.5)
 
 "I plugged in the T5 EVO and it would not appear; it said it was opening its index. It should still appear but with an
 indicator like an hourglass saying there is some waiting involved, in the search bar." Decided: a drive that is not
