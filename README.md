@@ -39,3 +39,7 @@ app/scripts/build-go.sh
 (cd app && swift build && LASERDOTD=$PWD/build/go/laserdotd swift test)
 VERSION=0.1.0 app/scripts/bundle.sh && app/scripts/make-dmg.sh out/LaserdotPlus-0.1.0.dmg
 ```
+
+To release from your own Mac in a few minutes (no waiting for GitHub's Macs): add a `## x.y.z` section to
+`CHANGELOG.md`, commit it on `main`, then run `app/scripts/release-local.sh` (`--quick` skips the tests).
+It needs Xcode's command-line tools, Go and the GitHub CLI signed in (`gh auth login`).

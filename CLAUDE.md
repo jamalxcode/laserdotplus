@@ -59,6 +59,7 @@ app/scripts/build-go.sh                      # laserdotd, CLI, Registry.generate
 (cd app && swift build && LASERDOTD=$PWD/build/go/laserdotd swift test)
 VERSION=0.1.0 app/scripts/bundle.sh          # → app/build/Laserdot+.app
 app/scripts/make-dmg.sh out/LaserdotPlus-0.1.0.dmg
+app/scripts/release-local.sh [--quick]     # on the owner's Mac: test, build, publish the CHANGELOG's newest version (minutes)
 ```
 
 Swift compiles only on macOS (CI). The self-test (`LASERDOT_SELFTEST`, `SelfTest.swift`) drives the real app in CI
