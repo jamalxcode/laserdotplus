@@ -68,6 +68,12 @@ struct FileMenu: View {
         Button(n > 1 ? String(format: L("action.revealMany"), n) : L("action.reveal")) { model.reveal(hits) }
         Button(n > 1 ? String(format: L("action.copyMany"), n) : L("action.copy")) { model.copyPaths(hits) }
         Divider()
+        Button(L("tray.markTrash")) { model.mark(hits, .trash) }
+        Button(L("tray.markMove")) { model.mark(hits, .move) }
+        if hits.contains(where: { model.tray[$0.path] != nil }) {
+            Button(L("tray.unmark")) { model.unmark(hits.map(\.path)) }
+        }
+        Divider()
         Button(n > 1 ? String(format: L("action.trashMany"), n) : L("action.trash")) { model.trash(hits, undo: undo) }
     }
 }

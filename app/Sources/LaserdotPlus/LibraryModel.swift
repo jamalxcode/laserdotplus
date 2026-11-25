@@ -2,7 +2,7 @@ import AppKit
 import LaserdotKit
 import SwiftUI
 
-enum ViewMode: String, CaseIterable { case list, grid }
+enum ViewMode: String, CaseIterable { case list, grid, sheet, timeline }
 
 /// Where the window looks: everything plugged in, this Mac, or one drive.
 enum Place: Hashable {
@@ -54,6 +54,11 @@ final class LibraryModel: ObservableObject {
     @Published private(set) var status: DaemonStatus?
     /// Something the window should say for a moment ("Moved 3 items to the Trash").
     @Published var notice: String?
+    /// The clean-up tray: files marked (in review mode, or from a menu) to
+    /// go to the Trash or to a folder; nothing moves until it is applied.
+    @Published private(set) var tray: [String: TrayItem] = [:]
+    /// Review mode: the result shown full-window (nil: not reviewing).
+    @Published var reviewIndex: Int?
 
     static let page = 500
     private var generation = 0
@@ -224,6 +229,43 @@ final class LibraryModel: ObservableObject {
 
     // MARK: selection
 
+    /// A click in the grid, contact sheet or timeline: plain selects, ⌘
+    /// adds or removes, ⇧ selects from the anchor. Returns the new anchor.
+    func click(_ i: Int, _ h: Hit, anchor: Int?) -> Int? {
+        let flags = NSEvent.modifierFlags
+        if flags.contains(.command) {
+            if selection.contains(h.path) { selection.remove(h.path) } else { selection.insert(h.path) }
+            return i
+        }
+        if flags.contains(.shift), let a = anchor, results.indices.contains(a) {
+            selection = Set((min(a, i)...max(a, i)).map { results[$0].path })
+            return anchor
+        }
+        selection = [h.path]
+        return i
+    }
+
+    /// The results by month of their date (modified), newest first.
+    var months: [MonthGroup] {
+        let f = DateFormatter()
+        f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
+        var order: [String] = []
+        var groups: [String: [IndexedHit]] = [:]
+        let cal = Calendar.current
+        for (i, h) in results.enumerated() {
+            let d = Date(timeIntervalSince1970: TimeInterval(h.modified))
+            let c = cal.dateComponents([.year, .month], from: d)
+            let key = String(format: "%04d-%02d", c.year ?? 0, c.month ?? 0)
+            if groups[key] == nil { order.append(key) }
+            groups[key, default: []].append(IndexedHit(index: i, hit: h))
+        }
+        return order.sorted(by: >).map { key in
+            let items = groups[key] ?? []
+            let d = Date(timeIntervalSince1970: TimeInterval(items.first?.hit.modified ?? 0))
+            return MonthGroup(id: key, title: f.string(from: d), items: items, bytes: items.reduce(0) { $0 + $1.hit.size })
+        }
+    }
+
     var selectedHits: [Hit] { results.filter { selection.contains($0.path) } }
 
     private func selectionChanged() {
@@ -313,10 +355,114 @@ final class LibraryModel: ObservableObject {
         schedule(now: true, keepSelection: true)
     }
 
+    // MARK: the clean-up tray
+
+    func mark(_ hits: [Hit], _ action: TrayAction) {
+        for h in hits { tray[h.path] = TrayItem(hit: h, action: action) }
+    }
+
+    func unmark(_ paths: [String]) {
+        paths.forEach { tray[$0] = nil }
+    }
+
+    func clearTray() { tray = [:] }
+
+    var trayBytes: UInt64 { tray.values.reduce(0) { $0 + $1.hit.size } }
+    func trayCount(_ action: TrayAction) -> Int { tray.values.filter { $0.action == action }.count }
+
+    /// Apply the tray after one confirmation: the Trash for some, a folder
+    /// (chosen now) for the others; one Undo puts everything back.
+    func applyTray(undo: UndoManager?) {
+        guard !tray.isEmpty else { return }
+        let toTrash = tray.values.filter { $0.action == .trash }.map(\.hit.path)
+        let toMove = tray.values.filter { $0.action == .move }.map(\.hit.path)
+        let alert = NSAlert()
+        alert.messageText = String(format: L("tray.confirm.title"), tray.count, bytesText(trayBytes))
+        alert.informativeText = String(format: L("tray.confirm.detail"), toTrash.count, toMove.count)
+        alert.addButton(withTitle: L("tray.apply"))
+        alert.addButton(withTitle: L("action.cancel"))
+        guard alert.runFront() == .alertFirstButtonReturn else { return }
+        var folder: URL?
+        if !toMove.isEmpty {
+            let panel = NSOpenPanel()
+            panel.canChooseDirectories = true
+            panel.canChooseFiles = false
+            panel.canCreateDirectories = true
+            panel.prompt = L("tray.moveHere")
+            guard panel.runFront() == .OK, let url = panel.url else { return }
+            folder = url
+        }
+        undo?.beginUndoGrouping()
+        trashPaths(toTrash, undo: undo)
+        if let folder { movePaths(toMove, to: folder, undo: undo) }
+        undo?.endUndoGrouping()
+        undo?.setActionName(L("tray.apply"))
+        clearTray()
+    }
+
+    /// Move files into a folder (a new name when one is taken), undoable.
+    func movePaths(_ paths: [String], to folder: URL, undo: UndoManager?) {
+        var moved: [(from: URL, to: URL)] = []
+        for path in paths {
+            let from = URL(fileURLWithPath: path)
+            var to = folder.appendingPathComponent(from.lastPathComponent)
+            var n = 2
+            while FileManager.default.fileExists(atPath: to.path) {
+                let base = from.deletingPathExtension().lastPathComponent
+                let ext = from.pathExtension
+                to = folder.appendingPathComponent(ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)")
+                n += 1
+            }
+            if (try? FileManager.default.moveItem(at: from, to: to)) != nil { moved.append((from, to)) }
+        }
+        let gone = Set(moved.map(\.from.path))
+        results.removeAll { gone.contains($0.path) }
+        selection.subtract(gone)
+        notice = String(format: L("notice.moved"), moved.count)
+        undo?.registerUndo(withTarget: self) { model in
+            for m in moved { try? FileManager.default.moveItem(at: m.to, to: m.from) }
+            model.tellEngine(moved.map(\.from) + moved.map(\.to))
+            model.schedule(now: true, keepSelection: true)
+        }
+        tellEngine(moved.map(\.from) + moved.map(\.to))
+    }
+
+    // MARK: review mode
+
+    func startReview() {
+        guard !results.isEmpty else { return }
+        let first = results.firstIndex { selection.contains($0.path) } ?? 0
+        reviewIndex = first
+    }
+
+    func reviewStep(_ delta: Int) {
+        guard let i = reviewIndex else { return }
+        let next = i + delta
+        if next >= results.count, canLoadMore { loadMore() }
+        reviewIndex = max(0, min(results.count - 1, next))
+        if let r = reviewIndex { selection = [results[r].path] }
+    }
+
+    /// K, T, M in review mode: keep (takes it out of the tray), or mark for
+    /// the Trash or a folder; then the next file.
+    func reviewDecide(_ action: TrayAction?) {
+        guard let i = reviewIndex, results.indices.contains(i) else { return }
+        let h = results[i]
+        if let action { mark([h], action) } else { unmark([h.path]) }
+        reviewStep(1)
+    }
+
     /// The folders changed: the engine lists them again at once.
-    private func tellEngine(_ urls: [URL]) {
+    func tellEngine(_ urls: [URL]) {
         let folders = Set(urls.map { $0.deletingLastPathComponent().path })
         let engine = self.engine
         DispatchQueue.global(qos: .utility).async { folders.forEach { engine.touched(folder: $0) } }
     }
+}
+
+enum TrayAction: String { case trash, move }
+
+struct TrayItem {
+    let hit: Hit
+    let action: TrayAction
 }

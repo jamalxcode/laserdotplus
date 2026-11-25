@@ -53,22 +53,8 @@ struct ResultsGrid: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.accentColor : Color.clear))
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { model.open([h]) }
-        .onTapGesture { click(i, h) }
+        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .onDrag { NSItemProvider(object: URL(fileURLWithPath: h.path) as NSURL) }
-    }
-
-    private func click(_ i: Int, _ h: Hit) {
-        let flags = NSEvent.modifierFlags
-        if flags.contains(.command) {
-            if model.selection.contains(h.path) { model.selection.remove(h.path) } else { model.selection.insert(h.path) }
-            anchor = i
-        } else if flags.contains(.shift), let a = anchor, model.results.indices.contains(a) {
-            let range = min(a, i)...max(a, i)
-            model.selection = Set(range.map { model.results[$0].path })
-        } else {
-            model.selection = [h.path]
-            anchor = i
-        }
     }
 }

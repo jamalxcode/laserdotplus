@@ -24,6 +24,10 @@ struct LaserdotPlusApp: App {
             CommandMenu(L("menu.view")) {
                 Button(L("view.list")) { delegate.model.viewMode = .list }.keyboardShortcut("1")
                 Button(L("view.grid")) { delegate.model.viewMode = .grid }.keyboardShortcut("2")
+                Button(L("view.sheet")) { delegate.model.viewMode = .sheet }.keyboardShortcut("3")
+                Button(L("view.timeline")) { delegate.model.viewMode = .timeline }.keyboardShortcut("4")
+                Divider()
+                Button(L("review.start")) { delegate.model.startReview() }.keyboardShortcut("r")
                 Divider()
                 Button(L("action.quickLook")) { delegate.model.quickLook() }.keyboardShortcut("y")
                 Button(L("filters.clear")) { delegate.model.clearFilters() }.keyboardShortcut(.delete, modifiers: [.command, .option])

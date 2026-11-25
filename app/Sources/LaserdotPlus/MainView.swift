@@ -27,10 +27,15 @@ struct MainView: View {
                 Picker(L("menu.view"), selection: $model.viewMode) {
                     Label(L("view.list"), systemImage: "list.bullet").tag(ViewMode.list)
                     Label(L("view.grid"), systemImage: "square.grid.2x2").tag(ViewMode.grid)
+                    Label(L("view.sheet"), systemImage: "film.stack").tag(ViewMode.sheet)
+                    Label(L("view.timeline"), systemImage: "calendar").tag(ViewMode.timeline)
                 }
                 .pickerStyle(.segmented)
                 .help(L("menu.view"))
-                if model.viewMode == .grid {
+                Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
+                    .help(L("review.start"))
+                    .disabled(model.results.isEmpty)
+                if model.viewMode != .list {
                     Slider(value: $model.tileSize, in: 96...320)
                         .frame(width: 110)
                         .help(L("view.size"))
@@ -51,6 +56,11 @@ struct MainView: View {
             }
         }
         .navigationTitle("Laserdot+")
+        .overlay {
+            if model.reviewIndex != nil {
+                ReviewView(model: model)
+            }
+        }
     }
 
     private var title: String {
@@ -93,13 +103,20 @@ struct ResultsView: View {
             Group {
                 if model.results.isEmpty && !model.searching {
                     emptyState
-                } else if model.viewMode == .list {
-                    ResultsList(model: model)
                 } else {
-                    ResultsGrid(model: model)
+                    switch model.viewMode {
+                    case .list: ResultsList(model: model)
+                    case .grid: ResultsGrid(model: model)
+                    case .sheet: ContactSheet(model: model)
+                    case .timeline: TimelineView(model: model)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if !model.tray.isEmpty {
+                Divider()
+                TrayBar(model: model)
+            }
             Divider()
             statusLine
         }

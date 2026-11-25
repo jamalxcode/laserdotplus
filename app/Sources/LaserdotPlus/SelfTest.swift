@@ -72,8 +72,17 @@ final class SelfTestRunner {
                 self.after(2) {
                     self.shot("grid")
                     self.model.clearFilters()
-                    self.model.viewMode = .list
-                    self.details()
+                    self.model.viewMode = .sheet
+                    self.after(3) {
+                        self.shot("sheet")
+                        self.model.viewMode = .timeline
+                        self.after(2) {
+                            self.shot("timeline")
+                            self.report["months"] = self.model.months.map(\.title)
+                            self.model.viewMode = .list
+                            self.details()
+                        }
+                    }
                 }
             }
         }
@@ -100,6 +109,25 @@ final class SelfTestRunner {
         report["trash_hidden"] = !model.results.contains { $0.path == victim }
         undo.undo()
         report["restored"] = FileManager.default.fileExists(atPath: victim)
+        // Review mode: T marks for the Trash (into the tray), K keeps.
+        model.selection = []
+        model.startReview()
+        model.reviewDecide(.trash)
+        model.reviewDecide(nil)
+        report["tray_count"] = model.tray.count
+        report["review_index"] = model.reviewIndex ?? -1
+        after(2) {
+            self.shot("review")
+            self.model.reviewIndex = nil
+            self.after(1) {
+                self.shot("tray")
+                self.model.clearTray()
+                self.thisMac()
+            }
+        }
+    }
+
+    private func thisMac() {
         model.place = .thisMac
         waitFor(10, { !self.model.results.isEmpty }) { _ in
             self.report["this_mac_count"] = self.model.results.count
