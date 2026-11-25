@@ -38,3 +38,8 @@ The window passed CI's self-test on a real Mac on its first full run, the privac
 split view's sidebar did not show in the self-test's screenshots, so the window became a plain three-pane layout.
 Phase 2 began with the contact sheet, the timeline, review mode and the clean-up tray (moved up from Phase 3 because
 review mode feeds it). Released as 0.1.0.
+
+## 6. 0.1.0 released
+
+Released 25 Nov at 20:45 Kuwait time. Its screenshots showed review mode's buttons pushed off a small window and the
+contact sheet's frames running past the row; fixed in 0.1.1 (the preview takes the room left; frames share the width).

@@ -37,7 +37,7 @@ struct MainView: View {
                     .disabled(model.results.isEmpty)
                 if model.viewMode != .list {
                     Slider(value: $model.tileSize, in: 96...320)
-                        .frame(width: 110)
+                        .frame(width: 80)
                         .help(L("view.size"))
                 }
                 Menu {
@@ -52,7 +52,7 @@ struct MainView: View {
                 }
                 .help(L("sort.by"))
                 SearchBox(text: $model.text)
-                    .frame(width: 280)
+                    .frame(minWidth: 160, idealWidth: 240, maxWidth: 260)
             }
         }
         .navigationTitle("Laserdot+")

@@ -18,13 +18,18 @@ struct ReviewView: View {
                     Spacer()
                     Button(L("review.done")) { model.reviewIndex = nil }.keyboardShortcut(.cancelAction)
                 }
-                Group {
-                    if h.kind == "video" {
-                        ScrubThumb(path: h.path, size: 640)
-                        FrameStrip(path: h.path, count: 10, height: 70)
-                    } else {
-                        FileIcon(path: h.path, size: 600, thumbnail: true)
+                // The preview takes the room left: the buttons always show.
+                GeometryReader { g in
+                    let edge = max(120, min(g.size.width, g.size.height - (h.kind == "video" ? 90 : 0)))
+                    VStack(spacing: 8) {
+                        if h.kind == "video" {
+                            ScrubThumb(path: h.path, size: edge)
+                            FrameStrip(path: h.path, count: 10, height: 60)
+                        } else {
+                            FileIcon(path: h.path, size: edge, thumbnail: true)
+                        }
                     }
+                    .frame(width: g.size.width, height: g.size.height)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 VStack(spacing: 4) {

@@ -57,19 +57,24 @@ struct FrameStrip: View {
     @State private var framesFor = ""
 
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<count, id: \.self) { i in
-                ZStack {
-                    Rectangle().fill(Color.secondary.opacity(0.12))
-                    if framesFor == path, let img = frames[i] {
-                        Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+        // Each frame gets an equal share of the row's width: never wider.
+        GeometryReader { g in
+            let w = max(10, (g.size.width - CGFloat(count - 1) * 3) / CGFloat(count))
+            HStack(spacing: 3) {
+                ForEach(0..<count, id: \.self) { i in
+                    ZStack {
+                        Rectangle().fill(Color.secondary.opacity(0.12))
+                        if framesFor == path, let img = frames[i] {
+                            Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+                                .frame(width: w, height: height)
+                        }
                     }
+                    .frame(width: w, height: height)
+                    .clipped()
                 }
-                .frame(height: height)
-                .frame(maxWidth: .infinity)
-                .clipped()
             }
         }
+        .frame(height: height)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .task(id: path) {
             frames = [:]

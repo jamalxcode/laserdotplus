@@ -2,6 +2,12 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.1
+
+- Review mode fits any window size: the preview takes the room left, so Keep, Trash and Move always show.
+- The contact sheet's frames fit the row, and the search box no longer slides off the toolbar when the thumbnail size
+  slider shows.
+
 ## 0.1.0
 
 - **First version of Laserdot+:** one window to review the files on this Mac and every drive plugged in.
