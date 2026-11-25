@@ -87,3 +87,9 @@ with info and preview of the file; panes can be made bigger or smaller and adjus
 and sort move from the toolbar into a top area with the places and choices (it scrolls when made small); the files
 fill the middle; the right pane is slim (the preview takes its width); a bottom bar describes the selected file and
 shows its full path; the top area and the right pane are resized by dragging. Privacy is unchanged.
+
+## 13. The chosen drive in the search box (0.1.4)
+
+"When I choose a disk, it should be included and shown in the search bar text box." Decided: the chosen place (a
+drive or This Mac) is the first pill in the search box, with a drive icon, before the chosen filters; ✕ on it, or
+clearing the search, goes back to everything plugged in. The place bar above still highlights it.

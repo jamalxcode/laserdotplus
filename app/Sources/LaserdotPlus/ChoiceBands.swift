@@ -133,6 +133,9 @@ struct FilterPills: View {
         HStack(spacing: 3) {
             ForEach(model.pills, id: \.token) { p in
                 HStack(spacing: 2) {
+                    if p.isPlace {
+                        Image(systemName: p.label == L("place.thisMac") ? "desktopcomputer" : "externaldrive")
+                    }
                     Text(p.excluded ? String(format: L("choices.not"), p.label) : p.label)
                         .strikethrough(p.excluded)
                         .lineLimit(1)

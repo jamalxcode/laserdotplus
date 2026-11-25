@@ -2,6 +2,11 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.4
+
+- **The chosen drive shows in the search box.** Pick a drive (or This Mac) and it appears as the first pill in the
+  search box, with a drive icon; ✕ on it, or clearing the search, goes back to everything plugged in.
+
 ## 0.1.3
 
 - **The files take the centre of the window.** A few lines at the top to search (the search box, the view and sort,

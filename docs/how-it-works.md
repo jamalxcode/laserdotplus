@@ -18,7 +18,8 @@
 - **Filters:** the engine's `refine` answer for the current search, shown as Laserdot's compact choice bands above
   the files (`ChoiceBands`: one band per family, Okabe–Ito colour and icon; chips with counts in a `FlowLayout`; the
   calm view `RefineLogic.compact`, More choices for the rest). Click narrows (several in a group: OR), ⌥-click leaves
-  out (a `-` word); chosen and left-out values are pills in the search box (`FilterPills`).
+  out (a `-` word); chosen and left-out values are pills in the search box (`FilterPills`), after the chosen place (a drive or
+  This Mac, its own pill with a drive icon; ✕ or Clear goes back to everything plugged in).
 - **Select All** (status bar, ⌥⌘A): loads the rest of the results (up to 200,000) and selects them — with a drive
   chosen, the whole drive. One file selected: its full path in the status bar.
 - **Details:** the engine's `details` call reads the file's header on request and returns sections of key/value

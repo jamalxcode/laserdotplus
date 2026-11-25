@@ -176,21 +176,35 @@ final class LibraryModel: ObservableObject {
     func clearFilters() {
         filters = [:]
         excluded = []
+        place = .everywhere
         schedule(now: true)
     }
 
-    var hasFilters: Bool { !filters.isEmpty || !excluded.isEmpty }
+    var hasFilters: Bool { !filters.isEmpty || !excluded.isEmpty || place != .everywhere }
 
-    struct Pill { let group: String?; let token: String; let label: String; let excluded: Bool }
+    struct Pill {
+        let group: String?; let token: String; let label: String; let excluded: Bool
+        var isPlace = false
+    }
 
-    /// The chosen and left-out values, as pills in the search box.
+    /// The chosen place (a drive or This Mac — the owner: "when i choose a
+    /// disk, it should be included and shown in the search bar"), then the
+    /// chosen and left-out values, as pills in the search box.
     var pills: [Pill] {
+        var out: [Pill] = []
+        switch place {
+        case .everywhere: break
+        case .thisMac: out.append(Pill(group: nil, token: place.token ?? "", label: L("place.thisMac"), excluded: false, isPlace: true))
+        case let .drive(name): out.append(Pill(group: nil, token: place.token ?? name, label: name, excluded: false, isPlace: true))
+        }
         let chosen = filters.keys.sorted().flatMap { g in (filters[g] ?? []).map { Pill(group: g, token: $0, label: labels[$0] ?? $0, excluded: false) } }
-        return chosen + excluded.map { Pill(group: nil, token: $0, label: labels[$0] ?? $0, excluded: true) }
+        return out + chosen + excluded.map { Pill(group: nil, token: $0, label: labels[$0] ?? $0, excluded: true) }
     }
 
     func removePill(_ p: Pill) {
-        if p.excluded {
+        if p.isPlace {
+            place = .everywhere
+        } else if p.excluded {
             excluded.removeAll { $0 == p.token }
             schedule(now: true)
         } else if let g = p.group {

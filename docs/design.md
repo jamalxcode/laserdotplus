@@ -35,7 +35,7 @@ preview and details, a bottom margin about the selected file; the top area and t
 
 Over the files, as in Laserdot: the places band (everything plugged in, This Mac, each drive with its state; right-
 click a drive to eject, index or unlock it) and Laserdot's compact choice bands (every choice the current files have, with counts; several in a group mean any of them;
-chosen ones are pills in the search box) · the files (a list with
+chosen ones — and the chosen drive — are pills in the search box) · the files (a list with
 sortable columns, or thumbnails; videos flip under the pointer) · the details panel (a large preview, a 12-frame
 storyboard for videos, and everything read from the file: tracks, languages, subtitles, chapters, HDR, camera, GPS,
 author, the app that made it, a data file's columns). Search box in the toolbar (plain words or the engine's

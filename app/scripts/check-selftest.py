@@ -29,6 +29,7 @@ check("video" in r.get("details_sections", []) and "general" in r.get("details_s
       f"the details panel describes the video (got {r.get('details_sections')})")
 check(r.get("trashed") is True and r.get("trash_hidden") is True, "Move to Trash moves the file and drops it from the list")
 check(r.get("restored") is True, "Undo puts it back")
+check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")
 check(r.get("tray_count") == 1 and r.get("review_index") == 2, f"review mode: T marks one for the tray, K keeps (got {r.get('tray_count')}, {r.get('review_index')})")
@@ -36,7 +37,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

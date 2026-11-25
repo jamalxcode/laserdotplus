@@ -134,6 +134,9 @@ final class SelfTestRunner {
         model.place = .thisMac
         waitFor(10, { !self.model.results.isEmpty }) { _ in
             self.report["this_mac_count"] = self.model.results.count
+            // The chosen place shows in the search box as a pill.
+            self.report["place_pill"] = self.model.pills.first { $0.isPlace }?.label ?? ""
+            self.shot("place")
             self.report["drives"] = self.drives.drives.map(\.name)
             // Deleted behind the app's back (as in Finder): it leaves the list.
             let gone = self.folder + "/Trips/2023/rome trip.txt"
