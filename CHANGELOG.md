@@ -6,6 +6,8 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 - **The chosen drive shows in the search box.** Pick a drive (or This Mac) and it appears as the first pill in the
   search box, with a drive icon; ✕ on it, or clearing the search, goes back to everything plugged in.
+- **Drag to select in the picture views.** In the grid, contact sheet and timeline, drag across the files to select
+  them with a box, as in Finder (⌘ or ⇧ adds to what is selected). Dragging a selected file still drags it out.
 
 ## 0.1.3
 

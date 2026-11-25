@@ -55,3 +55,6 @@
 - **Self-test** (CI): indexes fixtures and a mounted test drive, then search, a filter, each view, details, Trash and
   Undo, review mode and the tray, with screenshots; it also checks the drive's index is on the drive and that nothing
   in this Mac's data folder names the drive's file.
+
+- **Drag to select** (`Marquee.swift`): in the grid, contact sheet and timeline a box drawn over the tiles selects
+  what it touches, live (⌘/⇧ add); a drag that starts on a selected file drags it out instead.

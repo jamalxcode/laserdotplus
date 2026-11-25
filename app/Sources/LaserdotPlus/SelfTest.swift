@@ -71,6 +71,12 @@ final class SelfTestRunner {
                 self.model.viewMode = .grid
                 self.after(2) {
                     self.shot("grid")
+                    // Drag-to-select: a box drawn from the empty corner across
+                    // the first tiles selects them (real mouse events).
+                    self.model.selection = []
+                    self.dragBox()
+                    self.report["marquee_count"] = self.model.selection.count
+                    self.shot("marquee")
                     self.model.clearFilters()
                     self.model.viewMode = .sheet
                     self.after(3) {
@@ -159,6 +165,32 @@ final class SelfTestRunner {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: check)
         }
         check()
+    }
+
+    /// Mouse down in the picture view's top-left corner, a drag across the
+    /// first row of tiles, mouse up — sent to the window as real events.
+    private func dragBox() {
+        guard let w = NSApp.windows.filter({ $0.isVisible }).max(by: { $0.frame.width < $1.frame.width }),
+              let content = w.contentView else { return }
+        let f = MarqueeSelect.lastFrame
+        let tile = model.tileSize + 34
+        func point(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
+            let p = content.isFlipped ? NSPoint(x: x, y: y) : NSPoint(x: x, y: content.bounds.height - y)
+            return content.convert(p, to: nil)
+        }
+        let start = point(f.minX + 4, f.minY + 4)
+        func send(_ type: NSEvent.EventType, _ p: NSPoint) {
+            if let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                          windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
+                w.sendEvent(e)
+            }
+        }
+        send(.leftMouseDown, start)
+        for i in 1...12 {
+            let t = CGFloat(i) / 12
+            send(.leftMouseDragged, point(f.minX + 4 + t * tile * 1.6, f.minY + 4 + t * tile * 0.6))
+        }
+        send(.leftMouseUp, point(f.minX + 4 + tile * 1.6, f.minY + 4 + tile * 0.6))
     }
 
     private func after(_ seconds: Double, _ f: @escaping () -> Void) {

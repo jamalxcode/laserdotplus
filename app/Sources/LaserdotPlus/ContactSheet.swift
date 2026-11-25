@@ -21,6 +21,7 @@ struct ContactSheet: View {
                 }
             }
             .padding(8)
+            .marqueeSelect(model)
         }
     }
 
@@ -45,6 +46,8 @@ struct ContactSheet: View {
         .onTapGesture(count: 2) { model.open([h]) }
         .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
+        .tileFrame(h.path)
+        .fileDrag(h.path, when: selected)
     }
 }
 
@@ -123,6 +126,7 @@ struct TimelineView: View {
                 }
             }
             .padding(10)
+            .marqueeSelect(model)
         }
     }
 
@@ -145,6 +149,8 @@ struct TimelineView: View {
         .onTapGesture(count: 2) { model.open([h]) }
         .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
+        .tileFrame(h.path)
+        .fileDrag(h.path, when: selected)
     }
 }
 

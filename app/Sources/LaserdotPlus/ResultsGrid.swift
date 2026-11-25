@@ -3,7 +3,8 @@ import SwiftUI
 
 /// Big pictures: photos and videos (move the pointer across a video to flip
 /// through it), every other file by its icon. Click selects, ⌘ adds, ⇧
-/// selects a range, a double click opens.
+/// selects a range, a double click opens; drag across the tiles to select
+/// them with a box.
 struct ResultsGrid: View {
     @ObservedObject var model: LibraryModel
     @Environment(\.undoManager) private var undo
@@ -11,15 +12,18 @@ struct ResultsGrid: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: model.tileSize + 24), spacing: 10)], spacing: 12) {
-                ForEach(Array(model.results.enumerated()), id: \.element.path) { i, h in
-                    tile(i, h)
+            VStack(spacing: 0) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: model.tileSize + 24), spacing: 10)], spacing: 12) {
+                    ForEach(Array(model.results.enumerated()), id: \.element.path) { i, h in
+                        tile(i, h)
+                    }
+                }
+                .padding(12)
+                if model.canLoadMore {
+                    Button(L("results.more")) { model.loadMore() }.padding(.bottom, 12)
                 }
             }
-            .padding(12)
-            if model.canLoadMore {
-                Button(L("results.more")) { model.loadMore() }.padding(.bottom, 12)
-            }
+            .marqueeSelect(model)
         }
         .background(Color(nsColor: .textBackgroundColor).opacity(0.001))
         .onTapGesture { model.selection = [] }
@@ -55,6 +59,7 @@ struct ResultsGrid: View {
         .onTapGesture(count: 2) { model.open([h]) }
         .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
-        .onDrag { NSItemProvider(object: URL(fileURLWithPath: h.path) as NSURL) }
+        .tileFrame(h.path)
+        .fileDrag(h.path, when: selected)
     }
 }

@@ -93,3 +93,9 @@ shows its full path; the top area and the right pane are resized by dragging. Pr
 "When I choose a disk, it should be included and shown in the search bar text box." Decided: the chosen place (a
 drive or This Mac) is the first pill in the search box, with a drive icon, before the chosen filters; ✕ on it, or
 clearing the search, goes back to everything plugged in. The place bar above still highlights it.
+
+## 14. Drag to select (0.1.4)
+
+"Drag select should work in the files preview area." Decided: the grid, contact sheet and timeline get Laserdot's
+selection box — drag across tiles to select them (⌘/⇧ add to the selection); a drag that starts on a selected file
+drags it out to Finder or Mail, as before. The list already selects by dragging.
