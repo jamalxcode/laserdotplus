@@ -4,6 +4,7 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.4
 
+- **A new icon:** a little ship firing its laser across a starry sky.
 - **Laserdot+ updates itself.** When a newer version is out, **Install and Relaunch** downloads it from GitHub,
   replaces this copy (the old one goes to the Trash) and opens the new one — no download page. Laserdot+ looks once a
   day (turn it off in the View menu); it asks GitHub only for the version and the update, and sends nothing about you
