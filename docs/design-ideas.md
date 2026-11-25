@@ -1,0 +1,37 @@
+# Design ideas
+
+The ideas offered while designing Laserdot+, the owner's answers, and where each stands. Done ones say the version.
+
+## First ten (the owner's answers in brackets)
+
+1. **A proper main window** — sidebar, files, details panel; an ordinary app [yes; no menu bar, behaves like an app].
+   *Done 0.1.0.*
+2. **Browse drives that aren't plugged in** (an offline catalog) [no: only what's plugged in, indexed automatically].
+   *Not doing.* Drives index themselves when plugged in (0.1.0).
+3. **A filter sidebar** with every relevant choice and counts [yes]. *Done 0.1.0.*
+4. **Views made for media** [yes to all]:
+   - contact sheet — *done 0.1.0*;
+   - photo grid with a zoom slider — *done 0.1.0*;
+   - timeline — *done 0.1.0* (by modified date; by date taken: later);
+   - places, grouped by GPS position (no map: maps need the internet) — *next*.
+5. **A collection health page per drive** [no need]. *Not doing.*
+6. **"What's not backed up"** across drives [not chosen yet].
+7. **A duplicates workspace with side-by-side compare** [not chosen yet; see 17].
+8. **Organize by rules** (move/rename by details) [not chosen yet; see 15].
+9. **Compare two folders or drives** [not chosen yet].
+10. **A full details panel and saved views** [yes]: details panel — *done 0.1.0*; saved views and tabs — *next*.
+
+## Second ten (built on the owner's goals: tell what a file is when the name doesn't say; clear junk; remove duplicates)
+
+11. **Review mode** (← → with keep/trash/move keys) [yes]. *Done 0.1.0.*
+12. **See inside a video without opening it** — a 12-frame storyboard, snippets on a key [yes]. *Storyboard done
+    0.1.0*; three-second snippets with sound — later.
+13. **Folders that show what's inside** — a cover of four thumbnails, what it holds, its dates [yes]. *Next.*
+14. **Find names that say nothing** (`IMG_1234`, `VID_…`, `Untitled`, `download (3)`) [yes]. *Phase 3.*
+15. **New names from what's inside the file** (date taken + camera; title + year + resolution) [yes]. *Phase 3.*
+16. **Junk finder by category** (empty files, unfinished downloads, lock files, used installers, broken media,
+    torrent leftovers, old screenshots) [yes]. *Phase 3.*
+17. **Smarter duplicates** (whole folders, the same film in several qualities, photo bursts, songs) [yes]. *Phase 3.*
+18. **Space map of each drive** [no need]. *Not doing.*
+19. **Clean-up tray** [yes]. *Done 0.1.0* (review mode feeds it).
+20. **Drives in the sidebar** with progress, space, Eject and settings [yes]. *Done 0.1.0* (per-drive settings later).

@@ -17,4 +17,18 @@
   rows; nothing is stored. Videos get a 12-frame storyboard (macOS's reader, else the bundled ffmpeg).
 - **Pictures:** icons from the file's type (no disk read); thumbnails through ImageIO / PDFKit / video frames, three
   at a time, newest first, only for rows on screen 0.2 s; kept in memory.
-- **Actions:** Open, Show in Finder, Copy Path, Quick Look (Space, ⌘Y), Move to Trash (⌫, ⌘⌫) with Undo (⌘Z).
+- **Window:** a plain three-pane layout (`HSplitView`: sidebar · files · details; not `NavigationSplitView`, whose
+  sidebar does not show in window captures) and a toolbar with the place's name, the view picker, Review, the size
+  slider, sort and a search box.
+- **Views:** list (`Table`, the engine sorts), thumbnails (`LazyVGrid`; videos scrub), contact sheet (eight frames per
+  video, `FrameStrip`), timeline (the loaded results by month of their modified date). ⌘1–⌘4.
+- **Review mode** (⌘R, `ReviewView`): the results one at a time from the selection; ← → move, Space Quick Look,
+  K keep (out of the tray), T trash, M move (into the tray), Esc closes.
+- **Clean-up tray** (`LibraryModel.tray`): files marked from review mode or the right-click menu, by action; the bar
+  under the files shows how many and how big; Apply confirms once, asks a folder for moves, then trashes and moves
+  in one Undo group (moves take a new name when one is taken).
+- **Actions:** Open, Show in Finder, Copy Path, Quick Look (Space, ⌘Y), Move to Trash (⌫, ⌘⌫) with Undo (⌘Z); a
+  right-click on one of several selected files acts on all of them.
+- **Self-test** (CI): indexes fixtures and a mounted test drive, then search, a filter, each view, details, Trash and
+  Undo, review mode and the tray, with screenshots; it also checks the drive's index is on the drive and that nothing
+  in this Mac's data folder names the drive's file.

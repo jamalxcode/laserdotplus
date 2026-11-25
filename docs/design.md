@@ -35,6 +35,12 @@ storyboard for videos, and everything read from the file: tracks, languages, sub
 author, the app that made it, a data file's columns). Search box in the toolbar (plain words or the engine's
 filters: `res:4k`, `kind:video since:30d`…). Click, ⌘-click, ⇧-click select; right-click acts on the selection.
 
+## Status
+
+- 0.1.0: Phase 1 complete; from Phase 2 the contact sheet, timeline, review mode and the clean-up tray (brought
+  forward from Phase 3, since review mode feeds it).
+- Next: folder covers, tabs, places (GPS groups), saved views (on their drive); then Phase 3.
+
 ## Phases
 
 1. **The window** (0.1): sidebar with places, drives and filters; list and thumbnails; details panel with storyboard;
