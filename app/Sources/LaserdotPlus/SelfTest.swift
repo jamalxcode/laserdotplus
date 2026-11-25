@@ -32,8 +32,10 @@ final class SelfTestRunner {
     }
 
     func run() {
-        // A hard stop: a stuck step still writes the report.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 240) { self.finish("timed out") }
+        // A hard stop: a stuck step still writes the report (a run-loop
+        // timer in the common modes, so it fires during mouse tracking too).
+        let stop = Timer(timeInterval: 240, repeats: false) { [weak self] _ in self?.finish("timed out") }
+        RunLoop.main.add(stop, forMode: .common)
         waitFor(60, { self.model.status?.running == true }) { ok in
             guard ok else { return self.finish("the engine did not start") }
             DispatchQueue.global().async {
@@ -75,6 +77,7 @@ final class SelfTestRunner {
                     // the first tiles selects them (real mouse events).
                     self.model.selection = []
                     self.dragBox()
+                    self.after(1.5) {
                     self.report["marquee_count"] = self.model.selection.count
                     self.shot("marquee")
                     self.model.clearFilters()
@@ -88,6 +91,7 @@ final class SelfTestRunner {
                             self.model.viewMode = .list
                             self.details()
                         }
+                    }
                     }
                 }
             }
@@ -168,7 +172,9 @@ final class SelfTestRunner {
     }
 
     /// Mouse down in the picture view's top-left corner, a drag across the
-    /// first row of tiles, mouse up — sent to the window as real events.
+    /// first row of tiles, mouse up — queued as real events all at once (a
+    /// mouse-down sent directly starts a tracking loop that waits for the
+    /// mouse-up, which froze the run).
     private func dragBox() {
         guard let w = NSApp.windows.filter({ $0.isVisible }).max(by: { $0.frame.width < $1.frame.width }),
               let content = w.contentView else { return }
@@ -182,7 +188,7 @@ final class SelfTestRunner {
         func send(_ type: NSEvent.EventType, _ p: NSPoint) {
             if let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                                           windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
-                w.sendEvent(e)
+                NSApp.postEvent(e, atStart: false)
             }
         }
         send(.leftMouseDown, start)
