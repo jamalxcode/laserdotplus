@@ -18,7 +18,9 @@ final class SelfTestRunner {
     let model: LibraryModel
     let drives: DrivesModel
     let out: URL
-    let folder = ProcessInfo.processInfo.environment["LASERDOT_SELFTEST_FOLDER"] ?? ""
+    /// The fixtures, as the engine spells them (/var is /private/var on macOS).
+    let folder = URL(fileURLWithPath: ProcessInfo.processInfo.environment["LASERDOT_SELFTEST_FOLDER"] ?? "")
+        .resolvingSymlinksInPath().path
     var report: [String: Any] = [:]
     var shots: [String] = []
     let undo = UndoManager()
@@ -123,11 +125,20 @@ final class SelfTestRunner {
         report["trash_hidden"] = !model.results.contains { $0.path == victim }
         undo.undo()
         report["restored"] = FileManager.default.fileExists(atPath: victim)
+        // Select All: every file of the place, loaded first if need be —
+        // once the list has settled after the Trash and Undo.
+        waitFor(15, { self.model.results.contains { $0.path == victim } && self.model.results.count == Int(self.model.total) }) { _ in
+            self.model.selectAll()
+            self.waitFor(10, { self.model.selection.count == Int(self.model.total) }) { _ in
+                self.report["select_all"] = self.model.selection.count == Int(self.model.total) && self.model.total > 0
+                self.model.selection = []
+                self.review()
+            }
+        }
+    }
+
+    private func review() {
         // Review mode: T marks for the Trash (into the tray), K keeps.
-        // Select All: every file of the place, loaded first if need be.
-        model.selectAll()
-        report["select_all"] = model.selection.count == Int(model.total) && model.total > 0
-        model.selection = []
         model.startReview()
         model.reviewDecide(.trash)
         model.reviewDecide(nil)
@@ -146,14 +157,14 @@ final class SelfTestRunner {
 
     private func thisMac() {
         model.place = .thisMac
-        waitFor(10, { !self.model.results.isEmpty }) { _ in
+        let gone = folder + "/Trips/2023/rome trip.txt"
+        waitFor(10, { self.model.results.contains { $0.path == gone } }) { _ in
             self.report["this_mac_count"] = self.model.results.count
             // The chosen place shows in the search box as a pill.
             self.report["place_pill"] = self.model.pills.first { $0.isPlace }?.label ?? ""
             self.shot("place")
             self.report["drives"] = self.drives.drives.map(\.name)
             // Deleted behind the app's back (as in Finder): it leaves the list.
-            let gone = self.folder + "/Trips/2023/rome trip.txt"
             self.report["external_listed"] = self.model.results.contains { $0.path == gone }
             try? FileManager.default.removeItem(atPath: gone)
             self.waitFor(25, { !self.model.results.contains { $0.path == gone } }) { ok in
