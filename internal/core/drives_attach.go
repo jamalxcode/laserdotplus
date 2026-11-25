@@ -30,39 +30,48 @@ func (ld *Laserdot) AttachDrive(mount, pass string) (DriveInfo, error) {
 	if err != nil {
 		return DriveInfo{}, err
 	}
-	ld.wmu.Lock()
-	ld.mu.RLock()
+	// Opening a drive's index never waits for this Mac's own indexing (the
+	// global writer lock is held for minutes while a home folder is first
+	// read: the owner saw "Opening its index…" for ever). The mount is
+	// reserved instead, so it is not opened twice; a second caller gets the
+	// drive's state ("opening") at once rather than waiting.
+	ld.mu.Lock()
 	if ld.creating[mount] {
-		ld.mu.RUnlock()
-		ld.wmu.Unlock()
+		ld.mu.Unlock()
 		return DriveInfo{}, fmt.Errorf("%s is being indexed", v.Name)
 	}
-	if ld.driveAt(mount) != nil {
-		info := ld.driveInfo(v)
-		ld.mu.RUnlock()
-		ld.wmu.Unlock()
-		return info, nil
+	already := ld.driveAt(mount) != nil || ld.attaching[mount]
+	if !already {
+		ld.attaching[mount] = true
 	}
-	dir, onDrive, vf, ok := ld.findIndex(v)
+	ld.mu.Unlock()
+	if already {
+		ld.mu.RLock()
+		defer ld.mu.RUnlock()
+		return ld.driveInfo(v), nil
+	}
+	defer func() {
+		ld.mu.Lock()
+		delete(ld.attaching, mount)
+		ld.mu.Unlock()
+	}()
+	dir, onDrive, vf, ok := ld.findIndex(v) // reads the drive: without the lock
+	ld.mu.RLock()
 	if pass == "" {
 		pass = ld.keys[vf.ID]
 	}
 	ld.mu.RUnlock()
 	if !ok {
-		ld.wmu.Unlock()
 		return DriveInfo{}, fmt.Errorf("%s has no index yet", v.Name)
 	}
 	if vf.Encrypted && pass == "" {
-		ld.wmu.Unlock()
 		return DriveInfo{}, &DriveLockedError{v.Name}
 	}
 	db, work, err := ld.openDriveDB(dir, mount, vf.ID, pass, vf.Encrypted)
 	if errors.Is(err, index.ErrLocked) {
-		ld.wmu.Unlock()
 		return DriveInfo{}, &DriveLockedError{v.Name}
 	}
 	if err != nil {
-		ld.wmu.Unlock()
 		return DriveInfo{}, err
 	}
 	ld.releasedMounts.Delete(mount) // attached again: its files may be read
@@ -70,7 +79,6 @@ func (ld *Laserdot) AttachDrive(mount, pass string) (DriveInfo, error) {
 		pass: pass, db: db, work: work, scan: driveScanOptions(v)}
 	if err := d.reload(); err != nil {
 		d.close()
-		ld.wmu.Unlock()
 		return DriveInfo{}, err
 	}
 	d.release() // loaded: the drive's file is not kept open
@@ -81,7 +89,6 @@ func (ld *Laserdot) AttachDrive(mount, pass string) (DriveInfo, error) {
 	}
 	ld.drives = append(ld.drives, d)
 	ld.mu.Unlock()
-	ld.wmu.Unlock()
 	switch {
 	case incomplete:
 		// A first index that was cut short goes on where it stopped, in
@@ -405,7 +412,7 @@ func (ld *Laserdot) SyncDrives() (attached, gone []string) {
 	for _, v := range mounted {
 		_, _, vf, ok := ld.findIndex(v) // reads the drive: without the lock
 		ld.mu.RLock()
-		skip := ld.driveAt(v.Mount) != nil || ld.creating[v.Mount]
+		skip := ld.driveAt(v.Mount) != nil || ld.creating[v.Mount] || ld.attaching[v.Mount]
 		_, haveKey := ld.keys[vf.ID]
 		ld.mu.RUnlock()
 		if skip || !ok || vf.Encrypted && !haveKey {

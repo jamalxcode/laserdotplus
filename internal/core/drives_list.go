@@ -137,6 +137,9 @@ func (ld *Laserdot) driveInfoFrom(v scan.Volume, f foundIndex) DriveInfo {
 		if _, have := ld.keys[vf.ID]; vf.Encrypted && !have {
 			info.State = DriveState{State: DriveLocked}
 		}
+		if ld.attaching[v.Mount] {
+			info.State = DriveState{State: DriveOpening}
+		}
 	}
 	return info
 }

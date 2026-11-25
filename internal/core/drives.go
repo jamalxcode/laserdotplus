@@ -42,6 +42,7 @@ const (
 	DriveUnindexed  = "unindexed"
 	DriveAttached   = "attached"
 	DriveDetached   = "detached"
+	DriveOpening    = "opening" // its index is being opened (Laserdot+)
 	DriveLocked     = "locked"
 	DriveUnreadable = "unreadable"
 )

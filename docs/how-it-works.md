@@ -65,3 +65,7 @@
 
 - **A drive not ready yet** (`DrivesModel.isWaiting`: its index opening, first indexing, or busy) shows an hourglass
   in the places band and in its search-box pill, with what it waits for; the files area says so until its files arrive.
+- **Opening a drive's index** (`AttachDrive`) does not take the engine's writer lock (this Mac's first home-folder index
+  holds it for minutes): the mount is reserved in `attaching`, listed as `opening`, and a second request returns at
+  once. The app sends it on a connection of its own (`Engine.driveAttach`) and asks for status one request at a time,
+  so a slow engine never piles up threads or freezes the window.

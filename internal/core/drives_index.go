@@ -85,7 +85,7 @@ func (ld *Laserdot) CreateDriveIndex(mount string, opts DriveOptions) (IndexStat
 	ld.mu.Lock()
 	_, _, _, exists := ld.findIndex(v)
 	exists = exists || ld.driveAt(mount) != nil
-	busy := ld.creating[mount]
+	busy := ld.creating[mount] || ld.attaching[mount]
 	if !exists && !busy {
 		ld.creating[mount] = true
 	}

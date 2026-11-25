@@ -38,7 +38,9 @@ extension Engine {
 
     /// Search an indexed drive again (after "Stop Searching").
     public func driveAttach(mount: String) throws {
-        _ = try call(.driveAttach(mount: mount, passphrase: nil), as: Wire.DriveInfo.self)
+        // A connection of its own: opening a big index takes a while, and the
+        // shared line (status, every few seconds) must not wait behind it.
+        _ = try longCall(longJobConnection(), .driveAttach(mount: mount, passphrase: nil), as: Wire.DriveInfo.self)
     }
 
     @discardableResult

@@ -108,7 +108,7 @@ final class DrivesModel: ObservableObject {
     /// place still shows (the owner: "it should still appear but with an
     /// indicator like an hourglass saying there is some waiting involved").
     func isWaiting(_ d: Drive) -> Bool {
-        busy[d.mount] != nil || d.state == "detached" || (d.state == "unindexed" && !d.readOnly)
+        busy[d.mount] != nil || d.state == "detached" || d.state == "opening" || (d.state == "unindexed" && !d.readOnly)
             || (d.state == "attached" && d.indexing)
     }
 
@@ -126,7 +126,7 @@ final class DrivesModel: ObservableObject {
         case "attached":
             return d.indexing ? String(format: L("drive.state.indexing"), d.entries) : String(format: L("drive.state.ready"), d.entries)
         case "locked": return L("drive.state.locked")
-        case "detached": return L("drive.busy.attaching") // the engine opens it by itself
+        case "detached", "opening": return L("drive.busy.attaching") // the engine opens it by itself
         case "unreadable": return L("drive.state.unreadable")
         default: return d.readOnly ? L("drive.state.readOnly") : L("drive.state.waiting")
         }

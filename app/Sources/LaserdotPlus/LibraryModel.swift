@@ -102,11 +102,18 @@ final class LibraryModel: ObservableObject {
         index(folder: NSHomeDirectory())
     }
 
+    /// One status request at a time: if the engine is slow to answer, the
+    /// timer does not pile up waiting threads (they starved the app until
+    /// the window froze).
+    private var statusInFlight = false
     func refreshStatus() {
+        guard !statusInFlight else { return }
+        statusInFlight = true
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
             let st = self.engine.status()
             DispatchQueue.main.async {
+                self.statusInFlight = false
                 let wasIndexing = self.status?.indexing != nil
                 let changed = st.changes != (self.status?.changes ?? st.changes)
                 self.status = st

@@ -259,7 +259,7 @@ final class EngineTests: XCTestCase {
         // Drives (spec §9): the list comes back, states are known, and a
         // folder that is not a mounted drive cannot be planned.
         if let drives = try ifSupported("drives", { try engine.drives() }) {
-            let known: Set<String> = ["unindexed", "attached", "detached", "locked", "unreadable"]
+            let known: Set<String> = ["unindexed", "attached", "detached", "opening", "locked", "unreadable"]
             for d in drives {
                 XCTAssertTrue(known.contains(d.state), "unknown drive state \(d.state)")
             }

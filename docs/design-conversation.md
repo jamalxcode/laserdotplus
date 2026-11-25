@@ -116,3 +116,13 @@ indicator like an hourglass saying there is some waiting involved, in the search
 ready (its index opening, a first indexing, or busy) shows an hourglass in the places band and, when chosen, in its
 pill in the search box, with what it waits for; clicking it chooses it at once (it is no longer only "click to
 search it"), and the files area says it is opening instead of "no results"; the files appear by themselves.
+
+## 17. The T5 EVO stuck on "Opening its index…", and a frozen window (0.1.5)
+
+"T5 EVO opening its index is taking longer than usual, it is still pending", then "Laserdot+ not responding, had to do
+a force quit", then "fix it all, publish it, and update all documentation." Found: opening a drive's index waited for
+the engine's writer lock, which this Mac's first home-folder index holds for minutes; the app's attach request sat on
+the shared connection meanwhile, so its status checks (every 3 s) queued up behind it, each holding a thread, until
+the app starved and froze. Decided: a drive's index is opened without the writer lock (the mount is reserved instead;
+the drive is listed as "opening" with the hourglass); the app opens a drive on a connection of its own, and asks for
+status one request at a time.

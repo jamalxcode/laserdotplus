@@ -12,7 +12,9 @@ global hotkey: it opens and quits like any app. Built on Laserdot's engine (`jam
    release's disk image from GitHub, checks it, puts the old copy in the Trash, moves the new one in and reopens.
    Nothing about the user or their files is sent; the app and the engine have no network code.
 3. **Never deletes:** everything goes to the Trash or a folder, after a preview, with Undo.
-4. **Never waits on a disk:** a sleeping or slow drive never freezes the window.
+4. **Never waits on a disk:** a sleeping or slow drive never freezes the window. Nor on the engine: a slow request has a
+   connection of its own, and status is asked one request at a time; opening one drive's index never waits for
+   another index's work.
 5. **Only what's plugged in:** a drive appears when connected and disappears when ejected.
 
 ## Privacy

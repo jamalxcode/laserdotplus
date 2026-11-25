@@ -63,6 +63,8 @@ struct PlacesBar: View {
             case "detached":
                 model.place = p // shown at once, with the hourglass, while it opens
                 drives.attach(d)
+            case "opening":
+                model.place = p // the engine is opening it already
             case "unindexed" where d.readOnly: drives.index(d)
             default: model.place = p
             }
