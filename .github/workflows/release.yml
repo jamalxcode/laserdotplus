@@ -81,5 +81,8 @@ jobs:
           v=${{ needs.decide.outputs.version }}
           { awk -v h="## $v" '$0 == h {on=1; next} /^## / {on=0} on' CHANGELOG.md; echo
             echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). Laserdot+ ▸ Check for Updates… tells you when a newer version is out (it asks GitHub for the version number only)."; } > notes.md
-          gh release create "v$v" "LaserdotPlus-$v.dmg" --target "${{ needs.decide.outputs.sha }}" --title "Laserdot+ $v" --notes-file notes.md \
-            || gh release upload "v$v" "LaserdotPlus-$v.dmg" --clobber
+          # Also under a fixed name: the README links to
+          # releases/latest/download/LaserdotPlus.dmg, always the newest.
+          cp "LaserdotPlus-$v.dmg" LaserdotPlus.dmg
+          gh release create "v$v" "LaserdotPlus-$v.dmg" LaserdotPlus.dmg --target "${{ needs.decide.outputs.sha }}" --title "Laserdot+ $v" --notes-file notes.md \
+            || gh release upload "v$v" "LaserdotPlus-$v.dmg" LaserdotPlus.dmg --clobber

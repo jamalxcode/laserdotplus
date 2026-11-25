@@ -3,7 +3,8 @@
 A Mac app for reviewing a large collection of files — movies, pictures, documents — on this Mac and every drive
 plugged in. See what a file is when its name doesn't say, clear out junk, and remove duplicates to save space.
 
-**[Download the latest version](https://github.com/jamalxcode/laserdotplus/releases/latest)** (macOS 14 or later).
+**[⬇ Download Laserdot+ (latest version)](https://github.com/jamalxcode/laserdotplus/releases/latest/download/LaserdotPlus.dmg)**
+— macOS 14 or later · [what's new and all versions](https://github.com/jamalxcode/laserdotplus/releases)
 
 - **One window, as compact as Laserdot:** places (everything plugged in, This Mac, each drive) and choice bands with
   counts over the files, everything about the selected file on the right — a storyboard of twelve frames for a video, its tracks, languages and subtitles, a photo's camera and place,
@@ -25,8 +26,8 @@ Built on the engine of [Laserdot](https://github.com/jamalxcode/laserdot-go). Se
 
 ## Install
 
-Download the disk image from the [Releases page](https://github.com/jamalxcode/laserdotplus/releases/latest), open
-it, and drag Laserdot+ to Applications. The first time,
+[Download the disk image](https://github.com/jamalxcode/laserdotplus/releases/latest/download/LaserdotPlus.dmg)
+(always the latest version), open it, and drag Laserdot+ to Applications. The first time,
 right-click Laserdot+ → Open (the app is not notarized). **Laserdot+ ▸ Check for Updates…** tells you when a newer
 version is out and opens its page here to download it.
 

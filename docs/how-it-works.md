@@ -38,6 +38,8 @@
   in one Undo group (moves take a new name when one is taken).
 - **Actions:** Open, Show in Finder, Copy Path, Quick Look (Space, ⌘Y), Move to Trash (⌫, ⌘⌫) with Undo (⌘Z); a
   right-click on one of several selected files acts on all of them.
+- **Releases:** each release carries `LaserdotPlus-<version>.dmg` and the same image as `LaserdotPlus.dmg`, so the
+  README's link `releases/latest/download/LaserdotPlus.dmg` always downloads the newest version.
 - **Quitting:** `applicationShouldTerminate` hides the window, asks the engine to stop on a background thread
   (`Engine.shutdown(waitForExit: false)`: the stop request, 2 s at most; no wait for the engine to exit — it saves
   on its own; one that does not answer gets SIGTERM) and then quits. Nothing waits on the main thread.
