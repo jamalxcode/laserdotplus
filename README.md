@@ -16,7 +16,8 @@ plugged in. See what a file is when its name doesn't say, clear out junk, and re
   camera, artist, author… Tick several; the counts follow.
 - **Drives index themselves** when you plug them in, and are searchable while they are read.
 - **Private by design:** what Laserdot+ knows about a drive is kept on that drive, and nowhere else. This Mac keeps
-  only its own index. No network at all, no AI.
+  only its own index. No network, no AI — except **Check for Updates…**, which only asks GitHub for the latest
+  version number when you choose it (or once a day, if you turn that on).
 
 Built on the engine of [Laserdot](https://github.com/jamalxcode/laserdot-go). See `docs/design.md` for the design,
 `docs/how-it-works.md` for how it works, `docs/design-ideas.md` for the ideas and where each stands, and
@@ -26,8 +27,8 @@ Built on the engine of [Laserdot](https://github.com/jamalxcode/laserdot-go). Se
 
 Download the disk image from the [Releases page](https://github.com/jamalxcode/laserdotplus/releases/latest), open
 it, and drag Laserdot+ to Applications. The first time,
-right-click Laserdot+ → Open (the app is not notarized). Laserdot+ never connects to the internet, so new versions
-are downloaded from the Releases page.
+right-click Laserdot+ → Open (the app is not notarized). **Laserdot+ ▸ Check for Updates…** tells you when a newer
+version is out and opens its page here to download it.
 
 ## Build
 

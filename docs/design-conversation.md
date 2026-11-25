@@ -43,3 +43,11 @@ review mode feeds it). Released as 0.1.0.
 
 Released 25 Nov at 20:45 Kuwait time. Its screenshots showed review mode's buttons pushed off a small window and the
 contact sheet's frames running past the row; fixed in 0.1.1 (the preview takes the room left; frames share the width).
+
+## 7. A check for updates (0.1.2)
+
+"Add a check for updates." Laserdot+ had no network code at all; this is the one exception, kept as small as
+Laserdot's: a separate bundled helper asks github.com only which release is the latest (one request, no cookies or
+cache, nothing about the user or files sent), on request or once a day if the owner turns that on (off by default).
+A newer version's page opens in the browser; the app itself downloads and installs nothing. CI checks no other code
+uses the network and the helper names no other host.

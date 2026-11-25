@@ -5,8 +5,8 @@
 #
 #   VERSION=0.1.0 BUILD=42 app/scripts/bundle.sh
 #
-# Signed ad hoc (Apple Silicon requires a signature). No updater: Laserdot+
-# has no network code at all.
+# Signed ad hoc (Apple Silicon requires a signature). The only networked code is
+# the bundled update check (asks GitHub for the latest version, on request).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 VERSION="${VERSION:-0.1.0}"
@@ -20,6 +20,9 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/LaserdotPlus" "$APP/Contents/MacOS/LaserdotPlus"
 cp "$DAEMON" "$APP/Contents/MacOS/laserdotd"
+# The update check: the only code that uses the network (GitHub, latest
+# release's version only).
+cp "$BIN/laserdotplus-update-check" "$APP/Contents/MacOS/laserdotplus-update-check"
 if [ -x build/ffmpeg/ffprobe ]; then
   cp build/ffmpeg/ffmpeg build/ffmpeg/ffprobe "$APP/Contents/MacOS/"
   mkdir -p "$APP/Contents/Resources/FFmpeg"

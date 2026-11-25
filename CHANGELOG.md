@@ -2,6 +2,12 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.2
+
+- **Check for Updates…** in the Laserdot+ menu: it asks GitHub for the latest version number — nothing else is sent —
+  and, if there is a newer one, opens its page so you can download it. Tick **Check for Updates Once a Day** to have
+  it ask by itself (off unless you turn it on). It is the only part of Laserdot+ that goes online.
+
 ## 0.1.1
 
 - Review mode fits any window size: the preview takes the room left, so Keep, Trash and Move always show.

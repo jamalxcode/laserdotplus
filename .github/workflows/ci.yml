@@ -79,10 +79,15 @@ jobs:
         run: app/scripts/build-go.sh
       - name: The committed registry is current
         run: git diff --exit-code app/Sources/LaserdotKit/Registry.generated.swift
-      - name: No network code anywhere in the app (Laserdot+ has no updater)
+      - name: No network code in the app or its client (only the update check may ask GitHub)
         run: |
-          if grep -rnE 'URLSession|NWConnection|CFNetwork|CFSocket|import Network|WKWebView' app/Sources --include='*.swift'; then
-            echo "::error::network code in the app"
+          if grep -rnE 'URLSession|NWConnection|CFNetwork|CFSocket|import Network|WKWebView' app/Sources --include='*.swift' | grep -v '^app/Sources/UpdateCheck/'; then
+            echo "::error::network code outside app/Sources/UpdateCheck"
+            exit 1
+          fi
+          # The update check speaks to github.com only.
+          if grep -noE 'https?://[A-Za-z0-9.-]+' app/Sources/UpdateCheck/*.swift | grep -v 'https://github.com'; then
+            echo "::error::the update check names a host other than github.com"
             exit 1
           fi
       - name: Nothing in the app uses Quick Look thumbnails (they are cached on this Mac)
@@ -117,6 +122,11 @@ jobs:
             [ "$protos" = "file pipe " ] || { echo "::error::$t supports more than file and pipe: $protos"; exit 1; }
           done
           app/scripts/make-dmg.sh "$PWD/LaserdotPlus.dmg"
+      - name: The update check answers with the latest release's version
+        run: |
+          v=$("app/build/Laserdot+.app/Contents/MacOS/laserdotplus-update-check")
+          echo "latest release: $v"
+          echo "$v" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::unexpected answer: $v"; exit 1; }
       - name: Self-test of the real app (index, search, filters, grid, details, trash and undo, a drive)
         run: |
           fx="$(mktemp -d)/fixtures"

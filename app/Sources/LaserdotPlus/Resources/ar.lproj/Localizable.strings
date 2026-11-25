@@ -214,3 +214,13 @@
 "tray.markMove" = "إلى الدرج: نقل";
 "tray.unmark" = "إخراج من الدرج";
 "notice.moved" = "نُقل %d (⌘Z للإرجاع)";
+"updates.check" = "التحقق من التحديثات…";
+"updates.daily" = "التحقق من التحديثات مرة يوميًا";
+"updates.available" = "يتوفر Laserdot+ %@";
+"updates.available.help" = "لديك %@. افتح صفحته لتنزيله (Laserdot+ نفسه لا ينزّل شيئًا).";
+"updates.download" = "افتح صفحة التنزيل";
+"updates.later" = "لاحقًا";
+"updates.current" = "Laserdot+ محدَّث";
+"updates.current.help" = "لديك أحدث إصدار، %@.";
+"updates.failed" = "تعذر التحقق من التحديثات";
+"updates.failed.help" = "لم يجب GitHub. تحقق من الاتصال بالإنترنت وحاول مجددًا.";

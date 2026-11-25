@@ -7,7 +7,8 @@ global hotkey: it opens and quits like any app. Built on Laserdot's engine (`jam
 ## Ground rules
 
 1. **Privacy:** what the app knows about a drive's files stays on that drive (below).
-2. **No network, no AI.**
+2. **No network, no AI.** One exception, asked for by the owner: Check for Updates… asks github.com for the latest
+   release's version (nothing else is sent; on request, or daily if turned on) and opens its page in the browser.
 3. **Never deletes:** everything goes to the Trash or a folder, after a preview, with Undo.
 4. **Never waits on a disk:** a sleeping or slow drive never freezes the window.
 5. **Only what's plugged in:** a drive appears when connected and disappears when ejected.

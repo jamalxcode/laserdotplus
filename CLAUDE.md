@@ -28,8 +28,13 @@ the reference: when changing the engine, read its docs (`docs/history/lessons-le
    `QLThumbnailGenerator`). App settings hold only view mode, sort and tile size. Read-only drives can't hold their
    index: it is kept on this Mac only until the drive leaves (and deleted then). `internal/core/privacy_test.go` and
    the self-test (which scans this Mac's data folder for a drive's file name) guard this.
-2. **No network, ever.** The engine denies itself the network (sandbox) before anything else; the app has no
-   network code at all (no updater; CI greps for it). No telemetry.
+2. **No network, ever — one exception.** The engine denies itself the network (sandbox) before anything else; the
+   app has no network code (CI greps for it). **The exception** (the owner asked for "a check for updates"): the
+   bundled `laserdotplus-update-check` (`app/Sources/UpdateCheck`) asks github.com which Laserdot+ release is the
+   latest (one HEAD request, ephemeral session, no cookies or cache) and prints its version; it sends nothing about
+   the user or their files. It runs only on Check for Updates… or once a day if the user turns that on (off by
+   default). A newer version's page opens in the browser; the app downloads and installs nothing. Do not widen this.
+   No telemetry.
 3. **No AI.** Perceptual hashes and plain pixel measures are fine.
 4. **Never deletes.** Files go to the Trash (undoable) or a folder, after a preview for bulk actions.
 5. **The window never waits on a disk.** Nothing on the main thread touches a file: icons start as the type's,

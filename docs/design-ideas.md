@@ -35,3 +35,7 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
 18. **Space map of each drive** [no need]. *Not doing.*
 19. **Clean-up tray** [yes]. *Done 0.1.0* (review mode feeds it).
 20. **Drives in the sidebar** with progress, space, Eject and settings [yes]. *Done 0.1.0* (per-drive settings later).
+
+## Asked for since
+
+21. **Check for updates** [asked for]. *Done 0.1.2* (version number from GitHub only; the browser downloads).

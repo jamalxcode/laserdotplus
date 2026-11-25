@@ -29,6 +29,10 @@
   in one Undo group (moves take a new name when one is taken).
 - **Actions:** Open, Show in Finder, Copy Path, Quick Look (Space, ⌘Y), Move to Trash (⌫, ⌘⌫) with Undo (⌘Z); a
   right-click on one of several selected files acts on all of them.
+- **Updates:** Laserdot+ ▸ Check for Updates… (and, if ticked, once a day at launch) runs the bundled
+  `laserdotplus-update-check`, the only networked code: a HEAD request to github.com's latest-release address, whose
+  redirect names the version; nothing else is sent, nothing is stored. A newer version opens its release page in the
+  browser. CI checks that no other code uses the network and that the helper names no host but github.com.
 - **Self-test** (CI): indexes fixtures and a mounted test drive, then search, a filter, each view, details, Trash and
   Undo, review mode and the tray, with screenshots; it also checks the drive's index is on the drive and that nothing
   in this Mac's data folder names the drive's file.

@@ -214,3 +214,13 @@
 "tray.markMove" = "Add to Tray: Move";
 "tray.unmark" = "Take Out of Tray";
 "notice.moved" = "Moved %d (⌘Z puts back)";
+"updates.check" = "Check for Updates…";
+"updates.daily" = "Check for Updates Once a Day";
+"updates.available" = "Laserdot+ %@ is available";
+"updates.available.help" = "You have %@. Open its page to download it (Laserdot+ itself downloads nothing).";
+"updates.download" = "Open Download Page";
+"updates.later" = "Later";
+"updates.current" = "Laserdot+ is up to date";
+"updates.current.help" = "You have the latest version, %@.";
+"updates.failed" = "Couldn't check for updates";
+"updates.failed.help" = "GitHub didn't answer. Check the internet connection and try again.";

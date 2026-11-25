@@ -11,6 +11,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .executable(name: "LaserdotPlus", targets: ["LaserdotPlus"]),
+        .executable(name: "laserdotplus-update-check", targets: ["UpdateCheck"]),
         .library(name: "LaserdotKit", targets: ["LaserdotKit"]),
     ],
     targets: [
@@ -23,6 +24,9 @@ let package = Package(
             path: "Sources/LaserdotPlus",
             resources: [.process("Resources")]
         ),
+        // The update check: the only code allowed on the network (asks GitHub
+        // for the latest release's version, sends nothing else).
+        .executableTarget(name: "UpdateCheck", path: "Sources/UpdateCheck"),
         .testTarget(name: "LaserdotKitTests", dependencies: ["LaserdotKit"], path: "Tests/LaserdotKitTests"),
     ]
 )

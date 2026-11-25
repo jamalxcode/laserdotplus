@@ -9,6 +9,7 @@ import SwiftUI
 @main
 struct LaserdotPlusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @ObservedObject var updates = Updates.shared
 
     var body: some Scene {
         Window("Laserdot+", id: "main") {
@@ -17,6 +18,10 @@ struct LaserdotPlusApp: App {
         }
         .defaultSize(width: 1280, height: 800)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(L("updates.check")) { Updates.shared.check() }
+                Toggle(L("updates.daily"), isOn: $updates.daily)
+            }
             CommandGroup(after: .newItem) {
                 Button(L("menu.indexFolder")) { delegate.model.chooseFolderToIndex() }
                     .keyboardShortcut("i", modifiers: [.command, .shift])
@@ -60,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         model.start()
         drives.start()
+        Updates.shared.checkIfDue()
         if let out = SelfTest.outDir {
             selfTest = SelfTestRunner(model: model, drives: drives, out: out)
             selfTest?.run()
