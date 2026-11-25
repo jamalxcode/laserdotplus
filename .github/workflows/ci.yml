@@ -158,7 +158,18 @@ jobs:
           mkdir -p /Volumes/LDPlus/Movies && cp internal/media/testdata/vp9.webm /Volumes/LDPlus/Movies/holiday.webm
           out="$(mktemp -d)/selftest"
           export LASERDOT_DB="$(mktemp -d)/data/index.db"
-          LASERDOT_SELFTEST="$out" LASERDOT_SELFTEST_FOLDER="$fx" "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > app.log 2>&1 || true
+          LASERDOT_SELFTEST="$out" LASERDOT_SELFTEST_FOLDER="$fx" "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > app.log 2>&1 &
+          app=$!
+          # A run that hangs is sampled (where every thread is stuck), then stopped.
+          for i in $(seq 1 300); do kill -0 "$app" 2>/dev/null || break; sleep 1; done
+          if kill -0 "$app" 2>/dev/null; then
+            echo "::error::Laserdot+ hung — where its threads are:"
+            sample "$app" 3 2>/dev/null | head -400 || true
+            echo "--- engine:"; pgrep -fl laserdotd || true
+            kill -9 "$app" || true
+            echo "--- app.log:"; cat app.log
+            exit 1
+          fi
           echo "--- the drive's own folder (its index lives there):"; ls -la /Volumes/LDPlus/.laserdot || true
           cat "$out/report.json" || { cat app.log; exit 1; }
           for f in "$out"/*.png; do echo "=== SCREENSHOT $(basename "$f")"; base64 -i "$f" | tr -d '\n'; echo; done
