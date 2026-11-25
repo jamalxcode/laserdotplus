@@ -62,3 +62,6 @@
 
 - **Drag to select** (`Marquee.swift`): in the grid, contact sheet and timeline a box drawn over the tiles selects
   what it touches, live (⌘/⇧ add); a drag that starts on a selected file drags it out instead.
+
+- **A drive not ready yet** (`DrivesModel.isWaiting`: its index opening, first indexing, or busy) shows an hourglass
+  in the places band and in its search-box pill, with what it waits for; the files area says so until its files arrive.

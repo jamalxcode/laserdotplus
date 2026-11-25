@@ -4,6 +4,9 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.4
 
+- **A drive shows up at once, with an hourglass while it gets ready.** A drive whose index is still opening (or that
+  is being indexed for the first time) appears straight away in the places and, once chosen, in the search box — with
+  an hourglass and what it is waiting for ("Opening its index…"); its files appear by themselves when it is ready.
 - **A new icon:** a little ship firing its laser across a starry sky.
 - **Laserdot+ updates itself.** When a newer version is out, **Install and Relaunch** downloads it from GitHub,
   replaces this copy (the old one goes to the Trash) and opens the new one — no download page. Laserdot+ looks once a

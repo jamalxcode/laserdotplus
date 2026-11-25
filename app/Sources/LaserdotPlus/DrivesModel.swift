@@ -104,6 +104,21 @@ final class DrivesModel: ObservableObject {
         }
     }
 
+    /// Not ready yet: being opened, indexed for the first time, or busy. Its
+    /// place still shows (the owner: "it should still appear but with an
+    /// indicator like an hourglass saying there is some waiting involved").
+    func isWaiting(_ d: Drive) -> Bool {
+        busy[d.mount] != nil || d.state == "detached" || (d.state == "unindexed" && !d.readOnly)
+            || (d.state == "attached" && d.indexing)
+    }
+
+    /// What a chosen drive is waiting for ("Opening its index…"), or nil when
+    /// it is ready.
+    func waiting(named name: String) -> String? {
+        guard let d = drives.first(where: { $0.name == name }), isWaiting(d) else { return nil }
+        return stateText(d)
+    }
+
     /// One line under the drive's name.
     func stateText(_ d: Drive) -> String {
         if let b = busy[d.mount] { return b }
@@ -111,7 +126,7 @@ final class DrivesModel: ObservableObject {
         case "attached":
             return d.indexing ? String(format: L("drive.state.indexing"), d.entries) : String(format: L("drive.state.ready"), d.entries)
         case "locked": return L("drive.state.locked")
-        case "detached": return L("drive.state.detached")
+        case "detached": return L("drive.busy.attaching") // the engine opens it by itself
         case "unreadable": return L("drive.state.unreadable")
         default: return d.readOnly ? L("drive.state.readOnly") : L("drive.state.waiting")
         }

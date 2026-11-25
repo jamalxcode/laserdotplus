@@ -128,17 +128,22 @@ struct ChoiceBands: View {
 /// out one reads "not …").
 struct FilterPills: View {
     @ObservedObject var model: LibraryModel
+    @ObservedObject var drives: DrivesModel
 
     var body: some View {
         HStack(spacing: 3) {
             ForEach(model.pills, id: \.token) { p in
                 HStack(spacing: 2) {
+                    let wait = p.isPlace ? drives.waiting(named: p.label) : nil
                     if p.isPlace {
-                        Image(systemName: p.label == L("place.thisMac") ? "desktopcomputer" : "externaldrive")
+                        Image(systemName: wait != nil ? "hourglass" : p.label == L("place.thisMac") ? "desktopcomputer" : "externaldrive")
                     }
                     Text(p.excluded ? String(format: L("choices.not"), p.label) : p.label)
                         .strikethrough(p.excluded)
                         .lineLimit(1)
+                    if let wait {
+                        Text(wait).foregroundStyle(.secondary).lineLimit(1)
+                    }
                     Button { model.removePill(p) } label: { Image(systemName: "xmark") }
                         .buttonStyle(.plain)
                         .help(L("choices.remove"))

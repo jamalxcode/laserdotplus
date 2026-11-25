@@ -236,3 +236,4 @@
 "updates.install" = "Install and Relaunch";
 "updates.downloading" = "Downloading Laserdot+ %@…";
 "updates.installFailed" = "Couldn't install the update";
+"drive.waiting.help" = "Its files appear here as soon as it is ready; nothing else needs doing.";

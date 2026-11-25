@@ -20,7 +20,7 @@ struct MainView: View {
                 TopArea(model: model, drives: drives)
                     .frame(minHeight: 70, idealHeight: 150, maxHeight: 420)
                 HSplitView {
-                    FilesArea(model: model)
+                    FilesArea(model: model, drives: drives)
                         .frame(minWidth: 420, idealWidth: 900, maxWidth: .infinity)
                     DetailsView(model: model)
                         .frame(minWidth: 200, idealWidth: 250, maxWidth: 460)
@@ -55,7 +55,7 @@ struct TopArea: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                SearchBox(model: model)
+                SearchBox(model: model, drives: drives)
                     .frame(maxWidth: .infinity)
                 Picker(L("menu.view"), selection: $model.viewMode) {
                     Image(systemName: "list.bullet").help(L("view.list")).tag(ViewMode.list)
@@ -105,11 +105,12 @@ struct TopArea: View {
 /// The search box: plain words or filters (`res:4k`, `kind:video since:30d`).
 struct SearchBox: View {
     @ObservedObject var model: LibraryModel
+    @ObservedObject var drives: DrivesModel
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            FilterPills(model: model)
+            FilterPills(model: model, drives: drives)
             TextField(model.pills.isEmpty ? L("search.prompt") : "", text: $model.text)
                 .textFieldStyle(.plain)
             if !model.text.isEmpty || model.hasFilters {
@@ -131,11 +132,20 @@ struct SearchBox: View {
 /// The middle: the files as a list, thumbnails, contact sheet or timeline.
 struct FilesArea: View {
     @ObservedObject var model: LibraryModel
+    @ObservedObject var drives: DrivesModel
     @Environment(\.undoManager) private var undo
 
     var body: some View {
         Group {
-            if model.results.isEmpty && !model.searching {
+            if model.results.isEmpty, case let .drive(name) = model.place, let wait = drives.waiting(named: name) {
+                // A chosen drive that is not ready yet: say what it waits for.
+                VStack(spacing: 8) {
+                    Image(systemName: "hourglass").font(.largeTitle).foregroundStyle(.secondary)
+                    Text(name).font(.headline)
+                    Text(wait).foregroundStyle(.secondary)
+                    Text(L("drive.waiting.help")).font(.caption).foregroundStyle(.secondary)
+                }
+            } else if model.results.isEmpty && !model.searching {
                 VStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.largeTitle).foregroundStyle(.secondary)
                     Text(model.problem ?? L("results.none")).foregroundStyle(.secondary)

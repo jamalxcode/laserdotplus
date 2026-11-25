@@ -108,3 +108,11 @@ file hosts) and swap it in. Decided: a newer version offers Install and Relaunch
 app (same bundle, that version) before Laserdot+ quits, then puts the old copy in the Trash, moves the new one in and
 reopens it. The daily check is now on by default. Still nothing about the user or their files is sent, and the app and
 engine keep no network code.
+
+## 16. A drive that is still opening (0.1.4)
+
+"I plugged in the T5 EVO and it would not appear; it said it was opening its index. It should still appear but with an
+indicator like an hourglass saying there is some waiting involved, in the search bar." Decided: a drive that is not
+ready (its index opening, a first indexing, or busy) shows an hourglass in the places band and, when chosen, in its
+pill in the search box, with what it waits for; clicking it chooses it at once (it is no longer only "click to
+search it"), and the files area says it is opening instead of "no results"; the files appear by themselves.

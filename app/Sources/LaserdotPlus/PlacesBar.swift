@@ -52,7 +52,7 @@ struct PlacesBar: View {
         let p = Place.drive(d.name)
         let on = model.place == p
         let label = HStack(spacing: 4) {
-            Image(systemName: d.readOnly ? "lock" : "externaldrive")
+            Image(systemName: drives.isWaiting(d) ? "hourglass" : d.readOnly ? "lock" : "externaldrive")
             Text(d.name)
             Text(drives.stateText(d)).foregroundStyle(on ? Color.white.opacity(0.8) : Color.secondary)
         }
@@ -60,7 +60,9 @@ struct PlacesBar: View {
         let button = Button {
             switch d.state {
             case "locked": drives.unlock(d)
-            case "detached": drives.attach(d)
+            case "detached":
+                model.place = p // shown at once, with the hourglass, while it opens
+                drives.attach(d)
             case "unindexed" where d.readOnly: drives.index(d)
             default: model.place = p
             }
