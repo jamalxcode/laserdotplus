@@ -49,8 +49,15 @@ VERSION="$v" app/scripts/build-go.sh universal
 git diff --exit-code app/Sources/LaserdotKit/Registry.generated.swift \
   || { echo "the registry changed: commit Registry.generated.swift" >&2; exit 1; }
 if ! $quick; then
-  echo "== Swift tests"
-  (cd app && LASERDOTD="$PWD/build/go/laserdotd" swift test)
+  # XCTest comes only with the full Xcode app; with just the command-line
+  # tools, build the app here and leave its Swift tests to CI.
+  if xcode-select -p 2>/dev/null | grep -q CommandLineTools; then
+    echo "== Swift build (Swift tests need the full Xcode app — CI runs them)"
+    (cd app && swift build)
+  else
+    echo "== Swift tests"
+    (cd app && LASERDOTD="$PWD/build/go/laserdotd" swift test)
+  fi
 fi
 VERSION="$v" BUILD="local-$(date +%Y%m%d%H%M)" app/scripts/bundle.sh
 out=$(mktemp -d)
