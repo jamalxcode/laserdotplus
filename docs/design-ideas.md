@@ -45,3 +45,4 @@ The ideas offered while designing Laserdot+, the owner's answers, and where each
 23. **Laserdot's compact choice bands instead of the sidebar list** [asked for]. *Done 0.1.2.*
 24. **The selected file's full path in the status bar** [asked for]. *Done 0.1.2.*
 25. **Places over the main window, as in Laserdot** [asked for]. *Done 0.1.2* (the sidebar became a band).
+26. **The list follows changes made in Finder** [asked for]. *Done 0.1.3.*

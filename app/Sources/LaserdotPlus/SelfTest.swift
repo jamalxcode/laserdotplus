@@ -135,7 +135,14 @@ final class SelfTestRunner {
         waitFor(10, { !self.model.results.isEmpty }) { _ in
             self.report["this_mac_count"] = self.model.results.count
             self.report["drives"] = self.drives.drives.map(\.name)
-            self.finish("")
+            // Deleted behind the app's back (as in Finder): it leaves the list.
+            let gone = self.folder + "/Trips/2023/rome trip.txt"
+            self.report["external_listed"] = self.model.results.contains { $0.path == gone }
+            try? FileManager.default.removeItem(atPath: gone)
+            self.waitFor(25, { !self.model.results.contains { $0.path == gone } }) { ok in
+                self.report["external_delete"] = ok
+                self.finish("")
+            }
         }
     }
 

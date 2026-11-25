@@ -9,6 +9,10 @@
   replaced by `<path>`; the app keeps the engine's messages in memory only.
 - **Drives:** the app asks for the list every 3 s on its own connection; a writable drive with no index starts
   indexing by itself (not an installer disk image); read-only, locked and detached drives show what they need.
+- **Following changes:** the engine counts every change it applies (`core.Changes`: files added, removed, moved
+  or changed by the watcher — FSEvents on this Mac and on drives — and drives attached or gone) and reports it in
+  `status.changes`; the app reads the status every 3 s and searches again when the count moved, keeping the
+  selection where it still exists. A file deleted or moved out of the place in Finder leaves the list.
 - **Search:** the toolbar's words, plus the place (`volume:local` or `volume:"<drive>"`), plus each filter group's
   ticks joined with OR; with nothing typed, every file (`-kind:folder`). Results come 500 at a time; the engine sorts.
 - **Filters:** the engine's `refine` answer for the current search, shown as Laserdot's compact choice bands above

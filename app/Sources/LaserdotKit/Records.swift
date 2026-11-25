@@ -81,6 +81,9 @@ public struct DaemonStatus: Sendable {
     public var indexing: Wire.IndexProgress? = nil
     /// The watcher's hourly catch-up (newer daemons).
     public var catchUp: Wire.CatchUp? = nil
+    /// Moves whenever an index changed: files added, removed or moved (by
+    /// Finder or anything else), drives come and gone.
+    public var changes: UInt64 = 0
 
     static let down = DaemonStatus(
         running: false, version: "", protocolVersion: 0, networkDenied: false, watcher: "", entries: 0, folders: [])

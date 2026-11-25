@@ -108,9 +108,12 @@ final class LibraryModel: ObservableObject {
             let st = self.engine.status()
             DispatchQueue.main.async {
                 let wasIndexing = self.status?.indexing != nil
+                let changed = st.changes != (self.status?.changes ?? st.changes)
                 self.status = st
-                // Results follow the index as it grows.
-                if wasIndexing || st.indexing != nil { self.schedule(now: true, keepSelection: true) }
+                // Results follow the index: a file deleted or moved away in
+                // Finder leaves the list within a few seconds, one added
+                // appears (the selection is kept where it still exists).
+                if changed || wasIndexing || st.indexing != nil { self.schedule(now: true, keepSelection: true) }
             }
         }
     }

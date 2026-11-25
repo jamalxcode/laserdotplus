@@ -267,6 +267,7 @@ func (ld *Laserdot) applyDrive(mount string, changes []Change, complete bool) (U
 	opts := d.scan
 	opts.Stop = d.stop.Load // ejecting lets go at the next folder
 	u, err := index.Apply(d.db, d.store, changes, opts, &ld.mu)
+	ld.noteChanges(u)
 	if err == nil && complete {
 		// The whole tree was read: complete, and the time of this full
 		// read noted for CatchUpDrive.
@@ -410,6 +411,9 @@ func (ld *Laserdot) SyncDrives() (attached, gone []string) {
 		}
 	}
 	ld.Drives() // remembers what is mounted, and each drive's state (ld.mounted)
+	if len(attached)+len(gone) > 0 {
+		ld.changes.Add(1)
+	}
 	return attached, gone
 }
 

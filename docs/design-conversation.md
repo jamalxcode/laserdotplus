@@ -65,3 +65,10 @@ selected file's full path.
 "The left pane would be better placed over the main window, similar to Laserdot original." The sidebar became a
 places band over the files, in the same style as the choice bands: Everything plugged in, This Mac and each drive
 (its state beside its name; right-click to eject, index or unlock). The window is now two panes: files and details.
+
+## 10. The list follows Finder (0.1.3)
+
+"When files are deleted from the Finder, it needs to be reflected on Laserdot+, or if it's moved to a place that is not
+being viewed, it also needs to be removed." The engine already kept its indexes current; the window did not search
+again. Decided: the engine counts the changes it applies and reports the count; the app searches again when it moves.
+The self-test deletes a file behind the app's back and checks it leaves the list.

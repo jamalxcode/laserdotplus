@@ -213,6 +213,9 @@ type Status struct {
 	BugsCaught int `json:"bugs_caught,omitempty"`
 	// Dupes: the duplicate scan running now (see core.DupeProgress).
 	Dupes *DupeProgress `json:"dupes,omitempty"`
+	// Changes (Laserdot+): moves whenever an index changed (files added,
+	// removed, moved; drives come and gone): the app searches again.
+	Changes uint64 `json:"changes"`
 }
 
 // CatchUp: see core.WatcherHealth.

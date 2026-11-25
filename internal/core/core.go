@@ -173,7 +173,12 @@ type Laserdot struct {
 	// search wait behind a long reader (the owner's stuck "Searching…").
 	mounted   []mountedDrive
 	mountedMu sync.Mutex
-	keys      map[string]string
+	// changes counts changes applied to any index (files added, removed,
+	// moved, changed; drives attached or gone): the app searches again
+	// when it moves, so a file deleted or moved away in Finder leaves the
+	// list (Laserdot+, the owner's request).
+	changes atomic.Uint64
+	keys    map[string]string
 	// creating: drives being indexed for the first time (not attached or
 	// indexed twice meanwhile).
 	creating map[string]bool

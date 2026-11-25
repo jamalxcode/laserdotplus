@@ -135,7 +135,7 @@ public final class Engine: @unchecked Sendable {
         return DaemonStatus(
             running: true, version: s.version, protocolVersion: s.protocolVersion, networkDenied: s.networkDenied,
             watcher: s.watcher, entries: s.entries, folders: roots.map(\.path), indexing: s.indexing,
-            catchUp: s.catchUp)
+            catchUp: s.catchUp, changes: s.changes)
     }
 
     /// Whether the engine is indexing a folder now: one small request (the

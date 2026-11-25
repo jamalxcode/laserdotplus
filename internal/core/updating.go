@@ -50,6 +50,7 @@ func (ld *Laserdot) applyLocal(changes []Change) (UpdateStats, error) {
 	// Searches go on while the disk is looked at (wmu keeps other writers
 	// out); they wait only while the in-memory index changes.
 	u, err := index.Apply(ld.db, ld.store, changes, ld.ScanOptions(), &ld.mu)
+	ld.noteChanges(u)
 	compact := err == nil && ld.store.NeedsCompaction()
 	if u.OfflineRoots == nil {
 		u.OfflineRoots = []string{}
@@ -275,3 +276,14 @@ func (ld *Laserdot) Stats() Stats {
 	}
 	return st
 }
+
+// noteChanges counts an update that changed what searches find.
+func (ld *Laserdot) noteChanges(u UpdateStats) {
+	if u.Added+u.Removed+u.Renamed+u.Modified > 0 {
+		ld.changes.Add(1)
+	}
+}
+
+// Changes counts the changes applied to any index since the engine started;
+// it moves whenever what a search would find may have changed.
+func (ld *Laserdot) Changes() uint64 { return ld.changes.Load() }

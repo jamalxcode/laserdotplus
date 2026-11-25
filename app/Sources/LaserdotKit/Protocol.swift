@@ -242,10 +242,12 @@ public enum Wire {
         public var catchUp: CatchUp?
         /// The duplicate scan running now (newer daemons).
         public var dupes: DupeProgress?
+        /// Moves whenever an index changed (Laserdot+): search again.
+        public var changes: UInt64 = 0
 
         enum CodingKeys: String, CodingKey {
             case protocolVersion = "protocol", version, pid, networkDenied = "network_denied", watcher, db, entries, indexing
-            case catchUp = "catch_up", dupes
+            case catchUp = "catch_up", dupes, changes
         }
 
         public init(from decoder: Decoder) throws {
@@ -260,6 +262,7 @@ public enum Wire {
             indexing = try c.decodeIfPresent(IndexProgress.self, forKey: .indexing)
             catchUp = try c.decodeIfPresent(CatchUp.self, forKey: .catchUp)
             dupes = try c.decodeIfPresent(DupeProgress.self, forKey: .dupes)
+            changes = try c.value(.changes, or: 0)
         }
     }
 

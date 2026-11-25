@@ -332,6 +332,7 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 			Protocol: ipc.ProtocolVersion, Version: Version, PID: os.Getpid(),
 			NetworkDenied: sandbox.IsEnforced(), Watcher: s.watcherName(), CatchUp: s.catchUp(),
 			DB: s.ld.DBPath(), Entries: s.ld.Stats().Entries, BugsCaught: crash.Count(),
+			Changes: s.ld.Changes(),
 		}
 		if p := s.ld.Progress(); p != nil {
 			st.Indexing = &ipc.IndexProgress{Root: p.Root, Phase: p.Phase, Done: p.Done, Total: p.Total}

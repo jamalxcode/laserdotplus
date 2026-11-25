@@ -2,6 +2,11 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.3
+
+- **The list follows Finder:** a file deleted, moved away or renamed outside Laserdot+ leaves the list (or changes)
+  by itself within a few seconds, and new files appear — on this Mac and on drives.
+
 ## 0.1.2
 
 - **Laserdot's compact choices are back:** the filters sit above the files as shaded bands of chips with counts
