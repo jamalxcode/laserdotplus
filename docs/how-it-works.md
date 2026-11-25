@@ -48,10 +48,14 @@
 - **Quitting:** `applicationShouldTerminate` hides the window, asks the engine to stop on a background thread
   (`Engine.shutdown(waitForExit: false)`: the stop request, 2 s at most; no wait for the engine to exit — it saves
   on its own; one that does not answer gets SIGTERM) and then quits. Nothing waits on the main thread.
-- **Updates:** Laserdot+ ▸ Check for Updates… (and, if ticked, once a day at launch) runs the bundled
+- **Updates:** Laserdot+ ▸ Check for Updates… (and once a day at launch, on by default) runs the bundled
   `laserdotplus-update-check`, the only networked code: a HEAD request to github.com's latest-release address, whose
-  redirect names the version; nothing else is sent, nothing is stored. A newer version opens its release page in the
-  browser. CI checks that no other code uses the network and that the helper names no host but github.com.
+  redirect names the version. A newer version offers **Install and Relaunch**: the helper (`--install v --app path
+  --pid n`) downloads `LaserdotPlus-v.dmg` from the release (redirects followed to `*.githubusercontent.com` only),
+  checks the app in it has the same bundle id and that version, copies it next to the running app and prints `ready`;
+  the app quits, the helper puts the old copy in the Trash, moves the new one in and opens it. Ephemeral session, no
+  cookies or cache; nothing about the user or their files is sent. CI checks that no other code uses the network, that
+  the helper names no host but github.com, and runs a real download-and-swap against the latest release.
 - **Self-test** (CI): indexes fixtures and a mounted test drive, then search, a filter, each view, details, Trash and
   Undo, review mode and the tray, with screenshots; it also checks the drive's index is on the drive and that nothing
   in this Mac's data folder names the drive's file.

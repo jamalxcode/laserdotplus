@@ -99,3 +99,12 @@ clearing the search, goes back to everything plugged in. The place bar above sti
 "Drag select should work in the files preview area." Decided: the grid, contact sheet and timeline get Laserdot's
 selection box — drag across tiles to select them (⌘/⇧ add to the selection); a drag that starts on a selected file
 drags it out to Finder or Mail, as before. The list already selects by dragging.
+
+## 15. Updates install themselves (0.1.4)
+
+"If there is an update, I want it to self update, not send me to a downloads page." This widens the network exception
+(the owner's call): the bundled helper may now download the latest release's disk image from GitHub (and GitHub's
+file hosts) and swap it in. Decided: a newer version offers Install and Relaunch; the helper downloads and checks the
+app (same bundle, that version) before Laserdot+ quits, then puts the old copy in the Trash, moves the new one in and
+reopens it. The daily check is now on by default. Still nothing about the user or their files is sent, and the app and
+engine keep no network code.

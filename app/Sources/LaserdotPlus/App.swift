@@ -69,6 +69,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         model.start()
         drives.start()
+        NotificationCenter.default.addObserver(forName: .updateProgress, object: nil, queue: .main) { [weak self] n in
+            self?.model.notice = n.object as? String
+        }
         Updates.shared.checkIfDue()
         if let out = SelfTest.outDir {
             selfTest = SelfTestRunner(model: model, drives: drives, out: out)

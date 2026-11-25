@@ -215,10 +215,9 @@
 "tray.unmark" = "إخراج من الدرج";
 "notice.moved" = "نُقل %d (⌘Z للإرجاع)";
 "updates.check" = "التحقق من التحديثات…";
-"updates.daily" = "التحقق من التحديثات مرة يوميًا";
+"updates.daily" = "التحقق من التحديثات تلقائيًا";
 "updates.available" = "يتوفر Laserdot+ %@";
-"updates.available.help" = "لديك %@. افتح صفحته لتنزيله (Laserdot+ نفسه لا ينزّل شيئًا).";
-"updates.download" = "افتح صفحة التنزيل";
+"updates.available.help" = "لديك %@. ثبّته الآن: ينزّله Laserdot+ من GitHub ويستبدل هذه النسخة (تذهب القديمة إلى سلة المهملات) ثم يفتح من جديد.";
 "updates.later" = "لاحقًا";
 "updates.current" = "Laserdot+ محدَّث";
 "updates.current.help" = "لديك أحدث إصدار، %@.";
@@ -234,3 +233,6 @@
 "notice.selectingAll" = "يجري تحديد كل الملفات…";
 "menu.selectAll" = "تحديد كل الملفات";
 "drive.index" = "فهرسة هذا القرص";
+"updates.install" = "التثبيت وإعادة الفتح";
+"updates.downloading" = "جارٍ تنزيل Laserdot+ %@…";
+"updates.installFailed" = "تعذر تثبيت التحديث";

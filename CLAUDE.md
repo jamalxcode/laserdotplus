@@ -29,11 +29,13 @@ the reference: when changing the engine, read its docs (`docs/history/lessons-le
    index: it is kept on this Mac only until the drive leaves (and deleted then). `internal/core/privacy_test.go` and
    the self-test (which scans this Mac's data folder for a drive's file name) guard this.
 2. **No network, ever — one exception.** The engine denies itself the network (sandbox) before anything else; the
-   app has no network code (CI greps for it). **The exception** (the owner asked for "a check for updates"): the
-   bundled `laserdotplus-update-check` (`app/Sources/UpdateCheck`) asks github.com which Laserdot+ release is the
-   latest (one HEAD request, ephemeral session, no cookies or cache) and prints its version; it sends nothing about
-   the user or their files. It runs only on Check for Updates… or once a day if the user turns that on (off by
-   default). A newer version's page opens in the browser; the app downloads and installs nothing. Do not widen this.
+   app has no network code (CI greps for it). **The exception** (the owner asked for "a check for updates", then "i
+   want it to self update, not send me to a downloads page"): the bundled `laserdotplus-update-check`
+   (`app/Sources/UpdateCheck`) asks github.com which Laserdot+ release is the latest (one HEAD request, ephemeral
+   session, no cookies or cache), and on Install and Relaunch downloads that release's DMG from GitHub (redirects only
+   to `*.githubusercontent.com`), checks it and swaps it in for the running copy (old one to the Trash). It sends
+   nothing about the user or their files. It runs on Check for Updates… or once a day (on by default). Do not widen
+   this further.
    No telemetry.
 3. **No AI.** Perceptual hashes and plain pixel measures are fine.
 4. **Never deletes.** Files go to the Trash (undoable) or a folder, after a preview for bulk actions.

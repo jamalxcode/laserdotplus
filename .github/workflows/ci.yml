@@ -79,13 +79,14 @@ jobs:
         run: app/scripts/build-go.sh
       - name: The committed registry is current
         run: git diff --exit-code app/Sources/LaserdotKit/Registry.generated.swift
-      - name: No network code in the app or its client (only the update check may ask GitHub)
+      - name: No network code in the app or its client (only the updater may speak to GitHub)
         run: |
           if grep -rnE 'URLSession|NWConnection|CFNetwork|CFSocket|import Network|WKWebView' app/Sources --include='*.swift' | grep -v '^app/Sources/UpdateCheck/'; then
             echo "::error::network code outside app/Sources/UpdateCheck"
             exit 1
           fi
-          # The update check speaks to github.com only.
+          # The updater speaks to github.com only (release files are fetched from
+          # GitHub's own file hosts by redirect, checked in the code).
           if grep -noE 'https?://[A-Za-z0-9.-]+' app/Sources/UpdateCheck/*.swift | grep -v 'https://github.com'; then
             echo "::error::the update check names a host other than github.com"
             exit 1
@@ -127,6 +128,17 @@ jobs:
           v=$("app/build/Laserdot+.app/Contents/MacOS/laserdotplus-update-check")
           echo "latest release: $v"
           echo "$v" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::unexpected answer: $v"; exit 1; }
+      - name: The updater downloads the latest release and swaps it in for an older copy
+        run: |
+          v=$("app/build/Laserdot+.app/Contents/MacOS/laserdotplus-update-check")
+          d=$(mktemp -d)
+          ditto "app/build/Laserdot+.app" "$d/Laserdot+.app"
+          sleep 3 & pid=$!   # stands in for the running app, which quits
+          LASERDOTPLUS_UPDATE_NO_OPEN=1 "app/build/Laserdot+.app/Contents/MacOS/laserdotplus-update-check" --install "$v" --app "$d/Laserdot+.app" --pid "$pid" | tee "$d/out.txt"
+          grep -qx ready "$d/out.txt"
+          got=$(defaults read "$d/Laserdot+.app/Contents/Info" CFBundleShortVersionString)
+          echo "installed: $got"
+          test "$got" = "$v" || { echo "::error::expected $v, got $got"; exit 1; }
       - name: Self-test of the real app (index, search, filters, grid, details, trash and undo, a drive)
         run: |
           fx="$(mktemp -d)/fixtures"

@@ -215,10 +215,9 @@
 "tray.unmark" = "Take Out of Tray";
 "notice.moved" = "Moved %d (⌘Z puts back)";
 "updates.check" = "Check for Updates…";
-"updates.daily" = "Check for Updates Once a Day";
+"updates.daily" = "Check for Updates Automatically";
 "updates.available" = "Laserdot+ %@ is available";
-"updates.available.help" = "You have %@. Open its page to download it (Laserdot+ itself downloads nothing).";
-"updates.download" = "Open Download Page";
+"updates.available.help" = "You have %@. Install it now: Laserdot+ downloads it from GitHub, replaces this copy (the old one goes to the Trash) and opens again.";
 "updates.later" = "Later";
 "updates.current" = "Laserdot+ is up to date";
 "updates.current.help" = "You have the latest version, %@.";
@@ -234,3 +233,6 @@
 "notice.selectingAll" = "Selecting every file…";
 "menu.selectAll" = "Select All Files";
 "drive.index" = "Index This Drive";
+"updates.install" = "Install and Relaunch";
+"updates.downloading" = "Downloading Laserdot+ %@…";
+"updates.installFailed" = "Couldn't install the update";
