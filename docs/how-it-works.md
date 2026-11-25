@@ -25,9 +25,13 @@
   rows; nothing is stored. Videos get a 12-frame storyboard (macOS's reader, else the bundled ffmpeg).
 - **Pictures:** icons from the file's type (no disk read); thumbnails through ImageIO / PDFKit / video frames, three
   at a time, newest first, only for rows on screen 0.2 s; kept in memory.
-- **Window:** two panes (`HSplitView`: files · details; not `NavigationSplitView`, whose sidebar does not show in
-  window captures). Over the files, as in Laserdot: the places band (`PlacesBar`: everything plugged in, This Mac,
-  each drive with its state; right-click to eject, index, unlock), then the choice bands and a toolbar with the place's name, the view picker, Review, the size
+- **Window** (centred on the files): `VSplitView` of the top area (`TopArea`: the search box, view, size, sort and
+  Review on one line, then — scrolling — the places band `PlacesBar` and the choice bands) and an `HSplitView` of the
+  files (`FilesArea`) and the slim right pane (`DetailsView`: preview at the pane's width, two-column storyboard,
+  small details); under them the clean-up tray when it holds something and the bottom bar (`BottomBar`: the selected
+  file's icon, name, kind, size, date, badges and full path; several: count and size; none: count, Select All). Both
+  dividers can be dragged. Plain split views, not `NavigationSplitView` (its sidebar does not show in window
+  captures). Review mode covers the files area and a toolbar with the place's name, the view picker, Review, the size
   slider, sort and a search box.
 - **Views:** list (`Table`, the engine sorts), thumbnails (`LazyVGrid`; videos scrub), contact sheet (eight frames per
   video, `FrameStrip`), timeline (the loaded results by month of their modified date). ⌘1–⌘4.

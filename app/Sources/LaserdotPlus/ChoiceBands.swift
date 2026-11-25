@@ -15,7 +15,8 @@ struct ChoiceBands: View {
         let open = model.openGroups
         let calm = RefineLogic.compact(open, expanded: model.allChoices)
         if !open.isEmpty {
-            ScrollView(.vertical, showsIndicators: true) {
+            // The top area scrolls (it can be made smaller or bigger).
+            Group {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(RefineLogic.bands(calm.shown), id: \.family) { band in
                         HStack(alignment: .top, spacing: 6) {
@@ -58,8 +59,6 @@ struct ChoiceBands: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
             }
-            .frame(maxHeight: 170)
-            .fixedSize(horizontal: false, vertical: true)
         }
     }
 

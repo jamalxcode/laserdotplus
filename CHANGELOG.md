@@ -4,6 +4,10 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.3
 
+- **The files take the centre of the window.** A few lines at the top to search (the search box, the view and sort,
+  then the places and choices), a slim pane on the right with the preview and the file's details, and a bottom bar
+  about the selected file — its name, kind, size, date and details, and its full path. Drag the edges to make the
+  top area or the right pane bigger or smaller.
 - **The list follows Finder:** a file deleted, moved away or renamed outside Laserdot+ leaves the list (or changes)
   by itself within a few seconds, and new files appear — on this Mac and on drives.
 - **Quitting is instant:** no more spinning beachball for a few seconds — the window goes at once and the engine

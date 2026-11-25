@@ -78,3 +78,12 @@ The self-test deletes a file behind the app's back and checks it leaves the list
 "When I quit Laserdot+ I get a beachball for a few seconds before quitting." The app waited on its main thread for the
 engine to finish shutting down. Decided: the window goes at once, the engine is asked to stop in the background and
 finishes saving on its own; the app does not wait for it.
+
+## 12. The files at the centre (0.1.3)
+
+"I need the focus to be on the files being reviewed and looked at and arranged, with other functions surrounding it;
+privacy also needs to be preserved; top few lines for search, bottom margin about the file selected, right pane slim
+with info and preview of the file; panes can be made bigger or smaller and adjusted." Decided: the search box, view
+and sort move from the toolbar into a top area with the places and choices (it scrolls when made small); the files
+fill the middle; the right pane is slim (the preview takes its width); a bottom bar describes the selected file and
+shows its full path; the top area and the right pane are resized by dragging. Privacy is unchanged.

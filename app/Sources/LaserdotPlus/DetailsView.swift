@@ -26,19 +26,30 @@ struct DetailsView: View {
         }
     }
 
+    /// A slim pane: the preview takes its width, the details are small.
     private func one(_ h: Hit) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Group {
-                    if h.kind == "video" {
-                        ScrubThumb(path: h.path, size: 260)
-                    } else {
-                        FileIcon(path: h.path, size: 240, thumbnail: true)
+        GeometryReader { g in
+            let edge = max(120, g.size.width - 28)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    Group {
+                        if h.kind == "video" {
+                            ScrubThumb(path: h.path, size: edge - 8)
+                        } else {
+                            FileIcon(path: h.path, size: edge, thumbnail: true)
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .onTapGesture(count: 2) { model.open([h]) }
+                    details(h)
                 }
-                .frame(maxWidth: .infinity)
-                .onTapGesture(count: 2) { model.open([h]) }
-                Text(h.name).font(.headline).textSelection(.enabled)
+                .padding(14)
+            }
+        }
+    }
+
+    @ViewBuilder private func details(_ h: Hit) -> some View {
+                Text(h.name).font(.callout.weight(.semibold)).textSelection(.enabled).lineLimit(3)
                 actions([h])
                 if h.kind == "video" {
                     Storyboard(path: h.path)
@@ -49,9 +60,6 @@ struct DetailsView: View {
                 } else if h.kind == "video" || h.kind == "audio" || h.kind == "image" || h.kind == "document" {
                     ProgressView().controlSize(.small)
                 }
-            }
-            .padding(14)
-        }
     }
 
     private func many(_ hits: [Hit]) -> some View {
@@ -83,18 +91,18 @@ struct DetailsView: View {
             if h.created > 0 && h.created != h.modified { row(L("details.created"), dateText(h.created)) }
             row(L("details.where"), whereText(h.path))
         }
-        .font(.callout)
+        .font(.caption)
     }
 
     private func section(_ s: DetailSection) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title("details.section." + s.id, s.id)).font(.callout.weight(.semibold))
+            Text(title("details.section." + s.id, s.id)).font(.caption.weight(.semibold))
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 3) {
                 ForEach(Array(s.rows.enumerated()), id: \.offset) { _, r in
                     row(title("details.key." + r.key, r.key), value(r.value))
                 }
             }
-            .font(.callout)
+            .font(.caption)
         }
         .padding(.top, 4)
     }
@@ -123,7 +131,7 @@ struct Storyboard: View {
     private static let count = 12
 
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 2), spacing: 3) {
             ForEach(0..<Self.count, id: \.self) { i in
                 ZStack {
                     RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.12))
