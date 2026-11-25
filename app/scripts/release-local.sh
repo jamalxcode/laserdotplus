@@ -69,7 +69,7 @@ LASERDOT_DB="$d/data/index.db" "app/build/Laserdot+.app/Contents/MacOS/LaserdotP
 pid=$!
 sleep 6
 kill -0 "$pid" 2>/dev/null || { cat "$d/app.log"; echo "Laserdot+ exited at launch" >&2; exit 1; }
-kill "$pid"
+kill "$pid"; wait "$pid" 2>/dev/null || true
 pkill -f "Laserdot+.app/Contents/MacOS/laserdotd" || true
 rm -rf "$d"
 
