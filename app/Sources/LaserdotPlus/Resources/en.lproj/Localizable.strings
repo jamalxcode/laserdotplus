@@ -331,3 +331,13 @@
 "drive.info.checked" = "Files last checked: %@";
 "drive.info.readOnly" = "Read-only: Laserdot+ can't change files on it.";
 "drive.info.encrypted" = "Its index is encrypted.";
+"dupes.kind.likely" = "Probably the same file — reading it whole to make sure";
+"dupes.phase.listing" = "Choosing the files to compare";
+"dupes.phase.quick" = "Comparing samples of same-size files";
+"dupes.phase.full" = "Reading likely copies whole to make sure";
+"dupes.phase.images" = "Looking at pictures";
+"dupes.phase.videos" = "Looking at video frames";
+"dupes.phase.saving" = "Finishing";
+"dupes.soFar" = "%@ found so far";
+"dupes.stop" = "Stop";
+"dupes.stop.help" = "Stop now: what has been found so far stays, and you can act on it.";

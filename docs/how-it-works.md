@@ -117,3 +117,6 @@
 - **Progress and drive health:** `LibraryModel.indexingText` (percent from the engine's done/total, time left from
   the rate since the run began); `DrivesModel.showInfo` (About This Drive); `DrivesModel.notAnswering` when a drives
   request has been out for 12 s.
+- **Live duplicates:** `FindDuplicates` stores the groups found so far in `dupeFound` — `likely` groups (same size
+  and quick hash) right after the quick pass, then `groupsOf` after the exact and image passes; `dupes_found` returns
+  them. The panel polls it and `status.dupes` (step, done/total, current file) every 1.2 s, with Stop (`dupes_stop`).

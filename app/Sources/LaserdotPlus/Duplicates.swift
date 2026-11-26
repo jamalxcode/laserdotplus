@@ -39,11 +39,54 @@ final class DupesModel: ObservableObject {
     var toRemove: [DuplicateFile] { groups.flatMap { g in g.files.filter { !keep.contains($0.path) } } }
     var bytesToFree: UInt64 { toRemove.reduce(0) { $0 + $1.size } }
 
+    /// How far the scan has got (its step, files done of total, the file
+    /// being read), asked every second or so while it runs.
+    @Published var progress: Wire.DupeProgress?
+    private var poll: Timer?
+
+    /// While scanning: the step and the groups found so far, shown at once.
+    private func startPolling() {
+        poll?.invalidate()
+        poll = Timer.scheduledTimer(withTimeInterval: 1.2, repeats: true) { [weak self] _ in
+            guard let self, self.phase == .scanning else { return }
+            let engine = self.engine
+            DispatchQueue.global(qos: .utility).async {
+                let p = engine.dupeProgress()
+                let found = engine.dupesFound().filter { $0.files.count > 1 }
+                DispatchQueue.main.async {
+                    guard self.phase == .scanning else { return }
+                    self.progress = p
+                    if !found.isEmpty { self.take(found) }
+                }
+            }
+        }
+    }
+
+    /// Show these groups, keeping the user's Keep choices for files already
+    /// shown and the engine's recommendation for new ones.
+    private func take(_ found: [DuplicateGroup]) {
+        let shown = Set(groups.flatMap { $0.files.map(\.path) })
+        groups = found
+        for g in found {
+            for f in g.files where !shown.contains(f.path) && f.keep { keep.insert(f.path) }
+            if !g.files.contains(where: { keep.contains($0.path) }), let first = g.files.first { keep.insert(first.path) }
+        }
+    }
+
+    /// Stop early: what was found so far stays.
+    func stop() {
+        let engine = self.engine
+        DispatchQueue.global(qos: .userInitiated).async { engine.stopDuplicates() }
+    }
+
     func scan(scope: String) {
         guard phase != .scanning else { return }
         phase = .scanning
         problem = nil
         summary = nil
+        groups = []
+        progress = nil
+        startPolling()
         let (engine, similar) = (self.engine, self.similar)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let outcome = Result { try engine.findDuplicates(scope: scope, exactOnly: !similar) }
@@ -62,6 +105,8 @@ final class DupesModel: ObservableObject {
                     self.problem = (e as? LaserdotError)?.message ?? e.localizedDescription
                 }
                 self.phase = .done
+                self.poll?.invalidate()
+                self.progress = nil
             }
         }
     }
@@ -168,11 +213,18 @@ struct DuplicatesView: View {
         case .idle:
             message("square.on.square", L("dupes.intro"))
         case .scanning:
-            VStack(spacing: 10) {
-                ProgressView()
-                Text(L("dupes.scanning")).foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                progressStrip
+                if dupes.groups.isEmpty {
+                    VStack(spacing: 10) {
+                        ProgressView()
+                        Text(L("dupes.scanning")).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    groupList // found so far: shown as soon as they are found
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .cleaning:
             VStack(spacing: 10) {
                 ProgressView()
@@ -185,17 +237,48 @@ struct DuplicatesView: View {
             } else if dupes.groups.isEmpty {
                 message("checkmark.circle", dupes.summary ?? L("dupes.none"))
             } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        if let s = dupes.summary {
-                            Text(s).foregroundStyle(.secondary).padding(.horizontal, 4)
-                        }
-                        ForEach(Array(dupes.groups.enumerated()), id: \.offset) { _, g in group(g) }
-                    }
-                    .padding(10)
-                }
+                groupList
             }
         }
+    }
+
+    private var groupList: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 10) {
+                if let s = dupes.summary {
+                    Text(s).foregroundStyle(.secondary).padding(.horizontal, 4)
+                }
+                ForEach(Array(dupes.groups.enumerated()), id: \.offset) { _, g in group(g) }
+            }
+            .padding(10)
+        }
+    }
+
+    /// The step, how far along, the file being read, and Stop.
+    private var progressStrip: some View {
+        HStack(spacing: 10) {
+            let p = dupes.progress
+            Text(L("dupes.phase." + (p?.phase ?? "listing"))).fontWeight(.medium)
+            if let p, p.total > 0 {
+                ProgressView(value: Double(p.done), total: Double(p.total)).frame(maxWidth: 220)
+                Text("\(p.done) / \(p.total)").monospacedDigit().foregroundStyle(.secondary)
+            } else {
+                ProgressView().controlSize(.small)
+            }
+            if let cur = p?.current, !cur.isEmpty {
+                Text((cur as NSString).lastPathComponent).font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(1).truncationMode(.middle)
+            }
+            Spacer()
+            if !dupes.groups.isEmpty {
+                Text(String(format: L("dupes.soFar"), countText(dupes.groups.count, "group"))).font(.caption).foregroundStyle(.secondary)
+            }
+            Button(L("dupes.stop")) { dupes.stop() }
+                .help(L("dupes.stop.help"))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.accentColor.opacity(0.07))
     }
 
     private func message(_ symbol: String, _ text: String) -> some View {

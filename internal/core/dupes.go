@@ -65,6 +65,10 @@ const (
 	DupeExact          = "exact"
 	DupeSimilarImage   = "similar_image"
 	DupeReencodedVideo = "reencoded_video"
+	// DupeLikely: same size and the same start, middle and end — almost
+	// surely the same file, still being read whole to make sure (only while
+	// a scan runs).
+	DupeLikely = "likely"
 )
 
 // DupeMember is one copy.
@@ -117,6 +121,15 @@ func (ld *Laserdot) DupeProgress() *DupeProgress {
 		c.Current = *cur
 	}
 	return &c
+}
+
+// DupeFound: the groups the running scan has found so far (nil: none yet,
+// or no scan running).
+func (ld *Laserdot) DupeFound() []DupeGroup {
+	if g := ld.dupeFound.Load(); g != nil {
+		return *g
+	}
+	return []DupeGroup{}
 }
 
 // StopDuplicates asks the running scan to stop early: it stops reading
@@ -193,7 +206,9 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 		}
 	}
 	ld.dupeStop.Store(false)
+	ld.dupeFound.Store(nil)
 	prog("listing", 0, 0)
+	defer ld.dupeFound.Store(nil)
 	defer ld.dupes.Store(nil)
 	defer ld.dupeCurrent.Store(nil)
 	stop := ld.dupeStop.Load
@@ -244,7 +259,8 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 	// that is quit, updated over or crashes keeps what it read.
 	var saved uint64
 	var saveErr error
-	run := &dupeRun{prog: prog, stop: stop, current: func(p string) { ld.dupeCurrent.Store(&p) }, released: ld.released}
+	run := &dupeRun{prog: prog, stop: stop, current: func(p string) { ld.dupeCurrent.Store(&p) }, released: ld.released,
+		found: func(g []DupeGroup) { ld.dupeFound.Store(&g) }}
 	run.save = func(idx []int) {
 		var keys []string
 		var changed []index.Fingerprint
@@ -285,11 +301,19 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 	}
 	videoEdge := make([]bool, len(cands))
 	// Each pass stops reading once asked to; what it read still counts.
+	// What each pass finds is shown at once (the owner: "a detection as soon
+	// as it happens, rather than wait for the whole thing").
+	publish := func() {
+		g, _ := groupsOf(cands, s, exactRoot, videoEdge)
+		run.found(g)
+	}
 	if opts.Exact {
 		exactPass(cands, fps, s, exactRoot, rep, run)
+		publish()
 	}
 	if opts.Images && !stop() {
 		imagePass(cands, fps, s, opts, rep, run)
+		publish()
 	}
 	if opts.Videos && rep.VideoDecoder != nil && !stop() {
 		videoPass(cands, fps, s, videoEdge, opts, rep, run)
@@ -314,6 +338,17 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 		return nil, err
 	}
 	rep.Read = saved + uint64(len(keys))
+	rep.Groups, rep.Reclaimable = groupsOf(cands, s, exactRoot, videoEdge)
+	rep.MS = uint64(time.Since(t).Milliseconds())
+	return rep, nil
+}
+
+// groupsOf: the groups the sets hold so far — exact when every member has the
+// same full hash, a re-encoded video when a video matched by frames, else a
+// similar picture — best copy first, biggest saving first.
+func groupsOf(cands []cand, s sets, exactRoot []int, videoEdge []bool) ([]DupeGroup, uint64) {
+	groups := []DupeGroup{}
+	var total uint64
 	comps := map[int][]int{}
 	for i := range cands {
 		r := s.find(i)
@@ -335,32 +370,41 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 		case slices.ContainsFunc(idx, func(i int) bool { return videoEdge[i] }):
 			kind = DupeReencodedVideo
 		}
-		members := make([]DupeMember, len(idx))
-		for k, i := range idx {
-			members[k] = member(&cands[i])
-		}
-		slices.SortFunc(members, func(a, b DupeMember) int {
-			if c := cmpRank(b, a); c != 0 {
-				return c
-			}
-			return tie(a, b)
-		})
-		members[0].Keep = true
-		g := DupeGroup{Kind: kind, Members: members}
-		for _, m := range members[1:] {
-			g.Reclaimable += m.Size
-		}
-		rep.Reclaimable += g.Reclaimable
-		rep.Groups = append(rep.Groups, g)
+		g := groupOf(cands, idx, kind)
+		total += g.Reclaimable
+		groups = append(groups, g)
 	}
-	slices.SortFunc(rep.Groups, func(a, b DupeGroup) int {
+	sortGroups(groups)
+	return groups, total
+}
+
+// groupOf: one group, best copy first and marked to keep.
+func groupOf(cands []cand, idx []int, kind string) DupeGroup {
+	members := make([]DupeMember, len(idx))
+	for k, i := range idx {
+		members[k] = member(&cands[i])
+	}
+	slices.SortFunc(members, func(a, b DupeMember) int {
+		if c := cmpRank(b, a); c != 0 {
+			return c
+		}
+		return tie(a, b)
+	})
+	members[0].Keep = true
+	g := DupeGroup{Kind: kind, Members: members}
+	for _, m := range members[1:] {
+		g.Reclaimable += m.Size
+	}
+	return g
+}
+
+func sortGroups(groups []DupeGroup) {
+	slices.SortFunc(groups, func(a, b DupeGroup) int {
 		if a.Reclaimable != b.Reclaimable {
 			return cmp.Compare(b.Reclaimable, a.Reclaimable)
 		}
 		return strings.Compare(a.Members[0].Path, b.Members[0].Path)
 	})
-	rep.MS = uint64(time.Since(t).Milliseconds())
-	return rep, nil
 }
 
 func (ld *Laserdot) dupeCandidates(opts DupeOptions) ([]cand, error) {
@@ -433,6 +477,8 @@ type dupeRun struct {
 	// released: a file on a drive being ejected (or gone) is not read: the
 	// scan lets the drive go instead of holding it open.
 	released func(path string) bool
+	// found: the groups found so far (shown while the scan goes on).
+	found func(groups []DupeGroup)
 }
 
 // saveEvery: fingerprints are saved while a scan runs, so quitting, an
@@ -598,6 +644,18 @@ func exactPass(cands []cand, fps []index.Fingerprint, s sets, exactRoot []int, r
 				}
 			}
 		}
+	}
+	// Shown at once: same size and the same samples — almost surely copies;
+	// reading them whole (the slow part, on big files) makes sure.
+	if run.found != nil {
+		var likely []DupeGroup
+		for _, v := range byQuick {
+			if len(v) > 1 {
+				likely = append(likely, groupOf(cands, v, DupeLikely))
+			}
+		}
+		sortGroups(likely)
+		run.found(likely)
 	}
 	var needFull []int
 	for _, v := range byQuick {

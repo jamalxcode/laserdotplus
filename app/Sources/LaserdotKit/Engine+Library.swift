@@ -192,6 +192,24 @@ extension Engine {
         (try? call(.dupesStop, as: Bool.self)) ?? false
     }
 
+    static func group(_ g: Wire.DupeGroup) -> DuplicateGroup {
+        DuplicateGroup(
+            kind: g.kind,
+            files: g.members.map {
+                DuplicateFile(
+                    path: $0.path, size: $0.size, modified: $0.modified, volume: $0.volume,
+                    summary: $0.summary, keep: $0.keep, bpp: $0.bpp, timed: $0.durationMs != nil)
+            },
+            reclaimable: g.reclaimable)
+    }
+
+    /// The groups the running scan has found so far (shown while it goes on;
+    /// empty from an older daemon).
+    public func dupesFound() -> [DuplicateGroup] {
+        guard let g = try? call(.dupesFound, as: [Wire.DupeGroup]?.self) else { return [] }
+        return (g ?? []).map(Self.group)
+    }
+
     public func findDuplicates(scope: String, exactOnly: Bool) throws -> DuplicateReport {
         let request = DaemonRequest.dupes(options: Wire.DupeOptions(scope: scope, images: !exactOnly, videos: !exactOnly))
         // A scan can take minutes: use a connection of its own so searches
@@ -215,16 +233,7 @@ extension Engine {
             r = try call(request, as: Wire.DupeReport.self)
         }
         return DuplicateReport(
-            groups: r.groups.map { g in
-                DuplicateGroup(
-                    kind: g.kind,
-                    files: g.members.map {
-                        DuplicateFile(
-                            path: $0.path, size: $0.size, modified: $0.modified, volume: $0.volume,
-                            summary: $0.summary, keep: $0.keep, bpp: $0.bpp, timed: $0.durationMs != nil)
-                    },
-                    reclaimable: g.reclaimable)
-            },
+            groups: r.groups.map(Self.group),
             reclaimable: r.reclaimable, filesChecked: r.files, filesRead: r.read, unreadable: r.unreadable,
             videoDecoder: r.videoDecoder, elapsedMs: r.ms, stopped: r.stopped)
     }

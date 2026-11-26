@@ -37,6 +37,8 @@ public enum DaemonRequest: Encodable, Sendable {
     case dupes(options: Wire.DupeOptions)
     /// Stop the running duplicate scan early; it answers with what it found.
     case dupesStop
+    /// Laserdot+: the groups the running duplicate scan has found so far.
+    case dupesFound
     /// Dry run of a cleanup (spec §4.4).
     case cleanupPlan(request: Wire.CleanupRequest)
     case cleanup(request: Wire.CleanupRequest)
@@ -121,6 +123,7 @@ public enum DaemonRequest: Encodable, Sendable {
         case .driveContinue: return "drive_continue"
         case .dupes: return "dupes"
         case .dupesStop: return "dupes_stop"
+        case .dupesFound: return "dupes_found"
         case .cleanupPlan: return "cleanup_plan"
         case .cleanup: return "cleanup"
         case .contentStatus: return "content_status"
@@ -192,7 +195,7 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(path, forKey: .path)
             try c.encode(query, forKey: .query)
         case .ping, .status, .refresh, .roots, .stats, .shutdown, .drives, .contentStatus, .updateContent, .valueCounts,
-             .clearOpens, .exclusions, .unreadable, .dupesStop:
+             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound:
             break
         }
     }

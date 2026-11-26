@@ -480,3 +480,32 @@ func TestASlowFileIsSkippedNotWaitedFor(t *testing.T) {
 		t.Errorf("skipped pictures were tried again: %v", total)
 	}
 }
+
+// Groups show while the scan goes on (the owner: "a detection as soon as it
+// happens"): likely copies once their samples match, before they are read
+// whole; nothing is left behind afterwards.
+func TestDuplicatesShowAsTheyAreFound(t *testing.T) {
+	l := dupeLibrary(t)
+	var mu sync.Mutex
+	kinds := map[string]bool{}
+	dupeProgressSeen = func(p DupeProgress) {
+		if p.Phase != "full" && p.Phase != "images" {
+			return
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		for _, g := range l.ld.DupeFound() {
+			kinds[g.Kind] = true
+		}
+	}
+	defer func() { dupeProgressSeen = nil }()
+	if _, err := l.ld.FindDuplicates(DefaultDupeOptions()); err != nil {
+		t.Fatal(err)
+	}
+	if !kinds[DupeLikely] || !kinds[DupeExact] {
+		t.Errorf("seen while scanning: %v (want likely during full, exact during images)", kinds)
+	}
+	if n := len(l.ld.DupeFound()); n != 0 {
+		t.Errorf("%d groups left behind after the scan", n)
+	}
+}

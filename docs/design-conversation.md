@@ -243,3 +243,13 @@ left (from the rate since it started); right-click a drive ▸ About This Drive 
 indexed, index size and place, and when it was last checked; when the drive list has not come back for 12 seconds
 the bottom bar says a drive isn't answering. (Duplicate and junk scans still show a spinner: the engine does not
 report their progress yet.)
+
+## 32. A duplicate scan that seemed stuck (0.1.15)
+
+"I told Find Duplicates to look at files over 1 GB and it has been spinning for 20 minutes; check everything is OK.
+It would be nice to get a detection as soon as it happens, rather than wait for the whole thing." Found: nothing
+wrong — but likely copies of big files are read whole to confirm them (about 10–20 s per GB on a USB drive), videos
+are decoded for frames when "similar" is on, a drive's fingerprints are never kept on this Mac (privacy), and the app
+showed only a spinner although the engine reported each step. Decided: the engine publishes the groups found so far
+(`dupes_found`): likely copies right after the sample step, confirmed groups after each pass; the panel shows them
+live with the step, files done of total, the file being read, and Stop. Trash waits for confirmation.

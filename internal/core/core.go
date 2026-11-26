@@ -150,13 +150,16 @@ type Laserdot struct {
 	dupeStop atomic.Bool
 	// dupeCurrent: the file the scan started reading last.
 	dupeCurrent atomic.Pointer[string]
-	dbPath      string
-	wmu         sync.Mutex
-	db          *index.Db
-	mu          sync.RWMutex
-	store       *index.Store
-	loadMS      uint64
-	report      OpenReport
+	// dupeFound: the groups the running scan has found so far (shown as they
+	// come, the owner: "a detection as soon as it happens").
+	dupeFound atomic.Pointer[[]DupeGroup]
+	dbPath    string
+	wmu       sync.Mutex
+	db        *index.Db
+	mu        sync.RWMutex
+	store     *index.Store
+	loadMS    uint64
+	report    OpenReport
 	// content: file contents (§2.4), in its own file next to the index.
 	content *index.ContentIndex
 	// archives: the names inside this Mac's zip files, in their own file.

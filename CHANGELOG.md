@@ -2,6 +2,13 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.15
+
+- **Duplicates show as they are found.** Files of the same size whose start, middle and end match appear within
+  moments as "Probably the same file", while they are read whole to make sure; confirmed copies and similar pictures
+  replace them as each step finishes. A strip shows the step, how many files are done of how many, and the file being
+  read, with **Stop** (what was found so far stays). Move to Trash waits until the copies are confirmed.
+
 ## 0.1.14
 
 - **Progress you can read.** Indexing shows how far along it is and roughly how long is left
