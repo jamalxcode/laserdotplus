@@ -200,6 +200,21 @@ final class SelfTestRunner {
             try? FileManager.default.removeItem(atPath: gone)
             self.waitFor(25, { !self.model.results.contains(where: isGone) }) { ok in
                 self.report["external_delete"] = ok
+                self.driveDelete()
+            }
+        }
+    }
+
+    /// On the plugged-in drive (exFAT, like the owner's T5 EVO): a file
+    /// deleted behind the app's back leaves the list too.
+    private func driveDelete() {
+        model.place = .drive("LDPlus")
+        let isSpare: (Hit) -> Bool = { $0.path.hasSuffix("/Movies/spare.webm") }
+        waitFor(40, { self.model.results.contains(where: isSpare) }) { listed in
+            self.report["drive_listed"] = listed
+            if let p = self.model.results.first(where: isSpare)?.path { try? FileManager.default.removeItem(atPath: p) }
+            self.waitFor(25, { !self.model.results.contains(where: isSpare) }) { ok in
+                self.report["drive_delete"] = listed && ok
                 self.finish("")
             }
         }

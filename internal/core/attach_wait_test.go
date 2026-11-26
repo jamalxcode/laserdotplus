@@ -92,3 +92,34 @@ func TestADriveThatCannotBeOpenedSaysWhy(t *testing.T) {
 		t.Fatalf("%+v", st)
 	}
 }
+
+// A drive pulled out while attached (no eject): it leaves the list and its
+// files leave the results; nothing hangs.
+func TestADrivePulledOutLeavesCleanly(t *testing.T) {
+	m := newMac(t)
+	drive := makeDrive(t, m.vols, "Pulled")
+	if _, err := m.ld.CreateDriveIndex(drive, DriveOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	expect(t, dnames(t, m.ld, "invoice volume:pulled"), "invoice-march.pdf")
+	done := make(chan []string, 1)
+	if err := os.RemoveAll(drive); err != nil { // pulled out
+		t.Fatal(err)
+	}
+	go func() {
+		_, gone := m.ld.SyncDrives()
+		done <- gone
+	}()
+	select {
+	case gone := <-done:
+		if len(gone) != 1 {
+			t.Fatalf("gone %v", gone)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("noticing a pulled-out drive hung")
+	}
+	if n := len(m.ld.Drives()); n != 0 {
+		t.Errorf("%d drives listed", n)
+	}
+	expect(t, dnames(t, m.ld, "invoice volume:pulled"))
+}

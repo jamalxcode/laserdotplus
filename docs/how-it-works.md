@@ -100,3 +100,7 @@
   `placeParts` turn paths into "Drive › …" / "Home › …"; `FolderCover` asks the engine for four pictures in a folder.
 - **Calm choices** (`RefineLogic.compact`): the technical groups (`software`, `column`, `rows`, `codec`, `hdr`,
   `chapters`) show only under More choices.
+- **Real-drive tests:** the self-test's drive is an exFAT disk image (like most portable drives): it is indexed by
+  itself, a file deleted on it outside the app must leave the list, and its file names must not appear on this Mac.
+  Engine tests cover a second engine taking over, a drive pulled out while attached, and opening a drive while this
+  Mac's index holds the writer lock.

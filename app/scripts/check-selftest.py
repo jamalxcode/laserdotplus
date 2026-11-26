@@ -33,6 +33,7 @@ check(r.get("marquee_count", 0) >= 2, f"the selection box over the grid's tiles 
 check(r.get("choices_arranged") is True, "all the choices: what can be chosen comes first in each group")
 check(r.get("dupes_groups", 0) >= 1, f"Find Duplicates finds the same picture at several sizes (got {r.get('dupes_groups')} groups, problem {r.get('dupes_problem')!r})")
 check("private" not in r.get("friendly_path", "private") and r.get("friendly_path", "").endswith("rome trip.txt"), f"paths read like Finder's (got {r.get('friendly_path')!r})")
+check(r.get("drive_delete") is True, f"a file deleted on the exFAT drive outside Laserdot+ leaves the list (listed {r.get('drive_listed')})")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")

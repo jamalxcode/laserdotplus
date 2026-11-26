@@ -159,9 +159,12 @@ jobs:
           echo trash me > "$fx/trashme.txt"
           # A drive plugged in: indexed by itself, its index on the drive.
           d=$(mktemp -d)
-          hdiutil create -type SPARSE -size 1g -fs APFS -volname LDPlus "$d/drive" >/dev/null
+          # exFAT, like most portable drives (the owner's T5 EVO): no reliable
+          # file events, ._ files, no inodes to trust.
+          hdiutil create -type SPARSE -size 1g -fs ExFAT -volname LDPlus "$d/drive" >/dev/null
           for i in 1 2 3 4 5; do hdiutil attach "$d/drive.sparseimage" && break; sleep $((i * 3)); done
           mkdir -p /Volumes/LDPlus/Movies && cp internal/media/testdata/vp9.webm /Volumes/LDPlus/Movies/holiday.webm
+          cp internal/media/testdata/vp9.webm /Volumes/LDPlus/Movies/spare.webm   # deleted behind the app's back
           out="$(mktemp -d)/selftest"
           export LASERDOT_DB="$(mktemp -d)/data/index.db"
           LASERDOT_SELFTEST="$out" LASERDOT_SELFTEST_FOLDER="$fx" "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > app.log 2>&1 &

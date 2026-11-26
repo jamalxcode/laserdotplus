@@ -190,3 +190,10 @@ plain strip; Review and Duplicates cover the files and the right pane; the empty
 (files, size, kinds, biggest folders, duplicates); paths read from the drive or Home; folders show four of their
 pictures (asked of the engine); documents are one line in the contact sheet; counts use proper singulars; notices
 clear after 8 s; chips 12 pt, softer bands; a divider sets the modes apart.
+
+## 25. Testing before the owner does (0.1.11)
+
+From the critique: most bugs were found on the owner's Mac first. Decided: CI's test drive is exFAT (like the T5 EVO),
+and the self-test deletes a file on it behind the app's back; engine tests cover a drive pulled out while attached,
+a stuck second engine, and opening a drive while a home-folder index holds the writer lock. Technical choices
+(made with, columns, rows, codec, HDR, chapters) wait under More choices.
