@@ -25,7 +25,37 @@ struct ContactSheet: View {
         }
     }
 
-    private func row(_ i: Int, _ h: Hit) -> some View {
+    @ViewBuilder private func row(_ i: Int, _ h: Hit) -> some View {
+        if h.kind == "video" || h.kind == "image" {
+            sheetRow(i, h)
+        } else {
+            plainRow(i, h)
+        }
+    }
+
+    /// A document, a folder, a song: one compact line (a contact sheet card
+    /// with a small icon wasted the room).
+    private func plainRow(_ i: Int, _ h: Hit) -> some View {
+        let selected = model.selection.contains(h.path)
+        return HStack(spacing: 8) {
+            FileIcon(path: h.path, size: 24, thumbnail: false)
+            Text(h.name).lineLimit(1).truncationMode(.middle)
+            Text(h.badges.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Spacer()
+            Text(h.isDir ? "" : bytesText(h.size)).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 6).fill(selected ? Color.accentColor.opacity(0.22) : Color.clear))
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { model.open([h]) }
+        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
+        .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
+        .tileFrame(h.path)
+        .fileDrag(h.path, when: selected)
+    }
+
+    private func sheetRow(_ i: Int, _ h: Hit) -> some View {
         let selected = model.selection.contains(h.path)
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {

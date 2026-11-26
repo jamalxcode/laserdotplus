@@ -42,16 +42,36 @@ func dateText(_ unix: Int64) -> String {
 
 /// "plex media › Films › 2019": where a file is, short.
 func whereText(_ path: String) -> String {
-    let dir = (path as NSString).deletingLastPathComponent
-    var parts = dir.split(separator: "/").map(String.init)
-    let home = NSHomeDirectory().split(separator: "/").map(String.init)
-    if parts.starts(with: home) {
-        parts = ["~"] + parts.dropFirst(home.count)
-    } else if parts.first == "Volumes", parts.count > 1 {
-        parts = Array(parts.dropFirst())
-    }
+    var parts = placeParts((path as NSString).deletingLastPathComponent)
     if parts.count > 4 { parts = [parts[0], "…"] + parts.suffix(2) }
     return parts.joined(separator: " › ")
+}
+
+/// A path as Finder would say it: "T5 EVO › Movies › 2023 › clip.mp4",
+/// "Home › Pictures › …" — the whole of it, no system folders.
+func friendlyPath(_ path: String) -> String { placeParts(path).joined(separator: " › ") }
+
+/// The parts of a path, from its drive or Home (macOS's own /private and
+/// temporary folders left out).
+func placeParts(_ path: String) -> [String] {
+    var parts = path.split(separator: "/").map(String.init)
+    let home = NSHomeDirectory().split(separator: "/").map(String.init)
+    if parts.starts(with: home) {
+        parts = [L("path.home")] + parts.dropFirst(home.count)
+    } else if parts.first == "Volumes", parts.count > 1 {
+        parts = Array(parts.dropFirst())
+    } else if parts.starts(with: ["private", "var", "folders"]) || parts.starts(with: ["var", "folders"]) {
+        parts = Array(parts.suffix(3)) // a temporary folder: only the end means anything
+    } else {
+        if parts.first == "private" { parts.removeFirst() }
+        parts = [L("place.thisMac")] + parts
+    }
+    return parts
+}
+
+/// "1 file", "12 files" (and the like in Arabic).
+func countText(_ n: Int, _ unit: String) -> String {
+    String(format: L("unit." + unit + (n == 1 ? ".one" : ".many")), n)
 }
 
 /// A file kind in words ("Video").

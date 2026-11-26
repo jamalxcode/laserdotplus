@@ -14,18 +14,26 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // VSplitView/HSplitView: plain AppKit split views (resizable, and
-            // visible to the self-test's window captures).
-            VSplitView {
-                TopArea(model: model, drives: drives)
-                    .frame(minHeight: 70, idealHeight: 150, maxHeight: 420)
-                HSplitView {
-                    FilesArea(model: model, drives: drives)
-                        .frame(minWidth: 420, idealWidth: 900, maxWidth: .infinity)
-                    DetailsView(model: model)
-                        .frame(minWidth: 200, idealWidth: 250, maxWidth: 460)
+            // The top hugs what it shows (no empty band above the files); the
+            // files and the right pane fill the rest. HSplitView: a plain
+            // AppKit split view (resizable, visible to the self-test's captures).
+            TopArea(model: model, drives: drives)
+            Divider()
+            HSplitView {
+                FilesArea(model: model, drives: drives)
+                    .frame(minWidth: 420, idealWidth: 900, maxWidth: .infinity)
+                DetailsView(model: model)
+                    .frame(minWidth: 200, idealWidth: 250, maxWidth: 460)
+            }
+            .frame(minHeight: 240)
+            // Review and Duplicates take the whole width (they were squeezed
+            // into the files' half, beside an empty pane).
+            .overlay {
+                if model.reviewIndex != nil {
+                    ReviewView(model: model)
+                } else if model.showDupes {
+                    DuplicatesView(model: model, dupes: model.dupes)
                 }
-                .frame(minHeight: 240)
             }
             if !model.tray.isEmpty {
                 Divider()
@@ -51,6 +59,9 @@ struct MainView: View {
 struct TopArea: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
+    /// The choices' natural height: the area is that tall (up to a cap,
+    /// then it scrolls), never taller.
+    @State private var choicesHeight: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -84,6 +95,8 @@ struct TopArea: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
                 .help(L("sort.by"))
+                // The modes, apart from the view controls.
+                Divider().frame(height: 18).padding(.horizontal, 2)
                 Button { model.showDupes.toggle() } label: { Label(L("dupes.title"), systemImage: "square.on.square") }
                     .help(L("dupes.menu"))
                 Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
@@ -92,13 +105,16 @@ struct TopArea: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
+            // Where to look: navigation, not a filter — a strip of its own.
+            PlacesBar(model: model, drives: drives)
             ScrollView(.vertical) {
-                VStack(spacing: 0) {
-                    PlacesBar(model: model, drives: drives)
-                    ChoiceBands(model: model)
-                }
-                .padding(.bottom, 6)
+                ChoiceBands(model: model)
+                    .background(GeometryReader { g in
+                        Color.clear.preference(key: ChoicesHeightKey.self, value: g.size.height)
+                    })
             }
+            .frame(height: min(choicesHeight, 260))
+            .onPreferenceChange(ChoicesHeightKey.self) { choicesHeight = $0 }
         }
         .background(Color(nsColor: .windowBackgroundColor))
     }
@@ -170,13 +186,6 @@ struct FilesArea: View {
             return .handled
         }
         .onDeleteCommand { model.trash(model.selectedHits, undo: undo) }
-        .overlay {
-            if model.reviewIndex != nil {
-                ReviewView(model: model)
-            } else if model.showDupes {
-                DuplicatesView(model: model, dupes: model.dupes)
-            }
-        }
     }
 }
 
@@ -199,7 +208,7 @@ struct BottomBar: View {
                             .filter { !$0.isEmpty }.joined(separator: " · "))
                             .foregroundStyle(.secondary).lineLimit(1)
                     }
-                    Text(h.path)
+                    Text(friendlyPath(h.path))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -212,9 +221,9 @@ struct BottomBar: View {
                 Image(systemName: "square.stack").font(.title3).foregroundStyle(.secondary)
                 Text(String(format: L("results.selected"), hits.count, bytesText(hits.reduce(0) { $0 + $1.size })))
                     .fontWeight(.semibold)
-                Text(String(format: L("results.count"), model.total)).foregroundStyle(.secondary).monospacedDigit()
+                Text(countText(Int(model.total), "item")).foregroundStyle(.secondary).monospacedDigit()
             } else {
-                Text(String(format: L("results.count"), model.total)).monospacedDigit()
+                Text(countText(Int(model.total), "item")).monospacedDigit()
                 if model.total > 0 {
                     Button(String(format: L("results.selectAll"), model.total)) { model.selectAll() }.buttonStyle(.link)
                 }
@@ -236,4 +245,9 @@ struct BottomBar: View {
         .padding(.horizontal, 12)
         .frame(height: 46)
     }
+}
+
+struct ChoicesHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }

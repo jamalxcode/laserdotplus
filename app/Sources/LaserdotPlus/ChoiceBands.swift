@@ -37,7 +37,7 @@ struct ChoiceBands: View {
                             FlowLayout(spacing: 4, lineSpacing: 5) {
                                 ForEach(Array(band.groups.enumerated()), id: \.element.id) { gi, g in
                                     Text(Self.groupTitle(g.id))
-                                        .font(.caption2.weight(.medium))
+                                        .font(.caption.weight(.medium))
                                         .foregroundStyle(.secondary)
                                         .padding(.leading, gi == 0 ? 0 : 12)
                                         .fixedSize()
@@ -58,7 +58,7 @@ struct ChoiceBands: View {
                                             if revealed.contains(g.id) { revealed.remove(g.id) } else { revealed.insert(g.id) }
                                         }
                                         .buttonStyle(.plain)
-                                        .font(.system(size: 9))
+                                        .font(.system(size: 10))
                                         .foregroundStyle(.tertiary)
                                         .help(String(format: L("choices.quiet"), quiet.count))
                                         .fixedSize()
@@ -70,13 +70,13 @@ struct ChoiceBands: View {
                         .padding(.leading, 4)
                         .padding(.trailing, 8)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Self.color(band.family).opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+                        .background(Self.color(band.family).opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
                     }
                     if !quietBands.isEmpty {
                         // Bands with nothing to choose now: one short line.
                         Text(String(format: L("choices.nothingIn"),
                                     quietBands.flatMap(\.groups).map { Self.groupTitle($0.id) }.joined(separator: " · ")))
-                            .font(.system(size: 9))
+                            .font(.system(size: 10))
                             .foregroundStyle(.tertiary)
                             .lineLimit(2)
                             .padding(.leading, 6)
@@ -104,7 +104,7 @@ struct ChoiceBands: View {
             // Nothing to choose here now: small and quiet, it grows back into
             // a chip as soon as it gives results.
             Text(label)
-                .font(.system(size: 9))
+                .font(.system(size: 10))
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal, 2)
                 .padding(.vertical, 3)
@@ -122,7 +122,7 @@ struct ChoiceBands: View {
                 model.toggle(g.id, o.token, label: label)
             }
         } label: {
-            Text("\(label) ").font(.caption) + Text(o.count > 0 ? "\(o.count)" : "").font(.caption).foregroundColor(.secondary)
+            Text("\(label) ").font(.system(size: 12)) + Text(o.count > 0 ? "\(o.count)" : "").font(.system(size: 12)).foregroundColor(.secondary)
         }
         .help(String(format: L("choices.help"), label))
         .contextMenu {

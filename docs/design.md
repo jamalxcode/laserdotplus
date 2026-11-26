@@ -35,7 +35,7 @@ global hotkey: it opens and quits like any app. Built on Laserdot's engine (`jam
 
 Centred on the files (the owner: "the focus to be on the files being reviewed and looked at and arranged, with other
 functions surrounding it"): a few lines at the top to search, the files in the middle, a slim right pane with the
-preview and details, a bottom margin about the selected file; the top area and the right pane are resizable.
+preview and details (a summary of the place when nothing is selected), a bottom margin about the selected file; the top area is as tall as its choices, the right pane is resizable; places are a strip of their own.
 
 Over the files, as in Laserdot: the places band (everything plugged in, This Mac, each drive with its state; right-
 click a drive to eject, index or unlock it) and Laserdot's compact choice bands (every choice the current files have, with counts; several in a group mean any of them;

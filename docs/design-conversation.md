@@ -178,3 +178,15 @@ re-encoded videos — gets a panel over the files (File ▸ Find Duplicates…, 
 current place: groups with the recommended copy to keep, a click to change it, the space freed, and Move Copies to
 Trash after a preview (never deletes; a group whose kept copy changed is skipped). It is the first part of the
 clean-up screen.
+
+## 24. A UI critique, all of it (0.1.10)
+
+"On a UI level, critique Laserdot+" — then "do all". Found: an empty band under the choices (the top area had a fixed
+height); places styled like a filter; Review and Duplicates squeezed into the files' half beside an empty pane; an
+empty right pane with nothing selected; raw /private/var paths; documents as big contact-sheet cards; folders as
+plain icons; "1 groups", "Put back 1", "bpp"; small text and loud band colours; mode buttons mixed with view
+controls. Decided: the top hugs its choices (up to 260 pt, then scrolls; it is no longer dragged); places are a
+plain strip; Review and Duplicates cover the files and the right pane; the empty right pane summarises the place
+(files, size, kinds, biggest folders, duplicates); paths read from the drive or Home; folders show four of their
+pictures (asked of the engine); documents are one line in the contact sheet; counts use proper singulars; notices
+clear after 8 s; chips 12 pt, softer bands; a divider sets the modes apart.

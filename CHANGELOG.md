@@ -2,6 +2,22 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.10
+
+A tidier window:
+
+- **The files get the room.** The top area is only as tall as its choices (no empty band above the files), and the
+  places — everything plugged in, This Mac, each drive — are a strip of their own instead of looking like a filter.
+- **Review and Duplicates use the whole width**, instead of half the window beside an empty pane.
+- **The right pane says what's here** when nothing is selected: how many files, how big, what kinds, the biggest
+  folders, and the duplicates found, with Find Duplicates one click away.
+- **Paths read like Finder's**: "T5 EVO › Movies › 2023 › clip.mp4", "Home › Pictures …" — no system folders.
+- **Folders show what's inside** in the grid (up to four of their pictures), and the contact sheet gives documents a
+  compact line instead of a big card.
+- **Clearer words**: "1 file", "2 groups", no "bpp" in Duplicates, one clear Keep/Trash per copy, and messages in the
+  bottom bar go away by themselves. Slightly larger text in the choices and softer band colours. Duplicates and Review
+  sit apart from the view controls.
+
 ## 0.1.9
 
 - **Find Duplicates.** File ▸ Find Duplicates… (⇧⌘D) or the Duplicates button finds copies of the same file in the

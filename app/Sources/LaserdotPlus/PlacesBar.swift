@@ -11,26 +11,16 @@ struct PlacesBar: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 6) {
-            Capsule().fill(ChoiceBands.color("where")).frame(width: 4)
-            Image(systemName: "externaldrive")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(ChoiceBands.color("where"))
-                .frame(width: 14, height: 18)
-                .accessibilityHidden(true)
             FlowLayout(spacing: 4, lineSpacing: 5) {
-                Text(L("sidebar.places")).font(.caption2.weight(.medium)).foregroundStyle(.secondary).fixedSize()
                 place(.everywhere, L("place.everywhere"), "square.stack.3d.up", nil)
                 place(.thisMac, L("place.thisMac"), "laptopcomputer", nil)
                 ForEach(drives.drives, id: \.mount) { d in drive(d) }
             }
             .padding(.vertical, 3)
         }
-        .padding(.leading, 4)
-        .padding(.trailing, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChoiceBands.color("where").opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
         .padding(.horizontal, 10)
-        .padding(.top, 6)
+        .padding(.bottom, 4)
     }
 
     @ViewBuilder private func place(_ p: Place, _ title: String, _ symbol: String, _ detail: String?) -> some View {

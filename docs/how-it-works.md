@@ -94,3 +94,7 @@
   connection of its own; groups show best first with the engine's keep recommendation (at least one copy always kept);
   Move Copies to Trash runs `cleanupPreview` (dry run, an alert with count and bytes) then `cleanup` (to the Trash);
   moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **The window (0.1.10):** `TopArea` = search row, `PlacesBar` (a plain strip), and `ChoiceBands` in a scroll view
+  whose height follows the bands' measured height (max 260); then the files and `DetailsView` side by side, with
+  Review/Duplicates overlaid on both. Nothing selected → `PlaceSummary` (engine counts only). `friendlyPath` /
+  `placeParts` turn paths into "Drive › …" / "Home › …"; `FolderCover` asks the engine for four pictures in a folder.

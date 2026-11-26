@@ -92,7 +92,7 @@ struct TrayBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "tray.full")
-            Text(String(format: L("tray.summary"), model.tray.count, bytesText(model.trayBytes),
+            Text(String(format: L("tray.summary"), countText(model.tray.count, "file"), bytesText(model.trayBytes),
                         model.trayCount(.trash), model.trayCount(.move)))
                 .monospacedDigit()
             Spacer()

@@ -134,10 +134,11 @@ struct DuplicatesView: View {
             if !dupes.groups.isEmpty {
                 Divider()
                 HStack {
-                    Text(String(format: L("dupes.summary"), dupes.groups.count, dupes.toRemove.count, bytesText(dupes.bytesToFree)))
+                    Text(String(format: L("dupes.summary"), countText(dupes.groups.count, "group"),
+                                countText(dupes.toRemove.count, "copy"), bytesText(dupes.bytesToFree)))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(String(format: L("dupes.trashN"), dupes.toRemove.count, bytesText(dupes.bytesToFree))) {
+                    Button(String(format: L("dupes.trashN"), countText(dupes.toRemove.count, "copy"), bytesText(dupes.bytesToFree))) {
                         dupes.moveToTrash { model.schedule(now: true, keepSelection: true) }
                     }
                     .keyboardShortcut(.defaultAction)
@@ -199,8 +200,8 @@ struct DuplicatesView: View {
                 let kept = dupes.keep.contains(f.path)
                 HStack(spacing: 8) {
                     Button { dupes.toggle(f, in: g) } label: {
-                        Image(systemName: kept ? "checkmark.circle.fill" : "trash.circle")
-                            .foregroundStyle(kept ? Color.green : Color.red)
+                        Image(systemName: kept ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(kept ? Color.green : Color.secondary)
                             .font(.title3)
                     }
                     .buttonStyle(.plain)
@@ -208,11 +209,13 @@ struct DuplicatesView: View {
                     FileIcon(path: f.path, size: 40, thumbnail: true)
                     VStack(alignment: .leading, spacing: 1) {
                         Text((f.path as NSString).lastPathComponent).lineLimit(1).truncationMode(.middle)
-                        Text(([f.volume ?? L("place.thisMac"), (f.path as NSString).deletingLastPathComponent]).joined(separator: " · "))
+                        Text(whereText(f.path))
                             .font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                     }
                     Spacer()
-                    Text(f.summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    // Without "bpp" (jargon): the size and the rest say enough.
+                    Text(f.summary.components(separatedBy: " · ").filter { !$0.hasSuffix("bpp") }.joined(separator: " · "))
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Text(bytesText(f.size)).font(.caption).monospacedDigit().frame(width: 70, alignment: .trailing)
                     Text(kept ? L("dupes.keep") : L("dupes.trashOne"))
                         .font(.caption.weight(.medium))

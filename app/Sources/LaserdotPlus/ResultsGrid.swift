@@ -36,6 +36,9 @@ struct ResultsGrid: View {
             Group {
                 if h.kind == "video" {
                     ScrubThumb(path: h.path, size: size)
+                } else if h.isDir {
+                    FolderCover(path: h.path, size: size, engine: model.engine)
+                        .frame(width: size + 8, height: size * 0.92)
                 } else {
                     FileIcon(path: h.path, size: size, thumbnail: h.kind == "image" || h.kind == "document")
                         .frame(width: size + 8, height: size * 0.92)
@@ -61,5 +64,44 @@ struct ResultsGrid: View {
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
         .fileDrag(h.path, when: selected)
+    }
+}
+
+/// A folder shows what it holds: up to four of its pictures (asked of the
+/// engine, off the main thread; no folder is read), else its icon.
+struct FolderCover: View {
+    let path: String
+    let size: CGFloat
+    let engine: Engine
+    @State private var inside: [String] = []
+
+    var body: some View {
+        ZStack {
+            if inside.isEmpty {
+                FileIcon(path: path, size: size, thumbnail: false)
+            } else {
+                let cell = (size - 6) / 2
+                LazyVGrid(columns: [GridItem(.fixed(cell), spacing: 4), GridItem(.fixed(cell), spacing: 4)], spacing: 4) {
+                    ForEach(inside, id: \.self) { p in
+                        FileIcon(path: p, size: cell, thumbnail: true)
+                            .frame(width: cell, height: cell)
+                            .clipped()
+                    }
+                }
+                .padding(4)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.12)))
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: "folder.fill").font(.caption).foregroundStyle(.secondary).padding(4)
+                }
+            }
+        }
+        .task(id: path) {
+            let q = "in:\"" + path.replacingOccurrences(of: "\"", with: "\\\"") + "\" kind:image"
+            let engine = self.engine
+            let found = await Task.detached(priority: .utility) {
+                (try? engine.search(query: q, limit: 4))?.hits.map(\.path) ?? []
+            }.value
+            inside = found
+        }
     }
 }

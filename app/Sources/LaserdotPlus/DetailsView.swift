@@ -17,11 +17,7 @@ struct DetailsView: View {
             } else if hits.count > 1 {
                 many(hits)
             } else {
-                VStack(spacing: 6) {
-                    Image(systemName: "doc.text.magnifyingglass").font(.largeTitle).foregroundStyle(.secondary)
-                    Text(L("details.none")).foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                PlaceSummary(model: model, dupes: model.dupes)
             }
         }
     }
@@ -151,6 +147,66 @@ struct Storyboard: View {
                 let at = (Double(i) + 0.5) / Double(Self.count)
                 if let img = await VideoFrames.frame(path, at: at, edge: 120), !Task.isCancelled {
                     frames[i] = img
+                }
+            }
+        }
+    }
+}
+
+/// Nothing selected: what this place holds (the pane was an empty "select a
+/// file"): how many files, how big, what kinds, the biggest folders, and the
+/// duplicates found — from the engine's counts, nothing read from disk.
+struct PlaceSummary: View {
+    @ObservedObject var model: LibraryModel
+    @ObservedObject var dupes: DupesModel
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(format: L("summary.title"), model.placeTitle)).font(.headline)
+                    Text(countText(Int(model.total), "file")).foregroundStyle(.secondary)
+                    if !model.canLoadMore, !model.results.isEmpty {
+                        Text(String(format: L("summary.size"), bytesText(model.results.reduce(0) { $0 + $1.size })))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if let kinds = model.groups.first(where: { $0.id == "kind" }), !kinds.options.isEmpty {
+                    bars(L("summary.kinds"), kinds.options)
+                }
+                if let folders = model.groups.first(where: { $0.id == "folder" }), !folders.options.isEmpty {
+                    bars(L("summary.folders"), Array(folders.options.sorted { $0.count > $1.count }.prefix(5)))
+                }
+                if dupes.phase == .done, !dupes.groups.isEmpty {
+                    Text(String(format: L("summary.dupes"), countText(dupes.groups.count, "group"), bytesText(dupes.bytesToFree)))
+                        .font(.caption)
+                }
+                Button(L("summary.findDupes")) { model.showDupes = true }
+                    .controlSize(.small)
+                Divider()
+                Label(L("summary.hint"), systemImage: "doc.text.magnifyingglass")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// Counts as short bars, biggest first.
+    private func bars(_ title: String, _ options: [RefineOption]) -> some View {
+        let top = max(1, options.map(\.count).max() ?? 1)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(options.filter { $0.count > 0 }.prefix(6), id: \.token) { o in
+                HStack(spacing: 6) {
+                    Text(ChoiceBands.label(o)).font(.caption).lineLimit(1).frame(width: 90, alignment: .leading)
+                    GeometryReader { g in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.accentColor.opacity(0.35))
+                            .frame(width: max(2, g.size.width * CGFloat(o.count) / CGFloat(top)))
+                    }
+                    .frame(height: 8)
+                    Text("\(o.count)").font(.caption2).foregroundStyle(.secondary).monospacedDigit()
                 }
             }
         }

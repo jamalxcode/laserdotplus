@@ -77,7 +77,15 @@ final class LibraryModel: ObservableObject {
     @Published private(set) var details: FileDetails?
     @Published private(set) var status: DaemonStatus?
     /// Something the window should say for a moment ("Moved 3 items to the Trash").
-    @Published var notice: String?
+    /// A short message in the bottom bar; it goes by itself after a while.
+    @Published var notice: String? {
+        didSet {
+            guard let n = notice, n != L("notice.selectingAll") else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+                if self?.notice == n { self?.notice = nil }
+            }
+        }
+    }
     /// The clean-up tray: files marked (in review mode, or from a menu) to
     /// go to the Trash or to a folder; nothing moves until it is applied.
     @Published private(set) var tray: [String: TrayItem] = [:]

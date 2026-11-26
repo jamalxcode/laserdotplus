@@ -194,6 +194,8 @@ final class SelfTestRunner {
             self.report["drives"] = self.drives.drives.map(\.name)
             // Deleted behind the app's back (as in Finder): it leaves the list.
             self.report["external_listed"] = self.model.results.contains(where: isGone)
+            // Paths read like Finder's: no /private, no system folders.
+            self.report["friendly_path"] = friendlyPath(gone)
             self.report["external_paths"] = self.model.results.map(\.path).filter { $0.contains("trip") }
             try? FileManager.default.removeItem(atPath: gone)
             self.waitFor(25, { !self.model.results.contains(where: isGone) }) { ok in
