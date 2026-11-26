@@ -1,7 +1,8 @@
 name: Release
 # When CI passes on main and CHANGELOG.md's newest version has no release
-# yet, builds Laserdot+.app from exactly that commit, packs it as
-# LaserdotPlus-<version>.dmg, checks it launches, and publishes it.
+# yet, publishes the disk image CI built and tested for exactly that commit
+# (universal, versioned, through the self-test) as LaserdotPlus-<version>.dmg —
+# no second build, so a release follows the passing check within a minute.
 on:
   workflow_run:
     workflows: [ci]
@@ -43,37 +44,28 @@ jobs:
   release:
     needs: decide
     if: needs.decide.outputs.go == 'true'
-    runs-on: macos-latest
-    timeout-minutes: 45
+    # No second build: CI's app job built, tested (self-test, update swap) and
+    # kept this commit's universal disk image; it is published as it is.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.decide.outputs.sha }}
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: ffmpeg (LGPL, no network) — cached
-        uses: actions/cache@v4
-        with:
-          path: app/build/ffmpeg
-          key: ffmpeg-7.1-lgpl-nonet-${{ runner.os }}-${{ runner.arch }}-v1
-      - name: Build ffmpeg (only when not cached)
-        run: app/scripts/build-ffmpeg.sh
-      - name: Build
+      - name: The disk image CI tested
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION=${{ needs.decide.outputs.version }} app/scripts/build-go.sh universal
-          VERSION=${{ needs.decide.outputs.version }} BUILD=${{ github.run_number }} app/scripts/bundle.sh
-          app/scripts/make-dmg.sh "$PWD/LaserdotPlus-${{ needs.decide.outputs.version }}.dmg"
-      - name: The packaged app launches
-        run: |
-          d=$(mktemp -d)
-          export LASERDOT_DB="$d/data/index.db"
-          "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" > "$d/app.log" 2>&1 &
-          pid=$!
-          sleep 8
-          kill -0 "$pid" || { cat "$d/app.log"; echo "::error::Laserdot+ exited at launch"; exit 1; }
-          kill "$pid"
-          pkill -f "Laserdot+.app/Contents/MacOS/laserdotd" || true
+          sha=${{ needs.decide.outputs.sha }}
+          for id in ${{ github.event.workflow_run.id }} $(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=$sha&status=success&per_page=20" --jq '.workflow_runs[].id'); do
+            if gh run download "$id" -R "${{ github.repository }}" -n release-dmg -D dl 2>/dev/null && [ -f dl/LaserdotPlus.dmg ]; then
+              echo "from CI run $id"; break
+            fi
+          done
+          test -f dl/LaserdotPlus.dmg || { echo "::error::no tested disk image for $sha"; exit 1; }
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -83,6 +75,7 @@ jobs:
             echo "Open the disk image and drag Laserdot+ to Applications. The first time, right-click Laserdot+ → Open (the app is not notarized). From 0.1.5 on, Laserdot+ updates itself: Install and Relaunch when it says a newer version is out."; } > notes.md
           # Also under a fixed name: the README links to
           # releases/latest/download/LaserdotPlus.dmg, always the newest.
-          cp "LaserdotPlus-$v.dmg" LaserdotPlus.dmg
+          cp dl/LaserdotPlus.dmg "LaserdotPlus-$v.dmg"
+          cp dl/LaserdotPlus.dmg LaserdotPlus.dmg
           gh release create "v$v" "LaserdotPlus-$v.dmg" LaserdotPlus.dmg --target "${{ needs.decide.outputs.sha }}" --title "Laserdot+ $v" --notes-file notes.md \
             || gh release upload "v$v" "LaserdotPlus-$v.dmg" LaserdotPlus.dmg --clobber

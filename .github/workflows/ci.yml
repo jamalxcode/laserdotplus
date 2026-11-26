@@ -76,7 +76,13 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Build laserdotd, the CLI and the app's registry
-        run: app/scripts/build-go.sh
+        # Universal (Apple silicon + Intel), with the CHANGELOG's version: the
+        # disk image this job tests is the one release.yml publishes (no
+        # second build on another Mac).
+        run: |
+          v=$(awk '/^## [0-9]+\.[0-9]+\.[0-9]+/ {print $2; exit}' CHANGELOG.md)
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          VERSION="$v" app/scripts/build-go.sh universal
       - name: The committed registry is current
         run: git diff --exit-code app/Sources/LaserdotKit/Registry.generated.swift
       - name: No network code in the app or its client (only the updater may speak to GitHub)
@@ -114,7 +120,7 @@ jobs:
         run: app/scripts/build-ffmpeg.sh
       - name: Bundle Laserdot+.app and the disk image
         run: |
-          app/scripts/bundle.sh
+          BUILD=${{ github.run_number }} app/scripts/bundle.sh
           test -x "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus"
           test -x "app/build/Laserdot+.app/Contents/MacOS/laserdotd"
           plutil -lint "app/build/Laserdot+.app/Contents/Info.plist"
@@ -185,3 +191,9 @@ jobs:
             LaserdotPlus.dmg
             selftest/
           if-no-files-found: ignore
+      - name: Keep the tested disk image for the release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dmg
+          path: LaserdotPlus.dmg
+          retention-days: 7

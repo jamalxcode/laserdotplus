@@ -86,3 +86,7 @@
 - **Gone files** (`LibraryModel.dropGone`): every 4 s, off the main thread, the first 1,500 results are checked
   for existence; missing ones leave the list and their folders are sent to the engine (`touched`), which re-lists
   them — a safety net for drives whose file events go missing (exFAT).
+- **Releases:** CI's app job builds the universal app with the CHANGELOG's version, runs every check and the
+  self-test on it, and keeps that disk image (`release-dmg`); `release.yml` (on Linux) publishes exactly that file —
+  no second build, about a minute after the check passes. `app/scripts/release-local.sh` still releases from the
+  owner's Mac.
