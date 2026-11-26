@@ -147,3 +147,10 @@ the engine is really opening it.
 "I have Laserdot+ 0.1.5 running on another machine, no update detected." The daily check ran only at launch, so a copy
 left open never looked again. Decided: it also looks once a day while it runs (an hourly timer checks whether a day
 has passed); still once a day at most, still only GitHub, still nothing sent about the user.
+
+## 20. Still too long (0.1.7)
+
+"Choice list still large and not compacted, and still waiting for index." Shrinking the unavailable choices was not
+enough: with a drive still opening, nothing is available and every band still showed. Decided: in each group the
+unavailable values fold into a small "+N" (click to unfold); bands with nothing to choose fold into one line at the
+bottom naming their groups. (The T5 EVO still opening is being looked at on the owner's Mac.)

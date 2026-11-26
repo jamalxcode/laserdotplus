@@ -10,6 +10,11 @@ import SwiftUI
 /// shows the rest.
 struct ChoiceBands: View {
     @ObservedObject var model: LibraryModel
+    /// Groups whose quiet values (no results now) are unfolded.
+    @State private var revealed: Set<String> = []
+
+    static func isLive(_ o: RefineOption) -> Bool { o.count > 0 || o.isWaitingDrive }
+    static func hasLive(_ g: RefineGroup) -> Bool { g.options.contains(where: isLive) }
 
     var body: some View {
         let open = model.openGroups
@@ -17,8 +22,11 @@ struct ChoiceBands: View {
         if !open.isEmpty {
             // The top area scrolls (it can be made smaller or bigger).
             Group {
+                let all = RefineLogic.bands(calm.shown)
+                let liveBands = all.filter { $0.groups.contains(where: Self.hasLive) }
+                let quietBands = all.filter { !$0.groups.contains(where: Self.hasLive) }
                 VStack(alignment: .leading, spacing: 4) {
-                    ForEach(RefineLogic.bands(calm.shown), id: \.family) { band in
+                    ForEach(liveBands, id: \.family) { band in
                         HStack(alignment: .top, spacing: 6) {
                             Capsule().fill(Self.color(band.family)).frame(width: 4)
                             Image(systemName: Self.icon(band.family))
@@ -33,8 +41,27 @@ struct ChoiceBands: View {
                                         .foregroundStyle(.secondary)
                                         .padding(.leading, gi == 0 ? 0 : 12)
                                         .fixedSize()
-                                    ForEach(g.options, id: \.token) { o in
+                                    // What can be chosen, then the rest folded into
+                                    // a small "+N" (click to see them).
+                                    let live = g.options.filter(Self.isLive)
+                                    let quiet = g.options.filter { !Self.isLive($0) }
+                                    ForEach(live, id: \.token) { o in
                                         chip(o, in: g).fixedSize()
+                                    }
+                                    if revealed.contains(g.id) {
+                                        ForEach(quiet, id: \.token) { o in
+                                            chip(o, in: g).fixedSize()
+                                        }
+                                    }
+                                    if !quiet.isEmpty {
+                                        Button(revealed.contains(g.id) ? "−" : "+\(quiet.count)") {
+                                            if revealed.contains(g.id) { revealed.remove(g.id) } else { revealed.insert(g.id) }
+                                        }
+                                        .buttonStyle(.plain)
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(.tertiary)
+                                        .help(String(format: L("choices.quiet"), quiet.count))
+                                        .fixedSize()
                                     }
                                 }
                             }
@@ -44,6 +71,15 @@ struct ChoiceBands: View {
                         .padding(.trailing, 8)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Self.color(band.family).opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+                    }
+                    if !quietBands.isEmpty {
+                        // Bands with nothing to choose now: one short line.
+                        Text(String(format: L("choices.nothingIn"),
+                                    quietBands.flatMap(\.groups).map { Self.groupTitle($0.id) }.joined(separator: " · ")))
+                            .font(.system(size: 9))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(2)
+                            .padding(.leading, 6)
                     }
                     if calm.hidden > 0 || model.allChoices {
                         Button(model.allChoices ? L("choices.fewer") : String(format: L("choices.more"), calm.hidden)) {

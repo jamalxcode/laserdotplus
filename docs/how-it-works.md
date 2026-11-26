@@ -76,3 +76,5 @@
   bands with nothing to choose last; a value with no results is drawn as small grey text, not a button.
 - **A drive that cannot be opened**: the engine keeps why in memory (`attachErr`) and sends it as the drive's state
   detail; the app shows "Couldn't open its index · click to try again" (reason in the tooltip), not the hourglass.
+- **All the choices** (More choices): live values show as chips; a group's values with no results fold into "+N"
+  (`ChoiceBands.revealed` unfolds one group); bands with nothing to choose become one line, "Nothing to choose now: …".

@@ -4,6 +4,9 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.7
 
+- **All the choices, compact.** With More choices open, the choices that give nothing right now fold into a small
+  "+N" after each group (click it to see them), and the bands with nothing to choose at all fold into one short line
+  at the bottom ("Nothing to choose now: Camera · Artist · …"). A drive still opening no longer fills the top.
 - **Updates are found even if Laserdot+ stays open.** The daily look for a new version used to happen only when
   Laserdot+ started; a copy left open for days never saw one. It now looks once a day while it runs, too.
 
