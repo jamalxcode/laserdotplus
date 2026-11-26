@@ -90,3 +90,7 @@
   self-test on it, and keeps that disk image (`release-dmg`); `release.yml` (on Linux) publishes exactly that file —
   no second build, about a minute after the check passes. `app/scripts/release-local.sh` still releases from the
   owner's Mac.
+- **Find Duplicates** (`Duplicates.swift`): `engine.findDuplicates(scope: place token, exactOnly: !similar)` on a
+  connection of its own; groups show best first with the engine's keep recommendation (at least one copy always kept);
+  Move Copies to Trash runs `cleanupPreview` (dry run, an alert with count and bytes) then `cleanup` (to the Trash);
+  moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.

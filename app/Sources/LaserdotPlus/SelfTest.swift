@@ -132,6 +132,23 @@ final class SelfTestRunner {
             self.waitFor(10, { self.model.selection.count == Int(self.model.total) }) { _ in
                 self.report["select_all"] = self.model.selection.count == Int(self.model.total) && self.model.total > 0
                 self.model.selection = []
+                self.duplicates()
+            }
+        }
+    }
+
+    /// Find Duplicates over everything: the fixtures' pictures are one
+    /// picture at four sizes (the app icon), so a "same picture" group shows.
+    private func duplicates() {
+        model.showDupes = true
+        model.dupes.similar = true
+        model.dupes.scan(scope: "")
+        waitFor(60, { self.model.dupes.phase == .done }) { _ in
+            self.report["dupes_groups"] = self.model.dupes.groups.count
+            self.report["dupes_problem"] = self.model.dupes.problem ?? ""
+            self.after(2) {
+                self.shot("duplicates")
+                self.model.showDupes = false
                 self.review()
             }
         }

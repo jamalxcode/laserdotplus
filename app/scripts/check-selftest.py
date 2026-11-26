@@ -31,6 +31,7 @@ check(r.get("trashed") is True and r.get("trash_hidden") is True, "Move to Trash
 check(r.get("restored") is True, "Undo puts it back")
 check(r.get("marquee_count", 0) >= 2, f"the selection box over the grid's tiles selects what it touches (got {r.get('marquee_count')})")
 check(r.get("choices_arranged") is True, "all the choices: what can be chosen comes first in each group")
+check(r.get("dupes_groups", 0) >= 1, f"Find Duplicates finds the same picture at several sizes (got {r.get('dupes_groups')} groups, problem {r.get('dupes_problem')!r})")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")
@@ -39,7 +40,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

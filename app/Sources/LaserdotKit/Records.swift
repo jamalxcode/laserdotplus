@@ -148,6 +148,12 @@ public struct DuplicateGroup: Sendable {
     /// Best first.
     public var files: [DuplicateFile]
     public var reclaimable: UInt64
+
+    public init(kind: String, files: [DuplicateFile], reclaimable: UInt64) {
+        self.kind = kind
+        self.files = files
+        self.reclaimable = reclaimable
+    }
 }
 
 public struct DuplicateReport: Sendable {

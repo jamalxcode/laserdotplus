@@ -2,6 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.9
+
+- **Find Duplicates.** File ▸ Find Duplicates… (⇧⌘D) or the Duplicates button finds copies of the same file in the
+  current place — exact copies and, if you like, the same picture or video saved at another size or quality. The
+  best copy of each is marked to keep (click to change); **Move Copies to Trash** shows how much space you free,
+  previews, and moves the rest to the Trash. Nothing is deleted, and a group is skipped if a kept copy changed.
+- **One View menu.** The view, Review, Quick Look and Clear Filters are now in macOS's own View menu (there were two).
+
 ## 0.1.8
 
 - **Files deleted in Finder leave the list on drives too.** Some drives (exFAT ones, like most portable drives) don't

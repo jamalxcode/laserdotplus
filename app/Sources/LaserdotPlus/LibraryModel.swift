@@ -28,6 +28,22 @@ final class LibraryModel: ObservableObject {
     let engine: Engine
 
     @Published var text = "" { didSet { if text != oldValue { schedule() } } }
+    /// The Find Duplicates panel is open over the files.
+    @Published var showDupes = false
+    lazy var dupes = DupesModel(engine: engine)
+
+    /// The place, in words (the duplicates panel's title).
+    var placeTitle: String {
+        switch place {
+        case .everywhere: return L("place.everywhere")
+        case .thisMac: return L("place.thisMac")
+        case let .drive(name): return name
+        }
+    }
+
+    /// Where duplicates are looked for: the current place.
+    var dupesScope: String { place.token ?? "" }
+
     @Published var place: Place = .everywhere { didSet { if place != oldValue { filters = [:]; schedule(now: true) } } }
     /// Chosen filter values, by group (several in a group: any of them).
     @Published private(set) var filters: [String: [String]] = [:]

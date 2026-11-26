@@ -169,3 +169,12 @@ asked to stop, then stopped.
 The list follows the engine, which follows macOS file events — and on exFAT drives (the T5 EVO) those can go missing.
 Decided: a safety net in the app — every 4 seconds, off the main thread, the top of the list (1,500 files) is checked;
 files that are gone leave the list at once and the engine is told to list their folders again (`touched`).
+
+## 23. Two View menus, and no Find Duplicates (0.1.9)
+
+"There are 2 View menus in the menu bar; also there is no find duplicates function." Decided: the app's view commands
+go into macOS's own View menu. Find Duplicates — the engine already found exact copies, similar pictures and
+re-encoded videos — gets a panel over the files (File ▸ Find Duplicates…, ⇧⌘D, or the Duplicates button) for the
+current place: groups with the recommended copy to keep, a click to change it, the space freed, and Move Copies to
+Trash after a preview (never deletes; a group whose kept copy changed is skipped). It is the first part of the
+clean-up screen.

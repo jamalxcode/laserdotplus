@@ -84,6 +84,8 @@ struct TopArea: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
                 .help(L("sort.by"))
+                Button { model.showDupes.toggle() } label: { Label(L("dupes.title"), systemImage: "square.on.square") }
+                    .help(L("dupes.menu"))
                 Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
                     .help(L("review.start"))
                     .disabled(model.results.isEmpty)
@@ -171,6 +173,8 @@ struct FilesArea: View {
         .overlay {
             if model.reviewIndex != nil {
                 ReviewView(model: model)
+            } else if model.showDupes {
+                DuplicatesView(model: model, dupes: model.dupes)
             }
         }
     }

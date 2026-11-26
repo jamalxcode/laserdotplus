@@ -29,8 +29,11 @@ struct LaserdotPlusApp: App {
             CommandGroup(after: .newItem) {
                 Button(L("menu.indexFolder")) { delegate.model.chooseFolderToIndex() }
                     .keyboardShortcut("i", modifiers: [.command, .shift])
+                Button(L("dupes.menu")) { delegate.model.showDupes = true }
+                    .keyboardShortcut("d", modifiers: [.command, .shift])
             }
-            CommandMenu(L("menu.view")) {
+            // Into macOS's own View menu (a second one was added beside it).
+            CommandGroup(before: .toolbar) {
                 Button(L("view.list")) { delegate.model.viewMode = .list }.keyboardShortcut("1")
                 Button(L("view.grid")) { delegate.model.viewMode = .grid }.keyboardShortcut("2")
                 Button(L("view.sheet")) { delegate.model.viewMode = .sheet }.keyboardShortcut("3")
@@ -40,6 +43,7 @@ struct LaserdotPlusApp: App {
                 Divider()
                 Button(L("action.quickLook")) { delegate.model.quickLook() }.keyboardShortcut("y")
                 Button(L("filters.clear")) { delegate.model.clearFilters() }.keyboardShortcut(.delete, modifiers: [.command, .option])
+                Divider()
             }
         }
     }
