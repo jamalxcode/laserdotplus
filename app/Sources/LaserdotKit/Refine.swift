@@ -171,6 +171,34 @@ public enum RefineLogic {
         return (shown, hidden)
     }
 
+    /// All the choices, arranged so what can be chosen leads (the owner: "the
+    /// many choices that are shown but not available, shrunk because they
+    /// can't be chosen … rearrange to make it more logical and clear"):
+    /// within a group the values that give results come first (in their
+    /// usual order), then those that give none; within a family the groups
+    /// with something to choose come first; families with nothing to choose
+    /// go to the end. A drive waiting to be indexed counts as choosable.
+    public static func arranged(_ groups: [RefineGroup]) -> [RefineGroup] {
+        func live(_ o: RefineOption) -> Bool { o.count > 0 || o.isWaitingDrive }
+        let sorted = groups.map { g in
+            RefineGroup(id: g.id, family: g.family, options: g.options.filter(live) + g.options.filter { !live($0) })
+        }
+        var families: [String] = []
+        var byFamily: [String: [RefineGroup]] = [:]
+        for g in sorted {
+            let f = g.family ?? g.id
+            if byFamily[f] == nil { families.append(f) }
+            byFamily[f, default: []].append(g)
+        }
+        func hasLive(_ g: RefineGroup) -> Bool { g.options.contains(where: live) }
+        let ordered = families.map { f -> [RefineGroup] in
+            let gs = byFamily[f] ?? []
+            return gs.filter(hasLive) + gs.filter { !hasLive($0) }
+        }
+        return ordered.filter { $0.contains(where: hasLive) }.flatMap { $0 }
+            + ordered.filter { !$0.contains(where: hasLive) }.flatMap { $0 }
+    }
+
     /// The choice row top down (the owner: "starting large then going
     /// granular, with related properties"): consecutive groups of one family
     /// form a band, shaded by its family. The daemon sends them in order.

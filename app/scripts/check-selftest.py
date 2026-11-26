@@ -30,6 +30,7 @@ check("video" in r.get("details_sections", []) and "general" in r.get("details_s
 check(r.get("trashed") is True and r.get("trash_hidden") is True, "Move to Trash moves the file and drops it from the list")
 check(r.get("restored") is True, "Undo puts it back")
 check(r.get("marquee_count", 0) >= 2, f"the selection box over the grid's tiles selects what it touches (got {r.get('marquee_count')})")
+check(r.get("choices_arranged") is True, "all the choices: what can be chosen comes first in each group")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")

@@ -71,7 +71,8 @@ struct PlacesBar: View {
         } label: { label }
         .controlSize(.small)
         .fixedSize()
-        .help(d.totalBytes > 0 ? String(format: L("drive.space"), bytesText(d.freeBytes), bytesText(d.totalBytes)) : d.name)
+        .help(!(d.detail ?? "").isEmpty ? (d.detail ?? "")
+              : d.totalBytes > 0 ? String(format: L("drive.space"), bytesText(d.freeBytes), bytesText(d.totalBytes)) : d.name)
         .contextMenu {
             Button(L("drive.eject")) { drives.eject(d) }
             if d.state == "unindexed" { Button(L("drive.index")) { drives.index(d) } }

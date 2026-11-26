@@ -156,6 +156,7 @@ final class SelfTestRunner {
     }
 
     private func thisMac() {
+        model.allChoices = true // the "place" screenshot shows all the choices
         model.place = .thisMac
         let gone = folder + "/Trips/2023/rome trip.txt"
         // Matched by its end: the engine may spell the folder differently
@@ -165,7 +166,14 @@ final class SelfTestRunner {
             self.report["this_mac_count"] = self.model.results.count
             // The chosen place shows in the search box as a pill.
             self.report["place_pill"] = self.model.pills.first { $0.isPlace }?.label ?? ""
+            // All the choices: what can be chosen leads, what cannot is small.
+            let arranged = RefineLogic.arranged(self.model.openGroups)
+            self.report["choices_arranged"] = arranged.allSatisfy { g in
+                guard let dead = g.options.firstIndex(where: { $0.count == 0 }) else { return true }
+                return g.options[dead...].allSatisfy { $0.count == 0 }
+            }
             self.shot("place")
+            self.model.allChoices = false
             self.report["drives"] = self.drives.drives.map(\.name)
             // Deleted behind the app's back (as in Finder): it leaves the list.
             self.report["external_listed"] = self.model.results.contains(where: isGone)

@@ -2,6 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.6
+
+- **Choices you can't pick shrink.** With More choices open, a choice that gives no files right now is small grey
+  text instead of a full button; it grows back into a chip as soon as it applies. What you can pick comes first: in
+  each group, then in each band, and bands with nothing to pick move to the bottom.
+- **A drive that can't be opened says so.** Instead of "Opening its index…" for ever, it reads "Couldn't open its
+  index · click to try again", with the reason when you point at it.
+
 ## 0.1.5
 
 - **A drive opens straight away, and the window never freezes waiting for it.** Opening a drive's index (the T5 EVO

@@ -237,3 +237,5 @@
 "updates.downloading" = "جارٍ تنزيل Laserdot+ %@…";
 "updates.installFailed" = "تعذر تثبيت التحديث";
 "drive.waiting.help" = "تظهر ملفاته هنا حالما يصبح جاهزًا، ولا يلزم فعل شيء آخر.";
+"choices.none" = "لا توجد هنا ملفات «%@» الآن";
+"drive.state.cannotOpen" = "تعذر فتح فهرسه · انقر للمحاولة مجددًا";

@@ -1,6 +1,8 @@
 package core
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -63,4 +65,30 @@ func TestADriveBeingOpenedIsListedAsOpening(t *testing.T) {
 	m.ld.mu.Lock()
 	delete(m.ld.attaching, drive)
 	m.ld.mu.Unlock()
+}
+
+// A drive whose index cannot be opened says why, instead of "opening" for
+// ever.
+func TestADriveThatCannotBeOpenedSaysWhy(t *testing.T) {
+	m := newMac(t)
+	drive := makeDrive(t, m.vols, "Broken")
+	if _, err := m.ld.CreateDriveIndex(drive, DriveOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	m.ld.DetachDrive(drive)
+	idx := filepath.Join(drive, ".laserdot", "index.db")
+	for _, s := range []string{"-wal", "-shm"} {
+		os.Remove(idx + s)
+	}
+	if err := os.WriteFile(idx, append([]byte("SQLite format 3\x00"), make([]byte, 200)...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := m.ld.AttachDrive(drive, "")
+	if err == nil {
+		t.Fatal("a broken index opened")
+	}
+	st := m.ld.Drives()[0].State
+	if st.State != DriveDetached || st.Detail == "" {
+		t.Fatalf("%+v", st)
+	}
 }

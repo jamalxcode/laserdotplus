@@ -13,7 +13,7 @@ struct ChoiceBands: View {
 
     var body: some View {
         let open = model.openGroups
-        let calm = RefineLogic.compact(open, expanded: model.allChoices)
+        let calm = RefineLogic.compact(RefineLogic.arranged(open), expanded: model.allChoices)
         if !open.isEmpty {
             // The top area scrolls (it can be made smaller or bigger).
             Group {
@@ -62,9 +62,24 @@ struct ChoiceBands: View {
         }
     }
 
-    private func chip(_ o: RefineOption, in g: RefineGroup) -> some View {
+    @ViewBuilder private func chip(_ o: RefineOption, in g: RefineGroup) -> some View {
         let label = Self.label(o)
-        return Button {
+        if o.count == 0 && !o.isWaitingDrive {
+            // Nothing to choose here now: small and quiet, it grows back into
+            // a chip as soon as it gives results.
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 2)
+                .padding(.vertical, 3)
+                .help(String(format: L("choices.none"), label))
+        } else {
+            liveChip(o, label: label, in: g)
+        }
+    }
+
+    private func liveChip(_ o: RefineOption, label: String, in g: RefineGroup) -> some View {
+        Button {
             if NSEvent.modifierFlags.contains(.option) {
                 model.exclude(g.id, o.token, label: label)
             } else {
@@ -73,7 +88,6 @@ struct ChoiceBands: View {
         } label: {
             Text("\(label) ").font(.caption) + Text(o.count > 0 ? "\(o.count)" : "").font(.caption).foregroundColor(.secondary)
         }
-        .disabled(o.count == 0)
         .help(String(format: L("choices.help"), label))
         .contextMenu {
             Button(L("choices.leaveOut")) { model.exclude(g.id, o.token, label: label) }

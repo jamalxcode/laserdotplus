@@ -237,3 +237,5 @@
 "updates.downloading" = "Downloading Laserdot+ %@…";
 "updates.installFailed" = "Couldn't install the update";
 "drive.waiting.help" = "Its files appear here as soon as it is ready; nothing else needs doing.";
+"choices.none" = "No files here are “%@” right now";
+"drive.state.cannotOpen" = "Couldn’t open its index · click to try again";

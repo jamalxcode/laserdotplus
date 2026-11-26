@@ -21,11 +21,21 @@ import (
 // AttachDrive opens an existing drive index (pass: for encrypted ones; ""
 // uses a passphrase entered earlier this session). An interrupted first
 // index resumes.
-func (ld *Laserdot) AttachDrive(mount, pass string) (DriveInfo, error) {
-	mount, err := canonical(mount)
+func (ld *Laserdot) AttachDrive(mount, pass string) (info DriveInfo, err error) {
+	mount, err = canonical(mount)
 	if err != nil {
 		return DriveInfo{}, err
 	}
+	defer func() {
+		var locked *DriveLockedError
+		ld.mu.Lock()
+		if err != nil && !errors.As(err, &locked) {
+			ld.attachErr[mount] = err.Error()
+		} else {
+			delete(ld.attachErr, mount)
+		}
+		ld.mu.Unlock()
+	}()
 	v, err := scan.VolumeAt(mount)
 	if err != nil {
 		return DriveInfo{}, err

@@ -77,6 +77,21 @@ final class RefineLogicTests: XCTestCase {
         let decoded = try JSONDecoder().decode([RefineGroup].self, from: Data(json.utf8))
         XCTAssertTrue(decoded[0].options[0].isExcluded)
     }
+
+    /// What can be chosen leads: live values first in a group, live groups
+    /// first in a family, families with nothing to choose last.
+    func testArrangedPutsWhatCanBeChosenFirst() {
+        func o(_ t: String, _ n: UInt64) -> RefineOption { RefineOption(token: t, label: t, key: nil, count: n) }
+        let groups = [
+            RefineGroup(id: "kind", family: "what", options: [o("video", 0), o("image", 5), o("doc", 2)]),
+            RefineGroup(id: "camera", family: "photo", options: [o("canon", 0)]),
+            RefineGroup(id: "size", family: "file", options: [o("small", 0)]),
+            RefineGroup(id: "modified", family: "file", options: [o("today", 1)]),
+        ]
+        let a = RefineLogic.arranged(groups)
+        XCTAssertEqual(a.map(\.id), ["kind", "modified", "size", "camera"])
+        XCTAssertEqual(a[0].options.map(\.token), ["image", "doc", "video"])
+    }
 }
 
 final class PillsTests: XCTestCase {

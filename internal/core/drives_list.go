@@ -139,6 +139,8 @@ func (ld *Laserdot) driveInfoFrom(v scan.Volume, f foundIndex) DriveInfo {
 		}
 		if ld.attaching[v.Mount] {
 			info.State = DriveState{State: DriveOpening}
+		} else if e := ld.attachErr[v.Mount]; e != "" && info.State.State == DriveDetached {
+			info.State.Detail = e // shown with the drive: why it could not be opened
 		}
 	}
 	return info

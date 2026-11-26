@@ -130,3 +130,14 @@ Also found while testing it (a stack sample from CI): quitting could wait for it
 the background and the "quit now" answer was sent back through the main queue — busy, when the quit itself started
 in a main-queue block (Install and Relaunch, the self-test). The answer now goes through the run loop, in the modes
 AppKit waits in. CI now samples a hung self-test after five minutes, so a freeze shows where it is.
+
+## 18. Choices that can't be chosen, and a clearer order (0.1.6)
+
+"Let's have the many choices that are shown but not available shrunk, because they can't be chosen, and when they
+become available take a proper size; also rearrange to make it more logical and clear." (The screenshot also showed
+the T5 EVO and another drive still "Opening its index…".) Decided: a choice with no results is small grey text (no
+button) and grows back into a chip when it applies; values that give results lead each group (in their usual order),
+groups with something to choose lead each band, and bands with nothing to choose go to the bottom
+(`RefineLogic.arranged`). A drive whose index could not be opened now says so ("Couldn't open its index · click to try
+again", the engine's reason in the tooltip) instead of showing the hourglass for ever; "opening" is shown only while
+the engine is really opening it.

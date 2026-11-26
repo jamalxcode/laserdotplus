@@ -72,3 +72,7 @@
 - **Quitting** hides the window, stops the engine in the background and answers AppKit's "should terminate" through the
   run loop (`performSelector(onMainThread:modes:)`), never `DispatchQueue.main`, which is busy when the quit began in a
   main-queue block. CI samples the app's threads if the self-test has not ended after five minutes.
+- **Choices** are arranged by `RefineLogic.arranged`: live values first in each group, live groups first in each band,
+  bands with nothing to choose last; a value with no results is drawn as small grey text, not a button.
+- **A drive that cannot be opened**: the engine keeps why in memory (`attachErr`) and sends it as the drive's state
+  detail; the app shows "Couldn't open its index · click to try again" (reason in the tooltip), not the hourglass.

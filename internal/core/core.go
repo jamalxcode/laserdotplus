@@ -185,6 +185,9 @@ type Laserdot struct {
 	// attaching: drives whose index is being opened (reserved, so it is not
 	// opened twice; listed as "opening").
 	attaching map[string]bool
+	// attachErr: why a drive's index could not be opened (in memory only;
+	// shown with the drive instead of "opening" for ever).
+	attachErr map[string]string
 }
 
 // DefaultDBPath is $LASERDOT_DB, else
@@ -219,7 +222,7 @@ func OpenAt(dbPath string, now time.Time) (*Laserdot, error) {
 		return nil, err
 	}
 	ld := &Laserdot{dbPath: dbPath, db: db, report: OpenReport{Reindexed: []string{}, Purged: []string{}},
-		volumes: DefaultVolumeConfig(), keys: map[string]string{}, creating: map[string]bool{}, attaching: map[string]bool{}}
+		volumes: DefaultVolumeConfig(), keys: map[string]string{}, creating: map[string]bool{}, attaching: map[string]bool{}, attachErr: map[string]string{}}
 	if ld.content, err = index.OpenContent(contentPath(dbPath)); err != nil {
 		db.Close()
 		return nil, err
