@@ -8,6 +8,7 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
   moments as "Probably the same file", while they are read whole to make sure; confirmed copies and similar pictures
   replace them as each step finishes. A strip shows the step, how many files are done of how many, and the file being
   read, with **Stop** (what was found so far stays). Move to Trash waits until the copies are confirmed.
+- A file's details no longer stay empty after a brief hiccup talking to the engine: they are asked for again.
 
 ## 0.1.14
 

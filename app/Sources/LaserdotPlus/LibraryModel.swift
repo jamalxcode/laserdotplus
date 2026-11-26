@@ -481,7 +481,14 @@ final class LibraryModel: ObservableObject {
         }
         let engine = self.engine
         detailsQueue.async { [weak self] in
-            let d = try? engine.details(path: path)
+            // A connection that broke (the engine was busy, restarted…) is
+            // remade on the next try: a hiccup must not leave the panel empty.
+            var d = try? engine.details(path: path)
+            for wait in [0.3, 1.0, 2.0] where d == nil {
+                Thread.sleep(forTimeInterval: wait)
+                guard DispatchQueue.main.sync(execute: { self?.selection == [path] }) else { return }
+                d = try? engine.details(path: path)
+            }
             DispatchQueue.main.async {
                 guard let self, self.selection == [path] else { return }
                 self.details = d
