@@ -362,3 +362,6 @@ indexing". Found: every 3 s while indexing, the app re-ran the search, rebuilt t
 rows' dates and wrote them row by row (one redraw each), and the right pane asked the disk for the drive's mount on
 every redraw. Decided: refresh at most every 15 s and never during input, one update per refresh, mounts from the
 drive list, and a visible spinner. Lesson: anything on a timer must stay cheap at a 1 TB+ drive's scale.
+Then: "now its back again after viewing 1 video" and "and making new attribute choices". Same cause: every new search
+(a choice, or a file whose last-opened date changed) filled each row's date with its own assignment to the published
+list — hundreds of list copies and redraws on the main thread. The single update in 0.1.26 fixes it.
