@@ -15,6 +15,7 @@ struct PlacesBar: View {
                 place(.everywhere, L("place.everywhere"), "square.stack.3d.up", nil)
                 place(.thisMac, L("place.thisMac"), "laptopcomputer", nil)
                 ForEach(drives.drives, id: \.mount) { d in drive(d) }
+                SavedViewsStrip(model: model, views: model.views)
             }
             .padding(.vertical, 3)
         }

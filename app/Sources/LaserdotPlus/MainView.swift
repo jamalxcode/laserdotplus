@@ -113,6 +113,8 @@ struct TopArea: View {
                         .keyboardShortcut("j", modifiers: [.command, .shift])
                     Button { model.openCleanup(.bigOld) } label: { Label(L("cleanup.bigOld.menu"), systemImage: "externaldrive.badge.timemachine") }
                         .keyboardShortcut("b", modifiers: [.command, .shift])
+                    Button { model.openCleanup(.space) } label: { Label(L("space.menu"), systemImage: "chart.bar.xaxis") }
+                        .keyboardShortcut("s", modifiers: [.command, .shift])
                 } label: {
                     Label(L("tools.title"), systemImage: "wand.and.stars")
                 }

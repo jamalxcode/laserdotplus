@@ -2,6 +2,24 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.20
+
+- **Every date a file carries.** The details pane starts with a Dates section: created, modified, last opened and
+  added to its folder (as macOS records them on the file), and when its name or tags last changed; a picture's or
+  video's own date (taken, recorded) stays in its section. The list has a Date Created column (click to sort).
+- **Where is my space?** (Tools, ⇧⌘S, or Clean Up ▸ Space): the place's folders biggest first, measured from the
+  index; click a folder to go inside, Up to come back, right-click to show it in Finder or list its files.
+- **Keep, for every group at once** (Find Duplicates ▸ Keep): the best quality, the oldest or the newest copy, or the
+  copy in a folder you choose; and **Never Touch a Folder…** keeps everything in it. Choosing "Larger than 1 GB"
+  unticks Similar pictures and videos (the slow part; tick it again if you want it).
+- **A drive's Trash:** with a drive chosen and nothing selected, the right pane says how much is waiting in the drive's
+  Trash, with **Open Trash** (the space is freed when Finder empties it — Laserdot+ never deletes).
+- **Saved views:** the bookmark after the places saves the current words and choices; a drive's views are kept on
+  that drive and come back whenever it is plugged in.
+- **What Is This? ▸ Rename All to Suggestions**, after a preview; one Undo puts every name back.
+- In the pictures: **← → ↑ ↓** move the selection. A drive slow to open its index shows for how long. VoiceOver reads
+  the tiles and choices.
+
 ## 0.1.19
 
 - **A drive's second duplicate scan takes moments.** What a scan learns about a drive's files (their fingerprints)

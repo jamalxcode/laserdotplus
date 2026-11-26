@@ -13,6 +13,7 @@ import (
 
 	"github.com/jamalxcode/laserdotplus/internal/fold"
 	"github.com/jamalxcode/laserdotplus/internal/media"
+	"github.com/jamalxcode/laserdotplus/internal/scan"
 )
 
 // DetailRow is one fact: a key the app titles ("video.codec") and its value.
@@ -50,12 +51,42 @@ func (ld *Laserdot) Details(path string) (*FileDetails, error) {
 	fd := &FileDetails{Path: path, Name: filepath.Base(path), Kind: kind.String(), IsDir: fi.IsDir(), Size: size,
 		Modified: fi.ModTime().Unix(), Sections: []DetailSection{}}
 	if fi.IsDir() || !media.WantsProbe(kind, ext) {
+		fd.Sections = append(fd.Sections, datesSection(path)...)
 		return fd, nil
 	}
 	if st, rec := media.Probe(path, kind, ext, size); st == media.ProbeOK && rec != nil {
 		fd.Sections = detailSections(rec)
 	}
+	fd.Sections = append(datesSection(path), fd.Sections...)
 	return fd, nil
+}
+
+// datesSection: every date the file carries — created, modified, last opened
+// and added to its folder (as macOS records them on the file), and when its
+// name or tags last changed. A picture's or video's own date (taken,
+// recorded) is in its section. Times are this Mac's local time.
+func datesSection(path string) []DetailSection {
+	t, err := scan.FileTimes(path)
+	if err != nil {
+		return nil
+	}
+	var rows []DetailRow
+	add := func(key string, v int64) {
+		if v > 0 {
+			rows = append(rows, DetailRow{key, time.Unix(v, 0).Local().Format("2006-01-02 15:04")})
+		}
+	}
+	add("dates.created", t.Created)
+	add("dates.modified", t.Modified)
+	add("dates.opened", t.Opened)
+	add("dates.added", t.Added)
+	if t.Changed != t.Modified {
+		add("dates.changed", t.Changed)
+	}
+	if len(rows) == 0 {
+		return nil
+	}
+	return []DetailSection{{ID: "dates", Rows: rows}}
 }
 
 func detailSections(r *media.Record) []DetailSection {

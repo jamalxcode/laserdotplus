@@ -100,6 +100,7 @@ final class MouseCatcherView: NSView, NSDraggingSource {
     private var lastClick: (path: String, time: TimeInterval)?
 
     override var isFlipped: Bool { true } // the same coordinates as the tiles'
+    override func isAccessibilityElement() -> Bool { false } // VoiceOver reads the tiles under it
     override var acceptsFirstResponder: Bool { true }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
@@ -244,9 +245,50 @@ final class MouseCatcherView: NSView, NSDraggingSource {
             model.open(model.selectedHits)
         case 49: // Space
             model.quickLook()
+        case 123, 124, 125, 126: // ← → ↓ ↑
+            move(e.keyCode)
         default:
             super.keyDown(with: e)
         }
+    }
+
+    /// The arrows move the selection, as in Finder's icon view: ← → to the
+    /// file before or after, ↑ ↓ to the one above or below.
+    func move(_ key: UInt16) {
+        guard let model, !model.results.isEmpty else { return }
+        let paths = model.results.map(\.path)
+        let current = anchor.flatMap { model.selection.contains($0) ? $0 : nil } ?? model.selection.first
+        guard let cur = current, let i = paths.firstIndex(of: cur) else {
+            select(paths[0])
+            return
+        }
+        var target: String?
+        switch key {
+        case 123: target = i > 0 ? paths[i - 1] : nil
+        case 124: target = i + 1 < paths.count ? paths[i + 1] : nil
+        default:
+            if let f = frames.frames[cur] {
+                let down = key == 125
+                let row = frames.frames.filter { down ? $0.value.minY > f.maxY - 1 : $0.value.maxY < f.minY + 1 }
+                let nextY = down ? row.values.map(\.minY).min() : row.values.map(\.minY).max()
+                if let y = nextY {
+                    target = row.filter { abs($0.value.minY - y) < 2 }
+                        .min { abs($0.value.midX - f.midX) < abs($1.value.midX - f.midX) }?.key
+                }
+            }
+            if target == nil { // not laid out yet: a row's worth
+                let perRow = max(1, frames.frames.values.filter { abs($0.minY - (frames.frames[cur]?.minY ?? 0)) < 2 }.count)
+                let j = key == 125 ? i + perRow : i - perRow
+                target = paths.indices.contains(j) ? paths[j] : nil
+            }
+        }
+        if let t = target { select(t) }
+    }
+
+    private func select(_ path: String) {
+        model?.selectOne(path)
+        anchor = path
+        if let f = frames.frames[path] { scrollToVisible(f.insetBy(dx: 0, dy: -12)) }
     }
 }
 

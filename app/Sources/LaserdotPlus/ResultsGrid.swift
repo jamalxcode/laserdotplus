@@ -61,6 +61,9 @@ struct ResultsGrid: View {
         .contentShape(Rectangle())
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("\(h.name), \(kindText(h.kind))"))
+        .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
     }
 }
 

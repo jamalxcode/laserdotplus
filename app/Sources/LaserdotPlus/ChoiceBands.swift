@@ -141,6 +141,7 @@ struct ChoiceBands: View {
             }
         }
         .help(String(format: L("choices.help"), label))
+        .accessibilityLabel(Text(o.count > 0 ? "\(label), \(o.count)" : label))
         .contextMenu {
             Button(L("choices.leaveOut")) { model.exclude(g.id, o.token, label: label) }
         }

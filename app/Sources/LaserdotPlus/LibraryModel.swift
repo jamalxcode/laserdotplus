@@ -33,6 +33,8 @@ final class LibraryModel: ObservableObject {
     lazy var dupes = DupesModel(engine: engine)
     lazy var junk = JunkModel(engine: engine)
     lazy var bigOld = BigOldModel(engine: engine)
+    lazy var space = SpaceModel(engine: engine)
+    let views = SavedViews()
     /// Which clean-up the Clean Up screen shows.
     @Published var cleanupTab = CleanupTab.duplicates
 
@@ -270,6 +272,19 @@ final class LibraryModel: ObservableObject {
             filters[group] = toks.isEmpty ? nil : toks
         }
         if !excluded.contains(token) { excluded.append(token) }
+        schedule(now: true)
+    }
+
+    var filtersForSaving: [String: [String]] { filters }
+    var excludedForSaving: [String] { excluded }
+    var labelsForSaving: [String: String] { labels }
+
+    /// A saved view: its words and choices, in the current place.
+    func apply(_ v: SavedView) {
+        labels.merge(v.labels) { $1 }
+        filters = v.filters
+        excluded = v.excluded
+        text = v.text
         schedule(now: true)
     }
 
@@ -610,6 +625,11 @@ final class LibraryModel: ObservableObject {
                     undo?.setActionName(L("action.trash"))
                 }
                 self.tellEngine(moved.map(\.from))
+                // The drives' Trash sizes change.
+                Set(moved.compactMap { m -> String? in
+                    let parts = m.from.path.split(separator: "/")
+                    return parts.count > 2 && parts[0] == "Volumes" ? "/Volumes/" + parts[1] : nil
+                }).forEach { DriveTrash.shared.refresh(mount: $0) }
                 done(gone, failed)
             }
         }
@@ -734,6 +754,10 @@ final class LibraryModel: ObservableObject {
     /// The name suggested for a file, from its details (once they are read).
     func suggestedName(_ h: Hit) -> String? {
         guard let d = details, d.path == h.path else { return nil }
+        return Self.suggestion(h, d)
+    }
+
+    static func suggestion(_ h: Hit, _ d: FileDetails) -> String? {
         var rows: [String: String] = [:]
         for s in d.sections { for r in s.rows where rows[r.key] == nil { rows[r.key] = r.value } }
         let name = NameSense.suggest(name: h.name, modified: h.modified, kind: h.kind, rows: rows)
@@ -742,6 +766,60 @@ final class LibraryModel: ObservableObject {
 
     /// Rename a file in its folder (Edit ▸ Undo puts the old name back); in
     /// the sweep, it then leaves the list and the next one shows.
+    /// What Is This? ▸ Rename All: every unclear name to its suggestion,
+    /// after a preview; one Undo puts every name back.
+    func renameAllSuggestions(undo: UndoManager?) {
+        guard let items = sweep, !items.isEmpty else { return }
+        let engine = self.engine
+        notice = L("sweep.renameAll.reading")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var plan: [(Hit, String)] = []
+            for h in items {
+                if let d = try? engine.details(path: h.path), let s = Self.suggestion(h, d) { plan.append((h, s)) }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.notice = nil
+                guard !plan.isEmpty else { self.notice = L("sweep.renameAll.none"); return }
+                let alert = NSAlert()
+                alert.messageText = String(format: L("sweep.renameAll.confirm"), plan.count)
+                alert.informativeText = plan.prefix(8).map { "\($0.0.name)  →  \($0.1)" }.joined(separator: "\n")
+                    + (plan.count > 8 ? "\n…" : "")
+                alert.addButton(withTitle: L("sweep.renameAll"))
+                alert.addButton(withTitle: L("action.cancel"))
+                guard alert.runFront() == .alertFirstButtonReturn else { return }
+                DispatchQueue.global(qos: .userInitiated).async {
+                var done: [(from: URL, to: URL)] = []
+                for (h, name) in plan {
+                    let from = URL(fileURLWithPath: h.path)
+                    let dir = from.deletingLastPathComponent()
+                    var to = dir.appendingPathComponent(name)
+                    let stem = (name as NSString).deletingPathExtension, ext = (name as NSString).pathExtension
+                    var n = 2
+                    while FileManager.default.fileExists(atPath: to.path) {
+                        to = dir.appendingPathComponent(ext.isEmpty ? "\(stem) \(n)" : "\(stem) \(n).\(ext)")
+                        n += 1
+                    }
+                    if (try? FileManager.default.moveItem(at: from, to: to)) != nil { done.append((from, to)) }
+                }
+                DispatchQueue.main.async {
+                undo?.registerUndo(withTarget: self) { m in
+                    for d in done.reversed() { try? FileManager.default.moveItem(at: d.to, to: d.from) }
+                    m.tellEngine(done.flatMap { [$0.from, $0.to] })
+                    m.schedule(now: true, keepSelection: true)
+                }
+                undo?.setActionName(L("sweep.renameAll"))
+                self.notice = String(format: L("sweep.renameAll.done"), done.count)
+                self.tellEngine(done.flatMap { [$0.from, $0.to] })
+                self.sweep = nil
+                self.reviewIndex = nil
+                self.schedule(now: true, keepSelection: true)
+                }
+                }
+            }
+        }
+    }
+
     func rename(_ h: Hit, to newName: String, undo: UndoManager?) {
         let from = URL(fileURLWithPath: h.path)
         var to = from.deletingLastPathComponent().appendingPathComponent(newName)

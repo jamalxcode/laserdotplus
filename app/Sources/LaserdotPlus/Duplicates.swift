@@ -19,7 +19,12 @@ final class DupesModel: ObservableObject {
     /// for every file to be checked when the objective is just to save
     /// storage"): smaller files are never read. 0: every file.
     @Published var minMB: Int = (UserDefaults.standard.object(forKey: "dupes.minMB") as? Int) ?? 100 {
-        didSet { UserDefaults.standard.set(minMB, forKey: "dupes.minMB") }
+        didSet {
+            UserDefaults.standard.set(minMB, forKey: "dupes.minMB")
+            // Big files: comparing frames of every video is the slow part;
+            // exact copies are where the space is. (It can be ticked again.)
+            if minMB >= 1000, oldValue < 1000 { similar = false }
+        }
     }
     static let sizes = [0, 10, 100, 1000]
 
@@ -73,6 +78,47 @@ final class DupesModel: ObservableObject {
         }
     }
 
+    // MARK: which copy to keep, for every group at once
+
+    /// How the copy to keep is chosen (the critique: ticking hundreds of
+    /// groups one by one is not practical).
+    enum KeepRule: Equatable {
+        case best, oldest, newest
+        /// Keep the copy inside this folder (groups with none there keep
+        /// their choice).
+        case inFolder(String)
+    }
+
+    /// A folder whose files are never put in the Trash: in each group, its
+    /// copies are kept, whatever the rule.
+    @Published var protected: String?
+
+    func apply(_ rule: KeepRule) {
+        var next: Set<String> = []
+        for g in groups {
+            let pick: DuplicateFile?
+            switch rule {
+            case .best: pick = g.files.first(where: \.keep) ?? g.files.first
+            case .oldest: pick = g.files.min { ($0.modified, $0.path) < ($1.modified, $1.path) }
+            case .newest: pick = g.files.max { ($0.modified, $1.path) < ($1.modified, $0.path) }
+            case let .inFolder(dir):
+                pick = g.files.first { Self.inside($0.path, dir) } ?? g.files.first { keep.contains($0.path) }
+            }
+            if let pick { next.insert(pick.path) }
+            if let p = protected { g.files.filter { Self.inside($0.path, p) }.forEach { next.insert($0.path) } }
+        }
+        keep = next
+    }
+
+    func protect(_ dir: String?) {
+        protected = dir
+        if let dir { groups.flatMap(\.files).filter { Self.inside($0.path, dir) }.forEach { keep.insert($0.path) } }
+    }
+
+    static func inside(_ path: String, _ dir: String) -> Bool {
+        path.hasPrefix(dir.hasSuffix("/") ? dir : dir + "/")
+    }
+
     /// Stop early: what was found so far stays.
     func stop() {
         let engine = self.engine
@@ -113,6 +159,7 @@ final class DupesModel: ObservableObject {
 
     /// Keep or let go of one copy; the last kept copy of a group stays.
     func toggle(_ f: DuplicateFile, in g: DuplicateGroup) {
+        if let p = protected, Self.inside(f.path, p), keep.contains(f.path) { return } // never touched
         if keep.contains(f.path) {
             if g.files.filter({ keep.contains($0.path) }).count > 1 { keep.remove(f.path) }
         } else {
@@ -181,6 +228,33 @@ struct DuplicatesView: View {
     @ObservedObject var dupes: DupesModel
     @Environment(\.undoManager) private var undo
 
+    /// Which copy to keep, for every group at once.
+    private var keepMenu: some View {
+        Menu(L("dupes.keep")) {
+            Button(L("dupes.keep.best")) { dupes.apply(.best) }
+            Button(L("dupes.keep.oldest")) { dupes.apply(.oldest) }
+            Button(L("dupes.keep.newest")) { dupes.apply(.newest) }
+            Button(L("dupes.keep.folder")) { if let d = Self.chooseFolder() { dupes.apply(.inFolder(d)) } }
+            Divider()
+            if let p = dupes.protected {
+                Button(String(format: L("dupes.unprotect"), (p as NSString).lastPathComponent)) { dupes.protect(nil) }
+            } else {
+                Button(L("dupes.protect")) { if let d = Self.chooseFolder() { dupes.protect(d) } }
+            }
+        }
+        .fixedSize()
+        .help(L("dupes.keep.help"))
+        .disabled(dupes.phase != .done)
+    }
+
+    static func chooseFolder() -> String? {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        return panel.runFront() == .OK ? panel.url?.resolvingSymlinksInPath().path : nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ModeHeader(symbol: "square.on.square", title: L("dupes.title"), detail: model.placeTitle,
@@ -205,6 +279,7 @@ struct DuplicatesView: View {
                                 countText(dupes.toRemove.count, "copy"), bytesText(dupes.bytesToFree)))
                         .foregroundStyle(.secondary)
                     Spacer()
+                    keepMenu
                     Button(String(format: L("dupes.trashN"), countText(dupes.toRemove.count, "copy"), bytesText(dupes.bytesToFree))) {
                         dupes.moveToTrash(model: model, undo: undo) { model.schedule(now: true, keepSelection: true) }
                     }

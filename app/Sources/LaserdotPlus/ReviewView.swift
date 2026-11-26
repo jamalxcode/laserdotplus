@@ -43,6 +43,10 @@ struct ReviewView: View {
                         }
                         .help(L("sweep.rename.help"))
                     }
+                    if model.sweep != nil, (model.sweep?.count ?? 0) > 1 {
+                        Button(L("sweep.renameAll")) { model.renameAllSuggestions(undo: undo) }
+                            .help(L("sweep.renameAll.help"))
+                    }
                 }
                 HStack(spacing: 12) {
                     Button { model.reviewStep(-1) } label: { Label(L("review.previous"), systemImage: "chevron.left") }

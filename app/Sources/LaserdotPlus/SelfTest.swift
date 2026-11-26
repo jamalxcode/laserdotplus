@@ -121,6 +121,10 @@ final class SelfTestRunner {
                         v.simulate(.leftMouseDown, at: cb, clicks: 2); v.simulate(.leftMouseUp, at: cb, clicks: 2)
                         LibraryModel.openHook = nil
                         self.report["double_click_opens_first"] = opened == [a.key]
+                        // → moves the selection to the next file.
+                        v.simulate(.leftMouseDown, at: ca); v.simulate(.leftMouseUp, at: ca)
+                        v.move(124)
+                        self.report["arrow_moves"] = self.model.selection == [b.key]
                         let from = CGPoint(x: a.value.minX - 3, y: a.value.minY - 3)
                         let to = CGPoint(x: b.value.midX, y: b.value.midY)
                         v.simulate(.leftMouseDown, at: from)
@@ -197,6 +201,14 @@ final class SelfTestRunner {
         waitFor(60, { self.model.dupes.phase == .done }) { _ in
             self.report["dupes_groups"] = self.model.dupes.groups.count
             self.report["dupes_problem"] = self.model.dupes.problem ?? ""
+            // Keep ▸ The Oldest Copy: one copy kept per group, the oldest.
+            let d = self.model.dupes
+            d.apply(.oldest)
+            self.report["keep_oldest"] = !d.groups.isEmpty && d.groups.allSatisfy { g in
+                let kept = g.files.filter { d.keep.contains($0.path) }
+                return kept.count == 1 && kept[0].modified == g.files.map(\.modified).min()
+            }
+            d.apply(.best)
             self.after(2) {
                 self.shot("duplicates")
                 self.junk()
@@ -213,8 +225,16 @@ final class SelfTestRunner {
             self.report["junk_whys"] = Array(Set(self.model.junk.items.map(\.why))).sorted()
             self.after(1) {
                 self.shot("junk")
-                self.model.showDupes = false
-                self.review()
+                // Clean Up ▸ Space: the folders by size.
+                self.model.openCleanup(.space)
+                self.waitFor(20, { !self.model.space.items.isEmpty }) { _ in
+                    self.report["space_items"] = self.model.space.items.count
+                    self.after(1) {
+                        self.shot("space")
+                        self.model.showDupes = false
+                        self.review()
+                    }
+                }
             }
         }
     }
@@ -301,7 +321,16 @@ final class SelfTestRunner {
             if let p = self.model.results.first(where: isSpare)?.path { try? FileManager.default.removeItem(atPath: p) }
             self.waitFor(25, { !self.model.results.contains(where: isSpare) }) { ok in
                 self.report["drive_delete"] = listed && ok
-                self.finish("")
+                // A view saved on the drive is kept on the drive, and nowhere on this Mac.
+                self.model.toggle("kind", "kind:video", label: "Videos")
+                self.model.views.save(self.model.currentView(named: "Drive videos"))
+                let onDrive = URL(fileURLWithPath: "/Volumes/LDPlus/.laserdot/views.json")
+                let onMac = URL(fileURLWithPath: self.model.engine.dbPath).deletingLastPathComponent().appendingPathComponent("views.json")
+                self.waitFor(5, { FileManager.default.fileExists(atPath: onDrive.path) }) { saved in
+                    let macText = (try? String(contentsOf: onMac, encoding: .utf8)) ?? ""
+                    self.report["view_on_drive"] = saved && !macText.contains("Drive videos")
+                    self.finish("")
+                }
             }
         }
     }

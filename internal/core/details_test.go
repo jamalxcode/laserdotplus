@@ -33,4 +33,11 @@ func TestDetailsDescribeAFile(t *testing.T) {
 	if !has(d, "data", "data.column", "region  ·  text") || !has(d, "data", "data.rows", "1") {
 		t.Errorf("%+v", d.Sections)
 	}
+	// Every file and folder: its dates, first.
+	if !has(d, "dates", "dates.modified", "") || d.Sections[0].ID != "dates" {
+		t.Errorf("dates: %+v", d.Sections)
+	}
+	if f, _ := ld.Details(base); f == nil || !has(f, "dates", "dates.modified", "") {
+		t.Errorf("a folder's dates: %+v", f)
+	}
 }

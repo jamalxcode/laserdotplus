@@ -24,6 +24,10 @@ struct ResultsList: View {
             .width(min: 60, ideal: 80)
             TableColumn(L("column.modified"), value: \Hit.modified) { h in Text(dateText(h.modified)).foregroundStyle(.secondary).lineLimit(1) }
                 .width(min: 130, ideal: 160)
+            TableColumn(L("column.created"), value: \Hit.created) { h in
+                Text(h.created > 0 ? dateText(h.created) : "").foregroundStyle(.secondary).lineLimit(1)
+            }
+            .width(min: 110, ideal: 150)
             TableColumn(L("column.details")) { h in Text(h.badges.joined(separator: " · ")).foregroundStyle(.secondary).lineLimit(1) }
                 .width(min: 80, ideal: 200)
             TableColumn(L("column.where")) { h in Text(whereText(h.path)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
@@ -44,6 +48,8 @@ struct ResultsList: View {
                 key = .size
             } else if path == \Hit.kind as PartialKeyPath<Hit> {
                 key = .kind
+            } else if path == \Hit.created as PartialKeyPath<Hit> {
+                key = .created
             } else {
                 key = .modified
             }

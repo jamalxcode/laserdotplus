@@ -7,7 +7,7 @@ import SwiftUI
 /// place — Duplicates, Junk (system files, unfinished downloads, empty files
 /// and folders) and Big & old (large files untouched for years) — each with
 /// the space it frees and one Move to Trash (never deletes; Edit ▸ Undo).
-enum CleanupTab: String, CaseIterable { case duplicates, junk, bigOld }
+enum CleanupTab: String, CaseIterable { case duplicates, junk, bigOld, space }
 
 /// Junk: found by the engine walking the place's folders (junk is never
 /// indexed, so no search finds it).
@@ -82,18 +82,26 @@ struct CleanupView: View {
                 Text(L("cleanup.duplicates")).tag(CleanupTab.duplicates)
                 Text(L("cleanup.junk")).tag(CleanupTab.junk)
                 Text(L("cleanup.bigOld")).tag(CleanupTab.bigOld)
+                Text(L("space.title")).tag(CleanupTab.space)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 420)
+            .frame(maxWidth: 520)
             .padding(.top, 10)
             switch model.cleanupTab {
             case .duplicates: DuplicatesView(model: model, dupes: model.dupes)
             case .junk: junkView
             case .bigOld: bigView
+            case .space: SpaceView(model: model, space: model.space, root: spaceRoot)
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    /// Where Space starts: the drive, or every indexed folder.
+    private var spaceRoot: String {
+        if case let .drive(name) = model.place, let d = drives.drives.first(where: { $0.name == name }) { return d.mount }
+        return ""
     }
 
     /// The folders junk is looked for in: the drive's, this Mac's, or all.

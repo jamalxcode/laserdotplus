@@ -25,11 +25,16 @@ check("kind" in r.get("groups", []), f"the filter sidebar offers kinds (got {r.g
 check(r.get("typed") == ["Trips", "beach trip.jpg", "paris trip.txt", "rome trip.txt"], f"typing narrows by name, folders included (got {r.get('typed')})")
 check(r.get("filtered_kinds") == ["image"], f"ticking Pictures shows only pictures (got {r.get('filtered_kinds')})")
 check("kind:image" in r.get("filtered_query", ""), f"the tick becomes a filter (got {r.get('filtered_query')!r})")
+check(r.get("details_sections", [None])[0] == "dates", f"the details panel starts with the file's dates (got {r.get('details_sections')})")
 check("video" in r.get("details_sections", []) and "general" in r.get("details_sections", []),
       f"the details panel describes the video (got {r.get('details_sections')})")
 check(r.get("trashed") is True and r.get("trash_hidden") is True, "Move to Trash moves the file and drops it from the list")
 check(r.get("restored") is True, "Undo puts it back")
 check(r.get("clicks") == [True, True, True], f"a click selects one, ⌘-click adds one and takes it out again (got {r.get('clicks')})")
+check(r.get("view_on_drive") is True, "a drive's saved view is kept on the drive, not on this Mac")
+check(r.get("space_items", 0) > 0, f"Clean Up ▸ Space lists the folders by size (got {r.get('space_items')})")
+check(r.get("arrow_moves") is True, "→ moves the selection to the next file")
+check(r.get("keep_oldest") is True, "Keep ▸ The Oldest Copy keeps one copy per group, the oldest")
 check(r.get("double_click_opens_first") is True, "a double click opens the file its first click was on")
 check(r.get("drag_box", 0) >= 2, f"dragging the mouse from empty space selects the tiles it crosses (got {r.get('drag_box')})")
 check(r.get("marquee_count", 0) >= 2, f"the selection box over the grid's tiles selects what it touches (got {r.get('marquee_count')})")
@@ -52,7 +57,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep", "dark", "junk"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep", "dark", "junk", "space"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

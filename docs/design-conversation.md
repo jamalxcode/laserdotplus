@@ -299,3 +299,14 @@ once a file is clicked; refreshes wait while the mouse is down. The list view is
   playing instead of my choice". The first click selected the file, the details pane grew and pushed the split, the
   grid reflowed, and the second click landed on another tile. Fixed both: the pane can't push, and a double click
   opens the first click's file.
+
+## 38. The critique, done (0.1.20)
+
+The owner: "do all, also add time attributes, like last opened, date created, and related time that is recorded".
+- Dates: everything the file carries, read only for the file being looked at (no cost while indexing). Last opened
+  is macOS's own record on the file (it lives with the file, on the drive for a drive's file); Laserdot+ still keeps
+  no "opened" history of its own. Access time is left out: Laserdot+'s own header reads change it.
+- Space, Keep rules, saved views, Rename All, arrows, opening time, VoiceOver: as proposed.
+- The drive's Trash: the critique offered an Empty button, but Laserdot+ never deletes (rule 4). Decided: show how
+  much is waiting and open Finder's Trash, where the owner empties it.
+- Developer ID signing and notarization need the owner's Apple Developer account; not done.

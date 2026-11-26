@@ -151,8 +151,21 @@ final class DrivesModel: ObservableObject {
     }
 
     /// One line under the drive's name.
+    /// When each drive started opening (not published: it only changes the
+    /// text, which the drive list's own refresh redraws).
+    private var openingSince: [String: Date] = [:]
+
     func stateText(_ d: Drive) -> String {
         if let b = busy[d.mount] { return b }
+        if d.state == "opening" || (d.state == "detached" && (d.detail ?? "").isEmpty) {
+            // How long it has been opening, so a slow one does not look stuck.
+            let since = openingSince[d.mount] ?? Date()
+            openingSince[d.mount] = since
+            let s = Int(Date().timeIntervalSince(since))
+            if s >= 3 { return String(format: L("drive.busy.attachingFor"), durationText(Double(s))) }
+        } else {
+            openingSince[d.mount] = nil
+        }
         switch d.state {
         case "attached":
             return d.indexing ? String(format: L("drive.state.indexing"), d.entries) : String(format: L("drive.state.ready"), d.entries)

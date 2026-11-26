@@ -97,6 +97,21 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Dates (0.1.20):** `scan.FileTimes` reads, for one file when its details are asked: birth time, mtime, ctime,
+  last opened (`com.apple.lastuseddate#PS`, macOS) and date added (`getattrlist` `ATTR_CMN_ADDEDTIME` through
+  purego). `Details` puts them first as the `dates` section (local time). Never read while indexing (no cost per
+  file); atime is not shown (the indexer's own header reads change it). The list has a Date Created column.
+- **Space (0.1.20, `SpaceView.swift`):** Clean Up's fourth tab (Tools ▸ Where Is My Space?, ⇧⌘S) uses the engine's
+  `storage` op (sizes from the index): the place's folders by size, click to go in, Up to go back.
+- **Keep rules (0.1.20):** `DupesModel.apply(.best/.oldest/.newest/.inFolder)` sets one kept copy per group;
+  `protect(folder)` keeps every copy in a folder (and `toggle` won't untick them). `minMB >= 1000` unticks Similar.
+- **Drive Trash (0.1.20, `DriveTrash.swift`):** sums `<drive>/.Trashes/<uid>` off the main thread (refreshed after
+  a clean-up) and offers Open Trash (Finder's); Laserdot+ never empties it.
+- **Saved views (0.1.20, `SavedViews.swift`):** words, choices and labels as JSON — a drive's in
+  `<drive>/.laserdot/views.json`, This Mac's and Everything's beside this Mac's index; a view outside a drive that
+  names a drive (`/Volumes/…`, `volume:`) is refused. The self-test saves one on the test drive and checks this Mac.
+- **Rename All (0.1.20):** reads each unclear file's details, previews old → new, renames off the main thread, one
+  Undo. Arrow keys in `MouseCatcherView.move`; `DrivesModel` times "opening its index".
 - **Drive fingerprints (0.1.19, `internal/core/drivefp.go`):** a drive's duplicate fingerprints are kept in
   `<drive>/.laserdot/fingerprints.bin` (not in its index, whose schema is whitelisted): a binary list (path on the
   drive, size, mtime, hashes) closed by an HMAC-SHA256 with this Mac's key (`fingerprint.key` beside this Mac's

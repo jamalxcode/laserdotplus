@@ -1,0 +1,61 @@
+import AppKit
+import SwiftUI
+
+/// How much a drive's Trash holds (the critique: files moved to the Trash
+/// free no space until the Trash is emptied, and a drive's Trash is easy to
+/// forget). Laserdot+ never deletes: it says how much is waiting and opens
+/// Finder's Trash, where it is emptied. Counted off the main thread.
+final class DriveTrash: ObservableObject {
+    static let shared = DriveTrash()
+    @Published private(set) var bytes: [String: UInt64] = [:]
+    private var counting: Set<String> = []
+
+    /// The drive's own Trash folder (`<drive>/.Trashes/<uid>`).
+    static func folder(mount: String) -> URL {
+        URL(fileURLWithPath: mount).appendingPathComponent(".Trashes").appendingPathComponent(String(getuid()))
+    }
+
+    func refresh(mount: String) {
+        guard !counting.contains(mount) else { return }
+        counting.insert(mount)
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            var total: UInt64 = 0
+            let keys: [URLResourceKey] = [.totalFileAllocatedSizeKey, .fileSizeKey, .isRegularFileKey]
+            if let e = FileManager.default.enumerator(at: Self.folder(mount: mount), includingPropertiesForKeys: keys) {
+                for case let url as URL in e {
+                    guard let v = try? url.resourceValues(forKeys: Set(keys)), v.isRegularFile == true else { continue }
+                    total += UInt64(v.totalFileAllocatedSize ?? v.fileSize ?? 0)
+                }
+            }
+            DispatchQueue.main.async {
+                self?.counting.remove(mount)
+                self?.bytes[mount] = total
+            }
+        }
+    }
+
+    /// Finder's Trash window (it shows every drive's trashed files too).
+    static func openTrash() {
+        NSWorkspace.shared.open(URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".Trash"))
+    }
+}
+
+/// "48 GB in this drive's Trash — Open Trash", when there is something.
+struct DriveTrashLine: View {
+    let mount: String
+    @ObservedObject var trash = DriveTrash.shared
+
+    var body: some View {
+        Group {
+            if let b = trash.bytes[mount], b > 0 {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(String(format: L("trash.waiting"), bytesText(b)), systemImage: "trash")
+                        .font(.caption)
+                    Text(L("trash.help")).font(.caption2).foregroundStyle(.secondary)
+                    Button(L("trash.open")) { DriveTrash.openTrash() }.controlSize(.small)
+                }
+            }
+        }
+        .onAppear { trash.refresh(mount: mount) }
+    }
+}
