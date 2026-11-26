@@ -25,6 +25,7 @@ check("kind" in r.get("groups", []), f"the filter sidebar offers kinds (got {r.g
 check(r.get("typed") == ["Trips", "beach trip.jpg", "paris trip.txt", "rome trip.txt"], f"typing narrows by name, folders included (got {r.get('typed')})")
 check(r.get("filtered_kinds") == ["image"], f"ticking Pictures shows only pictures (got {r.get('filtered_kinds')})")
 check("kind:image" in r.get("filtered_query", ""), f"the tick becomes a filter (got {r.get('filtered_query')!r})")
+check({"dates.created", "dates.modified"} <= set(r.get("dates_keys", [])), f"the file's created and modified dates are read (got {r.get('dates_keys')})")
 check(r.get("details_sections", [None])[0] == "dates", f"the details panel starts with the file's dates (got {r.get('details_sections')})")
 check("video" in r.get("details_sections", []) and "general" in r.get("details_sections", []),
       f"the details panel describes the video (got {r.get('details_sections')})")

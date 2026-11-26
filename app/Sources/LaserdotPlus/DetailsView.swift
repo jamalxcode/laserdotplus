@@ -50,14 +50,15 @@ struct DetailsView: View {
     }
 
     @ViewBuilder private func details(_ h: Hit) -> some View {
-                Text(h.name).font(.callout.weight(.semibold)).textSelection(.enabled).lineLimit(3)
+                Text(h.name).font(.headline).textSelection(.enabled).lineLimit(3)
                 actions([h])
+                facts(h)
                 if h.kind == "video" {
                     Storyboard(path: h.path)
                 }
-                facts(h)
                 if let d = model.details, d.path == h.path {
-                    ForEach(d.sections, id: \.id) { s in section(s) }
+                    // The dates are in the facts above (the owner: they must show).
+                    ForEach(d.sections.filter { $0.id != "dates" }, id: \.id) { s in section(s) }
                 } else if h.kind == "video" || h.kind == "audio" || h.kind == "image" || h.kind == "document" {
                     ProgressView().controlSize(.small)
                 }
@@ -84,34 +85,47 @@ struct DetailsView: View {
         .controlSize(.small)
     }
 
+    /// What it is, where, and every date it carries (the owner: "last opened,
+    /// date created, and other file time attributes ... include them"), at
+    /// the top. Last opened and date added say "Not recorded" when macOS has
+    /// no record of them (a file never opened, or copied by a tool that
+    /// does not record it).
     private func facts(_ h: Hit) -> some View {
-        Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 4) {
+        let loaded = model.details.flatMap { $0.path == h.path ? $0 : nil }
+        let dates = loaded?.sections.first { $0.id == "dates" }?.rows ?? []
+        let date = { (key: String) in dates.first { $0.key == key }?.value }
+        return Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 5) {
             row(L("details.kind"), kindText(h.kind))
             if !h.isDir { row(L("details.size"), bytesText(h.size)) }
-            row(L("details.modified"), dateText(h.modified))
-            if h.created > 0 && h.created != h.modified { row(L("details.created"), dateText(h.created)) }
             row(L("details.where"), whereText(h.path))
+            Divider().gridCellColumns(2)
+            row(L("details.key.dates.created"), date("dates.created") ?? (h.created > 0 ? dateText(h.created) : L("details.notRecorded")))
+            row(L("details.key.dates.modified"), date("dates.modified") ?? dateText(h.modified))
+            if loaded != nil {
+                row(L("details.key.dates.opened"), date("dates.opened") ?? L("details.notRecorded"))
+                row(L("details.key.dates.added"), date("dates.added") ?? L("details.notRecorded"))
+                if let c = date("dates.changed") { row(L("details.key.dates.changed"), c) }
+            }
         }
-        .font(.caption)
     }
 
     private func section(_ s: DetailSection) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title("details.section." + s.id, s.id)).font(.caption.weight(.semibold))
-            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 3) {
+            Text(title("details.section." + s.id, s.id)).font(.headline)
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 4) {
                 ForEach(Array(s.rows.enumerated()), id: \.offset) { _, r in
                     row(title("details.key." + r.key, r.key), value(r.value))
                 }
             }
-            .font(.caption)
         }
         .padding(.top, 4)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
         GridRow {
-            Text(label).foregroundStyle(.secondary).gridColumnAlignment(.trailing)
-            Text(value).textSelection(.enabled).lineLimit(3)
+            // Titles bigger and bolder, so they show (the owner).
+            Text(label).font(.callout.weight(.semibold)).foregroundStyle(.primary).gridColumnAlignment(.trailing)
+            Text(value).font(.callout).foregroundStyle(.secondary).textSelection(.enabled).lineLimit(3)
         }
     }
 

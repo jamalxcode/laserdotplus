@@ -164,6 +164,7 @@ final class SelfTestRunner {
             self.model.selection = [v.path]
             self.waitFor(15, { self.model.details?.path == v.path }) { _ in
                 self.report["details_sections"] = self.model.details?.sections.map(\.id) ?? []
+                self.report["dates_keys"] = self.model.details?.sections.first { $0.id == "dates" }?.rows.map(\.key) ?? []
                 self.after(3) { // the storyboard's frames
                     self.shot("details")
                     self.trash()

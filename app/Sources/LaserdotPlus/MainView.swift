@@ -229,7 +229,12 @@ struct BottomBar: View {
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(h.name).fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
-                        Text(([kindText(h.kind), h.isDir ? "" : bytesText(h.size), dateText(h.modified)] + h.badges)
+                        let opened = model.details.flatMap { $0.path == h.path ? $0 : nil }?
+                            .sections.first { $0.id == "dates" }?.rows.first { $0.key == "dates.opened" }?.value
+                        Text(([kindText(h.kind), h.isDir ? "" : bytesText(h.size),
+                               String(format: L("bar.modified"), dateText(h.modified)),
+                               h.created > 0 ? String(format: L("bar.created"), dateText(h.created)) : "",
+                               opened.map { String(format: L("bar.opened"), $0) } ?? ""] + h.badges)
                             .filter { !$0.isEmpty }.joined(separator: " · "))
                             .foregroundStyle(.secondary).lineLimit(1)
                     }

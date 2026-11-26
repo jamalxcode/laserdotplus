@@ -310,3 +310,11 @@ The owner: "do all, also add time attributes, like last opened, date created, an
 - The drive's Trash: the critique offered an Empty button, but Laserdot+ never deletes (rule 4). Decided: show how
   much is waiting and open Finder's Trash, where the owner empties it.
 - Developer ID signing and notarization need the owner's Apple Developer account; not done.
+
+## 39. Dates where they show; bolder titles (0.1.21)
+
+The owner: "have the attribute titles bigger and bolder to make them show, also last opened, date created, and other
+file time attributes are not there, include them". They were there — at the bottom of the pane, under the preview and
+the storyboard, in small grey type. Decided: every date goes in the first block under the name; a date macOS did not
+record says "Not recorded" rather than vanishing (so the owner can tell it was looked for); titles in bold at body
+size, section titles as headlines.

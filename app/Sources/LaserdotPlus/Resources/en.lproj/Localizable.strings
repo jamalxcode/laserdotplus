@@ -378,3 +378,7 @@
 "views.save.help" = "Save these words and choices as a view of this place";
 "views.remove" = "Remove This View";
 "views.save.pickDrive" = "Choose the drive first to save a view of its files — what concerns a drive is kept on the drive.";
+"details.notRecorded" = "Not recorded";
+"bar.modified" = "Modified %@";
+"bar.created" = "Created %@";
+"bar.opened" = "Opened %@";

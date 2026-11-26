@@ -97,6 +97,9 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Dates in the pane (0.1.21):** `facts` shows them under the name (from the `dates` section once read, the hit's
+  dates before); Last opened / Added read "Not recorded" when absent; the `dates` section is not repeated below.
+  Labels are `.callout` semibold, section titles `.headline`. The bottom bar labels Modified, Created and Opened.
 - **Dates (0.1.20):** `scan.FileTimes` reads, for one file when its details are asked: birth time, mtime, ctime,
   last opened (`com.apple.lastuseddate#PS`, macOS) and date added (`getattrlist` `ATTR_CMN_ADDEDTIME` through
   purego). `Details` puts them first as the `dates` section (local time). Never read while indexing (no cost per

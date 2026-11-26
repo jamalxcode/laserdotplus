@@ -2,6 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.21
+
+- **The dates show at the top.** Under the file's name, with its kind, size and place: Created, Modified, Last
+  opened and Added to folder (and when its name or tags changed). Last opened and Added say "Not recorded" when macOS
+  has no record (a file never opened from Finder or an app, or copied by a tool that does not record it). The bar at
+  the bottom names them too ("Modified …  ·  Created …  ·  Opened …").
+- **Bigger, bolder titles** in the details pane: each fact's name and each section's title.
+
 ## 0.1.20
 
 - **Every date a file carries.** The details pane starts with a Dates section: created, modified, last opened and
