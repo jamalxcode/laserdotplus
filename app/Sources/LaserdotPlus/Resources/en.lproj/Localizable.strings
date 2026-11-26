@@ -465,3 +465,4 @@
 "protect.allGood" = "No damage: %@ read and unchanged.";
 "protect.damaged" = "%@ damaged — same size and date, different contents.";
 "protect.other" = "%llu edited since (not damage), %d missing.";
+"status.indexingShort" = "indexing…";

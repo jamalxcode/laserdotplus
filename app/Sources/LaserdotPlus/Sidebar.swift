@@ -123,6 +123,10 @@ struct Sidebar: View {
                 }
             }
             Spacer(minLength: 4)
+            if d.indexing || drives.isWaiting(d) {
+                // Work going on: say so (the owner saw only a beachball).
+                ProgressView().controlSize(.small).help(drives.stateText(d))
+            }
             Button { drives.eject(d) } label: { Image(systemName: "eject") }
                 .buttonStyle(.borderless)
                 .help(L("drive.eject"))

@@ -353,3 +353,12 @@ through with nothing ticked. Bit rot: a checksum list kept on the drive (it carr
 noticed); damage = same size and date, different contents; drives whose index lives on this Mac (read-only,
 encrypted) get none, so no names are written in clear. History: on the drive, once a day while plugged in, plus each
 clean-up's freed bytes; "full in about N months" from the last six months.
+
+## 43. A beachball while a new drive indexed (0.1.26)
+
+The owner: "for a new drive, i keep getting a beachball every 5 seconds, and it would not scroll up or down … no
+hourglass or wait indicator … a new 8tb drive filled with media", then "beachball stopped now, it must have been
+indexing". Found: every 3 s while indexing, the app re-ran the search, rebuilt the list and the choices, re-read the
+rows' dates and wrote them row by row (one redraw each), and the right pane asked the disk for the drive's mount on
+every redraw. Decided: refresh at most every 15 s and never during input, one update per refresh, mounts from the
+drive list, and a visible spinner. Lesson: anything on a timer must stay cheap at a 1 TB+ drive's scale.

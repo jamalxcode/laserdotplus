@@ -60,7 +60,8 @@ struct MainView: View {
 
     /// Where you are and how much is there, under the title (as in Finder).
     private var subtitle: String {
-        "\(model.placeTitle) — \(countText(Int(model.total), "file"))"
+        let busy = model.status?.indexing != nil || drives.drives.contains(where: \.indexing)
+        return "\(model.placeTitle) — \(countText(Int(model.total), "file"))" + (busy ? " · " + L("status.indexingShort") : "")
     }
 }
 

@@ -47,6 +47,7 @@ final class DrivesModel: ObservableObject {
                 if self.notAnswering { self.notAnswering = false }
                 let changed = list.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" } != self.drives.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" }
                 self.drives = list
+                Place.mounts = Dictionary(list.map { ($0.name, $0.mount) }) { a, _ in a }
                 list.forEach(DriveHistory.noteSnapshot) // once a day, on the drive
                 if changed { self.onChange() }
                 self.indexNewDrives()

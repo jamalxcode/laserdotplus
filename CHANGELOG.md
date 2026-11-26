@@ -2,6 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.26
+
+- **No more beachball while a new drive is indexed.** The list was rebuilt every 3 seconds while files kept arriving,
+  which froze the window and stopped it scrolling on a big drive. Now it refreshes at most every 15 seconds, never
+  while you scroll or click, and updates its rows in one go. The drive's place is no longer asked of the disk on every
+  redraw.
+- While a drive is being indexed, a spinner shows beside it in the sidebar, and the window's subtitle says "indexing…".
+
 ## 0.1.25
 
 - **Broken Files** (Tools, Clean Up ▸ Broken): pictures, videos and songs that can't be what they say — empty,

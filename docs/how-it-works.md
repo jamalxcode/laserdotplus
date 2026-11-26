@@ -97,6 +97,10 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Calm while indexing (0.1.26):** `refreshStatus` re-runs the search for index changes at most every 15 s and only
+  after 4 s without input (`LibraryModel.lastInput`, a local event monitor); `apply` sets `results` once; `Place.mount`
+  reads `Place.mounts` (filled from the drive list) instead of the file system. The sidebar shows a spinner beside a
+  drive that is indexing or opening, and the subtitle adds "indexing…".
 - **Integrity (0.1.25):** `Broken` (engine, from the index: media that is empty, has no record, a video with no
   video track, or no duration); `UnwantedModel` (searches: clips <3 s, height <240, bitrate <300 kbps, screenshots,
   pictures under 160×160 — `internal/query/unwanted_test.go` keeps them valid). Checksums (`checksums.go`):

@@ -188,6 +188,10 @@ final class LibraryModel: ObservableObject {
             }
         }
         statusTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in self?.refreshStatus() }
+        inputMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .leftMouseDown, .rightMouseDown, .keyDown]) { e in
+            LibraryModel.lastInput = Date()
+            return e
+        }
         goneTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in self?.dropGone() }
     }
 
@@ -202,6 +206,10 @@ final class LibraryModel: ObservableObject {
     /// timer does not pile up waiting threads (they starved the app until
     /// the window froze).
     private var statusInFlight = false
+    private var lastAutoRefresh = Date.distantPast
+    /// When you last scrolled, clicked or typed (a refresh waits for a pause).
+    static var lastInput = Date.distantPast
+    private var inputMonitor: Any?
     func refreshStatus() {
         guard !statusInFlight else { return }
         statusInFlight = true
@@ -221,7 +229,18 @@ final class LibraryModel: ObservableObject {
                 // Results follow the index: a file deleted or moved away in
                 // Finder leaves the list within a few seconds, one added
                 // appears (the selection is kept where it still exists).
-                if changed || wasIndexing || st.indexing != nil { self.schedule(now: true, keepSelection: true) }
+                // While a drive is being indexed the changes never stop: the
+                // list is refreshed at most every 15 s, and never while you
+                // scroll or click (the owner: a beachball every 5 s on a new
+                // 8 TB drive, and the list would not scroll).
+                if changed || wasIndexing || st.indexing != nil {
+                    let quiet = Date().timeIntervalSince(Self.lastInput) > 4
+                    let due = Date().timeIntervalSince(self.lastAutoRefresh) > 15
+                    if quiet && (due || (!changed && wasIndexing && st.indexing == nil)) {
+                        self.lastAutoRefresh = Date()
+                        self.schedule(now: true, keepSelection: true)
+                    }
+                }
             }
         }
     }
@@ -497,9 +516,13 @@ final class LibraryModel: ObservableObject {
 
     private func apply(_ opened: [String: Int64], gen: Int) {
         guard !opened.isEmpty else { return }
-        for i in results.indices {
-            if let o = opened[results[i].path], o != results[i].opened { results[i].opened = o }
+        // Built aside, then set once: one redraw, not one per row.
+        var next = results
+        var changed = false
+        for i in next.indices {
+            if let o = opened[next[i].path], o != next[i].opened { next[i].opened = o; changed = true }
         }
+        if changed { results = next }
     }
 
     /// The Last Opened column sorts the rows loaded (the engine does not
