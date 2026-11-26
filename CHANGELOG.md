@@ -6,7 +6,8 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 - **The T5 EVO stuck on "Opening its index…" — found and fixed.** An old copy of Laserdot+'s engine, left running
   after a force quit or an update, still held the drive's index, so the new one waited for it for ever. A new engine
-  now stops any old one on the same index before it starts.
+  now stops any old one on the same index before it starts, and an engine asked to stop never lingers more than
+  10 seconds, even if a drive stopped answering.
 - **All the choices, compact.** With More choices open, the choices that give nothing right now fold into a small
   "+N" after each group (click it to see them), and the bands with nothing to choose at all fold into one short line
   at the bottom ("Nothing to choose now: Camera · Artist · …"). A drive still opening no longer fills the top.

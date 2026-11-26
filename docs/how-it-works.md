@@ -81,3 +81,5 @@
 - **One engine per index:** `laserdotd` takes an exclusive `flock` on `laserdotd.lock` beside the index (it holds
   its pid) before opening it (`daemon.TakeOver`). An older engine that still holds it — left behind by a force quit or
   an update, not answering on the socket — gets SIGTERM, then SIGKILL; otherwise it would keep drives' indexes open.
+- **Stopping the engine** (quit, SIGTERM, the shutdown request) finishes what it is writing; if that hangs it leaves
+  after 10 seconds anyway (SQLite WAL keeps everything committed), and a second signal leaves at once.

@@ -224,6 +224,17 @@ func run() error {
 			srv.Stop()
 		case <-srv.Done():
 		}
+		// Stopping finishes what is being written; if something hangs (a
+		// drive that stopped answering mid-read), it does not keep the old
+		// engine alive — the owner's T5 EVO waited on one that ignored the
+		// stop. The index is SQLite in WAL mode: leaving now loses nothing
+		// committed. A second signal leaves at once.
+		time.AfterFunc(10*time.Second, func() {
+			fmt.Fprintln(os.Stderr, "laserdotd: stopping took too long; leaving now")
+			os.Exit(0)
+		})
+		<-sig
+		os.Exit(0)
 	}()
 	fmt.Fprintln(os.Stderr, "laserdotd: listening on", socket)
 	return srv.Serve()
