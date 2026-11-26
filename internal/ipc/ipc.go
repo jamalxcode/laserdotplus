@@ -48,10 +48,10 @@ const (
 	OpDriveStop     = "drive_stop"
 	OpDriveContinue = "drive_continue"
 	// Duplicates (§4).
-	OpDupes       = "dupes"
-	OpDupesStop   = "dupes_stop"
+	OpDupes     = "dupes"
+	OpDupesStop = "dupes_stop"
 	// OpDupesFound (Laserdot+): the groups the running scan has found so far.
-	OpDupesFound = "dupes_found"
+	OpDupesFound  = "dupes_found"
 	OpCleanupPlan = "cleanup_plan"
 	OpCleanup     = "cleanup"
 	// Content search (§2.4).
