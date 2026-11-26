@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -507,5 +508,40 @@ func TestDuplicatesShowAsTheyAreFound(t *testing.T) {
 	}
 	if n := len(l.ld.DupeFound()); n != 0 {
 		t.Errorf("%d groups left behind after the scan", n)
+	}
+}
+
+// A drive's fingerprints are kept on the drive, signed by this Mac: the next
+// scan reads nothing again; a file this Mac did not sign is ignored.
+func TestDriveFingerprintsStayOnTheDrive(t *testing.T) {
+	m := newMac(t)
+	drive := makeDrive(t, m.vols, "big drive")
+	same := []byte(strings.Repeat("same bytes ", 5000))
+	writeAged(t, filepath.Join(drive, "Films/a.bin"), same)
+	writeAged(t, filepath.Join(drive, "Films/b.bin"), same)
+	if _, err := m.ld.CreateDriveIndex(drive, DriveOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	opts := DefaultDupeOptions()
+	opts.Images, opts.Videos = false, false
+	first, err := m.ld.FindDuplicates(opts)
+	if err != nil || len(first.Groups) != 1 || first.Read == 0 {
+		t.Fatalf("%v %+v", err, first)
+	}
+	fp := filepath.Join(drive, ".laserdot", driveFPFile)
+	if _, err := os.Stat(fp); err != nil {
+		t.Fatalf("no fingerprints on the drive: %v", err)
+	}
+	again, _ := m.ld.FindDuplicates(opts)
+	if again.Read != 0 || len(again.Groups) != 1 {
+		t.Errorf("second scan read %d files again: %+v", again.Read, again)
+	}
+	// Forged: one byte changed. Ignored, so the files are read again.
+	b, _ := os.ReadFile(fp)
+	b[len(driveFPMagic)+2] ^= 0xff
+	os.WriteFile(fp, b, 0o600)
+	third, _ := m.ld.FindDuplicates(opts)
+	if third.Read == 0 || len(third.Groups) != 1 {
+		t.Errorf("a forged file was trusted: %+v", third)
 	}
 }

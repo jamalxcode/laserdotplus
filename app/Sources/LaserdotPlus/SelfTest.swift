@@ -113,6 +113,14 @@ final class SelfTestRunner {
                         v.simulate(.leftMouseDown, at: ca, flags: .command); v.simulate(.leftMouseUp, at: ca, flags: .command)
                         let back = self.model.selection == [b.key]
                         self.report["clicks"] = [one, two, back]
+                        // A double click whose second click lands on another
+                        // file (the files moved) opens the first one's.
+                        var opened: [String] = []
+                        LibraryModel.openHook = { opened += $0.map(\.path) }
+                        v.simulate(.leftMouseDown, at: ca); v.simulate(.leftMouseUp, at: ca)
+                        v.simulate(.leftMouseDown, at: cb, clicks: 2); v.simulate(.leftMouseUp, at: cb, clicks: 2)
+                        LibraryModel.openHook = nil
+                        self.report["double_click_opens_first"] = opened == [a.key]
                         let from = CGPoint(x: a.value.minX - 3, y: a.value.minY - 3)
                         let to = CGPoint(x: b.value.midX, y: b.value.midY)
                         v.simulate(.leftMouseDown, at: from)

@@ -515,8 +515,23 @@ final class LibraryModel: ObservableObject {
 
     // MARK: actions
 
+    /// The self-test sees what would open instead of opening it.
+    static var openHook: (([Hit]) -> Void)?
+
     func open(_ hits: [Hit]) {
-        hits.forEach { NSWorkspace.shared.open(URL(fileURLWithPath: $0.path)) }
+        if let hook = Self.openHook { return hook(hits) }
+        // Privacy (the owner: "disable recent items recording in apple menu"):
+        // a file opened from here is not added to  ▸ Recent Items.
+        let config = NSWorkspace.OpenConfiguration()
+        config.addsToRecentItems = false
+        for h in hits {
+            let url = URL(fileURLWithPath: h.path)
+            if let app = NSWorkspace.shared.urlForApplication(toOpen: url) {
+                NSWorkspace.shared.open([url], withApplicationAt: app, configuration: config)
+            } else {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     func reveal(_ hits: [Hit]) {

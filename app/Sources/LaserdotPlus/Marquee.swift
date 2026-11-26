@@ -95,6 +95,9 @@ final class MouseCatcherView: NSView, NSDraggingSource {
     private var start = CGPoint.zero
     /// Where ⇧-click ranges start (a file, so it survives new results).
     private var anchor: String?
+    /// The file the last click landed on: a double click opens that one,
+    /// even if the files moved between its two clicks.
+    private var lastClick: (path: String, time: TimeInterval)?
 
     override var isFlipped: Bool { true } // the same coordinates as the tiles'
     override var acceptsFirstResponder: Bool { true }
@@ -129,12 +132,17 @@ final class MouseCatcherView: NSView, NSDraggingSource {
         let flags = e.modifierFlags
         let adding = flags.contains(.command) || flags.contains(.shift)
 
-        if let hit, e.clickCount >= 2 {
-            drag = .none
-            model.selectOne(hit)
-            model.open(model.results.filter { $0.path == hit })
-            return
+        if e.clickCount >= 2 {
+            let first = lastClick.flatMap { e.timestamp - $0.time <= NSEvent.doubleClickInterval + 0.1 ? $0.path : nil }
+            if let path = first ?? hit {
+                drag = .none
+                lastClick = nil
+                model.selectOne(path)
+                model.open(model.results.filter { $0.path == path })
+                return
+            }
         }
+        lastClick = hit.map { ($0, e.timestamp) }
         guard let hit else {
             // Empty space: a box (or, if it is only a click, nothing selected).
             drag = .marquee(adding ? model.selection : [])

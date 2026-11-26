@@ -20,6 +20,11 @@ struct DetailsView: View {
                 PlaceSummary(model: model, dupes: model.dupes)
             }
         }
+        // The pane keeps the width it was given whatever it shows: a wider
+        // content pushed the split, the files reflowed under the mouse, and a
+        // double click opened the file that moved there (the owner).
+        .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .layoutPriority(-1)
     }
 
     /// A slim pane: the preview takes its width, the details are small.

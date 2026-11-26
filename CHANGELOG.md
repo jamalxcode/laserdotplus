@@ -2,6 +2,17 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.19
+
+- **A drive's second duplicate scan takes moments.** What a scan learns about a drive's files (their fingerprints)
+  is now kept on that drive, in its `.laserdot` folder — never on this Mac — so the next scan reads only new or
+  changed files, and a scan you stopped or quit goes on where it was. The file is signed by this Mac: one it did not
+  write (another Mac's, damaged or forged) is ignored and the files are read again.
+- **A double click opens the file you double-clicked**, even if the files moved between the two clicks (the details
+  pane no longer pushes the files over when you select one).
+- **Privacy: files opened from Laserdot+ are not added to  ▸ Recent Items**, and Laserdot+ keeps no recent
+  documents of its own.
+
 ## 0.1.18
 
 - **Clicking and drag-selecting work like Finder** in the thumbnails, contact sheet and timeline: a click selects a

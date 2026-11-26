@@ -97,6 +97,16 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Drive fingerprints (0.1.19, `internal/core/drivefp.go`):** a drive's duplicate fingerprints are kept in
+  `<drive>/.laserdot/fingerprints.bin` (not in its index, whose schema is whitelisted): a binary list (path on the
+  drive, size, mtime, hashes) closed by an HMAC-SHA256 with this Mac's key (`fingerprint.key` beside this Mac's
+  index, 32 random bytes). A file that fails the check is ignored (re-read), so a forged hash can't make a file look
+  like a copy. Saved as the scan goes (every `saveEvery`) and at the end, by temp file + rename; read-only and
+  encrypted drives keep none. `TestDriveFingerprintsStayOnTheDrive`.
+- **Opening files (0.1.19):** `open` uses `NSWorkspace.OpenConfiguration.addsToRecentItems = false` (no  ▸ Recent
+  Items entry); Laserdot+'s own recent documents are cleared at launch and quit. A double click opens the file the
+  first click was on (`lastClick`); the details pane has `layoutPriority(-1)` and a flexible frame so it never
+  pushes the split.
 - **Clicking and the selection box (0.1.18, `Marquee.swift`):** one AppKit view (`MouseCatcherView`) laid over a
   picture view's tiles takes the left button's events (its `hitTest` lets right-clicks, control-clicks, hovering and
   "Load more" through): click, ⌘-click, ⇧-click from an anchor file, double click opens, a drag from empty space or

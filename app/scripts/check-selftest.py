@@ -30,6 +30,7 @@ check("video" in r.get("details_sections", []) and "general" in r.get("details_s
 check(r.get("trashed") is True and r.get("trash_hidden") is True, "Move to Trash moves the file and drops it from the list")
 check(r.get("restored") is True, "Undo puts it back")
 check(r.get("clicks") == [True, True, True], f"a click selects one, ⌘-click adds one and takes it out again (got {r.get('clicks')})")
+check(r.get("double_click_opens_first") is True, "a double click opens the file its first click was on")
 check(r.get("drag_box", 0) >= 2, f"dragging the mouse from empty space selects the tiles it crosses (got {r.get('drag_box')})")
 check(r.get("marquee_count", 0) >= 2, f"the selection box over the grid's tiles selects what it touches (got {r.get('marquee_count')})")
 check(r.get("choices_arranged") is True, "all the choices: what can be chosen comes first in each group")

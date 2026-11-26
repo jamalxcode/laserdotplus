@@ -165,6 +165,9 @@ type DupeReport struct {
 }
 
 type cand struct {
+	// fpDir, rel: a drive's file keeps its fingerprint in fpDir (the
+	// drive's .laserdot folder; "" for none), under its path on the drive.
+	fpDir, rel     string
 	path, key, ext string
 	source         int
 	volume         *string
@@ -246,10 +249,23 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 	if err != nil {
 		return nil, err
 	}
+	// A drive's own fingerprints, from its signed file (driveFPs).
+	onDrive := map[string]*driveFPs{}
+	for _, c := range cands {
+		if c.fpDir != "" && onDrive[c.fpDir] == nil {
+			onDrive[c.fpDir] = loadDriveFPs(c.fpDir, ld.fpKey())
+		}
+	}
 	fps := make([]index.Fingerprint, len(cands))
 	for i, c := range cands {
 		if f, ok := cached[c.key]; ok {
 			fps[i] = f
+		} else if d := onDrive[c.fpDir]; d != nil {
+			if f, ok := d.get(c.rel, c.size, c.mtime); ok {
+				fps[i] = f
+			} else {
+				fps[i] = index.Fingerprint{Size: c.size, Modified: c.mtime}
+			}
 		} else {
 			fps[i] = index.Fingerprint{Size: c.size, Modified: c.mtime}
 		}
@@ -270,7 +286,15 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 				if keepsFingerprint(cands[i].key) {
 					keys = append(keys, cands[i].key)
 					changed = append(changed, fps[i])
+				} else if d := onDrive[cands[i].fpDir]; d != nil {
+					d.put(cands[i].rel, fps[i])
+					saved++
 				}
+			}
+		}
+		for dir, d := range onDrive {
+			if !ld.released(dir) {
+				_ = d.save() // a read-only drive keeps none; the scan goes on
 			}
 		}
 		if len(keys) == 0 {
@@ -322,10 +346,22 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 	prog("saving", 0, 0)
 	var keys []string
 	var changed []index.Fingerprint
+	var onDriveRead uint64
 	for i := range cands {
-		if !fps[i].Equal(before[i]) && keepsFingerprint(cands[i].key) {
+		if fps[i].Equal(before[i]) {
+			continue
+		}
+		if keepsFingerprint(cands[i].key) {
 			keys = append(keys, cands[i].key)
 			changed = append(changed, fps[i])
+		} else if d := onDrive[cands[i].fpDir]; d != nil {
+			d.put(cands[i].rel, fps[i])
+			onDriveRead++
+		}
+	}
+	for dir, d := range onDrive {
+		if !ld.released(dir) {
+			_ = d.save()
 		}
 	}
 	ld.wmu.Lock()
@@ -337,7 +373,7 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 	if err != nil {
 		return nil, err
 	}
-	rep.Read = saved + uint64(len(keys))
+	rep.Read = saved + uint64(len(keys)) + onDriveRead
 	rep.Groups, rep.Reclaimable = groupsOf(cands, s, exactRoot, videoEdge)
 	rep.MS = uint64(time.Since(t).Milliseconds())
 	return rep, nil
@@ -453,11 +489,15 @@ func (ld *Laserdot) dupeCandidates(opts DupeOptions) ([]cand, error) {
 			}
 			p := s.Path(id)
 			key := p
+			var fpDir, rel string
 			if d != nil {
-				rel, _ := filepath.Rel(d.mount, p)
+				rel, _ = filepath.Rel(d.mount, p)
 				key = "drive:" + d.id + ":" + rel
+				if d.holdsDrive() {
+					fpDir = d.dir
+				}
 			}
-			c := cand{path: p, key: key, source: n, volume: volume, inode: s.Inode(id), size: s.Size(id),
+			c := cand{fpDir: fpDir, rel: rel, path: p, key: key, source: n, volume: volume, inode: s.Inode(id), size: s.Size(id),
 				mtime: s.Modified(id), kind: s.Kind(id), ext: media.Extension(s.FoldedName(id))}
 			c.w, c.h, c.hasDims = s.Dimensions(id)
 			c.quality, c.hasQuality = s.Quality(id)

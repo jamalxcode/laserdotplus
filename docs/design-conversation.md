@@ -285,3 +285,17 @@ plus a drag gesture over them; a tile changed its view type when selected (it ga
 gestures mid-click, and the modifier keys were read from the global state late. Decided: Finder's rules on AppKit
 mouse events, one view over the tiles; the keys that act on what was found (⌫ trash, Return open, Space look) work
 once a file is clicked; refreshes wait while the mouse is down. The list view is AppKit's table and already had them.
+
+## 37. Fingerprints on the drive; Recent Items; double click (0.1.19)
+
+- From the critique ("do all"): a drive's fingerprints now live on the drive, which the privacy rule allows (what is
+  known about a drive's files stays on it). The engine had refused because a drive is untrusted — a forged hash
+  could make a different file look like a copy — so the file is signed with a key only this Mac holds; anything
+  else is ignored. Resuming a stopped scan comes with it.
+- The owner: "disable recent items recording in apple menu to preserve privacy, or clear it when exiting". Decided:
+  don't record rather than clear — files open with `addsToRecentItems = false`. Laserdot+ does not edit macOS's or
+  other apps' lists (the app that opens a file may still list it in its own File ▸ Open Recent).
+- The owner: "when double clicking on a video to play it, the screen scrolls down and i get the video above it
+  playing instead of my choice". The first click selected the file, the details pane grew and pushed the split, the
+  grid reflowed, and the second click landed on another tile. Fixed both: the pane can't push, and a double click
+  opens the first click's file.

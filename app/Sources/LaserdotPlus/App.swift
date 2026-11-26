@@ -71,6 +71,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Laserdot+'s own recent documents stay empty (privacy).
+        NSDocumentController.shared.clearRecentDocuments(nil)
         NSApp.setActivationPolicy(.regular)
         model.start()
         drives.start()
@@ -91,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// the background (it finishes saving on its own), then the app quits.
     private var stopping = false
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        NSDocumentController.shared.clearRecentDocuments(nil)
         if stopping { return .terminateNow }
         stopping = true
         NSApp.windows.forEach { $0.orderOut(nil) }
