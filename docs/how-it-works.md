@@ -107,3 +107,6 @@
 - **What Is This?** (`LibraryModel.startSweep`): `sweep` holds the listed files with unclear names; review mode walks
   `reviewItems` (the sweep, else the results). `suggestedName` builds a name from the selected file's details;
   `rename` moves it within its folder (a free name; undoable) and tells the engine.
+- **UI pass 2:** `ModeHeader` (shared by the covering modes), the Tools menu in `TopArea`, drive fullness bars in
+  `PlacesBar`. The self-test shoots `dark.png` (NSApp in dark aqua) and, in a second short run started with
+  `-AppleLanguages (ar)` and `LASERDOT_SELFTEST_QUICK`, `arabic.png`.

@@ -49,10 +49,26 @@ final class SelfTestRunner {
 
     private func steps() {
         model.schedule(now: true)
+        // A second, short run in Arabic (right to left): the main window only.
+        if ProcessInfo.processInfo.environment["LASERDOT_SELFTEST_QUICK"] != nil {
+            waitFor(30, { self.model.results.count >= 3 }) { _ in
+                self.after(3) {
+                    self.shot("arabic")
+                    self.finish("")
+                }
+            }
+            return
+        }
         waitFor(30, { self.model.results.count >= 3 && !self.model.groups.isEmpty }) { _ in
             self.report["all_count"] = self.model.results.count
             self.report["groups"] = self.model.groups.map(\.id)
             self.shot("list")
+            // The same window in dark mode.
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+            self.after(1) {
+                self.shot("dark")
+                NSApp.appearance = nil
+            }
             // Typing narrows.
             self.model.text = "trip"
             self.waitFor(10, { !self.model.results.isEmpty && self.model.results.allSatisfy { $0.name.lowercased().contains("trip") } }) { _ in

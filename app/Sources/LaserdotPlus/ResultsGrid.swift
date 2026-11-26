@@ -50,14 +50,15 @@ struct ResultsGrid: View {
                 .lineLimit(2)
                 .truncationMode(.middle)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(selected ? Color.white : Color.primary)
-            if let b = h.badges.first {
-                Text(b).font(.caption2).foregroundStyle(selected ? Color.white.opacity(0.85) : Color.secondary)
-            }
+            // What it is at a glance: a video's length and resolution, a
+            // picture's size, else the file's size.
+            Text((h.badges.prefix(2) + (h.isDir ? [] : [bytesText(h.size)])).joined(separator: " · "))
+                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         }
         .padding(6)
         .frame(width: size + 24, alignment: .top)
-        .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.accentColor : Color.clear))
+        .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.accentColor.opacity(0.15) : Color.clear))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(selected ? Color.accentColor : Color.clear, lineWidth: 2))
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { model.open([h]) }
         .onTapGesture { anchor = model.click(i, h, anchor: anchor) }

@@ -290,3 +290,6 @@
 "sweep.rename.help" = "A name from the file itself: its date, title or camera, and a video's resolution and length. Edit ▸ Undo puts the old name back.";
 "sweep.rename" = "Rename";
 "notice.renamed" = "Renamed to %@ (⌘Z puts the old name back)";
+"drive.free" = "%@ free";
+"tools.title" = "Tools";
+"tools.help" = "What Is This? · Review · Find Duplicates";

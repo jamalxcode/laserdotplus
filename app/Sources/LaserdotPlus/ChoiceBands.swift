@@ -70,7 +70,7 @@ struct ChoiceBands: View {
                         .padding(.leading, 4)
                         .padding(.trailing, 8)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Self.color(band.family).opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                        // One cue per band (its stripe and icon): no tinted box.
                     }
                     if !quietBands.isEmpty {
                         // Bands with nothing to choose now: one short line.

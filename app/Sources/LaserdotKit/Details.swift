@@ -26,6 +26,20 @@ public struct FileDetails: Decodable, Sendable {
         case path, name, kind, size, modified, sections
         case isDir = "is_dir"
     }
+
+    /// Tolerant: missing or null fields read as empty (a picture with no
+    /// camera details came as `"sections": null` and the whole answer was
+    /// lost — no details, no suggested name).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        path = try c.decode(String.self, forKey: .path)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? (path as NSString).lastPathComponent
+        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? "other"
+        isDir = try c.decodeIfPresent(Bool.self, forKey: .isDir) ?? false
+        size = try c.decodeIfPresent(UInt64.self, forKey: .size) ?? 0
+        modified = try c.decodeIfPresent(Int64.self, forKey: .modified) ?? 0
+        sections = try c.decodeIfPresent([DetailSection].self, forKey: .sections) ?? []
+    }
 }
 
 extension Engine {

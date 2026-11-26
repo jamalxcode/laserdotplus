@@ -4,6 +4,15 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.11
 
+- **A calmer window, second pass.** One **Tools** menu (What Is This?, Review, Find Duplicates — with their shortcuts)
+  instead of three buttons, so the search box keeps its width; Review, What Is This? and Duplicates share one header
+  with Done. The list drops the Kind column (the icon says it) and always shows the full date; grid tiles show a
+  video's length, a picture's size or the file size, with a light outline when selected. Drives in the places strip
+  show how full they are and their state as an icon; the choice bands lose their tinted boxes; the right pane's
+  bars take colours; the bottom bar shows the size of what's listed and a drive's free space. In Duplicates the whole
+  row switches Keep / Trash, the mark and its word side by side.
+- **Details for every picture.** A picture with no camera details showed nothing in the right pane (its details were
+  lost on the way); now they show, and What Is This? can suggest a name for it.
 - **What Is This?** (⌘E, or the button by Review) goes through only the files whose names say nothing — IMG_1234,
   VID_20240812_183011, DSC00042, untitled 3, a long id — one at a time, big, with K keep, T trash, M move, and a
   **suggested name** built from the file itself: its date (when the photo was taken), its title or camera, a video's

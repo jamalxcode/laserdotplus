@@ -183,26 +183,30 @@ struct PlaceSummary: View {
                 }
                 Button(L("summary.findDupes")) { model.showDupes = true }
                     .controlSize(.small)
-                Divider()
-                Label(L("summary.hint"), systemImage: "doc.text.magnifyingglass")
-                    .font(.caption).foregroundStyle(.secondary)
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
+    /// Okabe–Ito: distinct for colour-blind eyes.
+    static let palette: [Color] = [
+        Color(red: 0, green: 114 / 255, blue: 178 / 255), Color(red: 230 / 255, green: 159 / 255, blue: 0),
+        Color(red: 0, green: 158 / 255, blue: 115 / 255), Color(red: 204 / 255, green: 121 / 255, blue: 167 / 255),
+        Color(red: 86 / 255, green: 180 / 255, blue: 233 / 255), Color(red: 213 / 255, green: 94 / 255, blue: 0),
+    ]
+
     /// Counts as short bars, biggest first.
     private func bars(_ title: String, _ options: [RefineOption]) -> some View {
         let top = max(1, options.map(\.count).max() ?? 1)
         return VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-            ForEach(options.filter { $0.count > 0 }.prefix(6), id: \.token) { o in
+            ForEach(Array(options.filter { $0.count > 0 }.prefix(6).enumerated()), id: \.element.token) { i, o in
                 HStack(spacing: 6) {
                     Text(ChoiceBands.label(o)).font(.caption).lineLimit(1).frame(width: 90, alignment: .leading)
                     GeometryReader { g in
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.accentColor.opacity(0.35))
+                            .fill(Self.palette[i % Self.palette.count].opacity(0.6))
                             .frame(width: max(2, g.size.width * CGFloat(o.count) / CGFloat(top)))
                     }
                     .frame(height: 8)

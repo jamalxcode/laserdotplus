@@ -17,15 +17,13 @@ struct ResultsList: View {
                     Text(h.name).lineLimit(1).truncationMode(.middle)
                 }
             }
-            .width(min: 180, ideal: 320)
-            TableColumn(L("column.kind"), value: \Hit.kind) { h in Text(kindText(h.kind)).foregroundStyle(.secondary) }
-                .width(min: 60, ideal: 80)
+            .width(min: 160, ideal: 260)
             TableColumn(L("column.size"), value: \Hit.size) { h in
                 Text(h.isDir ? "" : bytesText(h.size)).monospacedDigit().foregroundStyle(.secondary)
             }
             .width(min: 60, ideal: 80)
-            TableColumn(L("column.modified"), value: \Hit.modified) { h in Text(dateText(h.modified)).foregroundStyle(.secondary) }
-                .width(min: 100, ideal: 150)
+            TableColumn(L("column.modified"), value: \Hit.modified) { h in Text(dateText(h.modified)).foregroundStyle(.secondary).lineLimit(1) }
+                .width(min: 130, ideal: 160)
             TableColumn(L("column.details")) { h in Text(h.badges.joined(separator: " · ")).foregroundStyle(.secondary).lineLimit(1) }
                 .width(min: 80, ideal: 200)
             TableColumn(L("column.where")) { h in Text(whereText(h.path)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }

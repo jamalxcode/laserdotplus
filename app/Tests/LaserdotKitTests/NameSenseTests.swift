@@ -21,4 +21,10 @@ final class NameSenseTests: XCTestCase {
         XCTAssertEqual(NameSense.suggest(name: "IMG_1.jpg", modified: 0, kind: "image", rows: ["photo.camera": "Canon/EOS"]),
                        "Canon-EOS.jpg")
     }
+
+    func testDetailsWithNullSectionsStillDecode() throws {
+        let json = #"{"path":"/a/IMG_1.png","name":"IMG_1.png","kind":"image","is_dir":false,"size":3,"modified":1700000000,"sections":null}"#
+        let d = try JSONDecoder().decode(FileDetails.self, from: Data(json.utf8))
+        XCTAssertTrue(d.sections.isEmpty)
+    }
 }

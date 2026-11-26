@@ -206,3 +206,12 @@ prefix with a number, a bare number or date stamp, a long hex id, "untitled", "S
 follow), with a suggested name from the file's own details (`NameSense.suggest`: date taken or modified, title or
 camera or artist, a video's resolution and length). R renames (in the same folder, never over another file;
 Edit ▸ Undo renames back). Plain rules, no AI.
+
+## 27. A UI critique, second pass (0.1.11)
+
+"On a UI level, critique Laserdot+" — "do all". Decided: one Tools menu replaces three mode buttons; one `ModeHeader`
+for Review, What Is This? and Duplicates; the list without Kind and with a readable date; grid tiles with facts and a
+light selection outline; drives with a fullness bar and state icons; bands with stripe and icon only; coloured
+summary bars; the bottom bar with listed size and free space; Duplicates rows that switch as a whole. The self-test
+now also takes a dark-mode screenshot and a second, short run in Arabic (right to left). Found while testing: the
+engine sent `"sections": null` for files with no details, which lost the whole answer in the app — both sides fixed.

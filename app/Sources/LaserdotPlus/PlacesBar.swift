@@ -31,9 +31,9 @@ struct PlacesBar: View {
                 Text(title)
                 if let detail { Text(detail).foregroundStyle(on ? Color.white.opacity(0.8) : Color.secondary) }
             }
-            .font(.caption)
+            .font(.callout)
         }
-        .controlSize(.small)
+        .controlSize(.regular)
         .fixedSize()
         if on { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
     }
@@ -41,12 +41,28 @@ struct PlacesBar: View {
     @ViewBuilder private func drive(_ d: Drive) -> some View {
         let p = Place.drive(d.name)
         let on = model.place == p
-        let label = HStack(spacing: 4) {
-            Image(systemName: drives.isWaiting(d) ? "hourglass" : d.readOnly ? "lock" : "externaldrive")
-            Text(d.name)
-            Text(drives.stateText(d)).foregroundStyle(on ? Color.white.opacity(0.8) : Color.secondary)
+        let label = HStack(spacing: 5) {
+            Image(systemName: drives.isWaiting(d) ? "hourglass" : d.state == "locked" ? "lock.fill"
+                  : !(d.detail ?? "").isEmpty ? "exclamationmark.triangle" : d.readOnly ? "lock" : "externaldrive")
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text(d.name).fontWeight(.medium)
+                    Text(drives.stateText(d)).foregroundStyle(on ? Color.white.opacity(0.8) : Color.secondary)
+                }
+                // How full it is, at a glance.
+                if d.totalBytes > 0 {
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill((on ? Color.white : Color.secondary).opacity(0.25))
+                            Capsule().fill(on ? Color.white : Color.accentColor)
+                                .frame(width: g.size.width * CGFloat(Double(d.totalBytes - min(d.freeBytes, d.totalBytes)) / Double(d.totalBytes)))
+                        }
+                    }
+                    .frame(height: 3)
+                }
+            }
         }
-        .font(.caption)
+        .font(.callout)
         let button = Button {
             switch d.state {
             case "locked": drives.unlock(d)

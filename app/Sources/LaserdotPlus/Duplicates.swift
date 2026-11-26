@@ -116,19 +116,12 @@ struct DuplicatesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: "square.on.square").foregroundStyle(.secondary)
-                Text(L("dupes.title")).font(.headline)
-                Text(model.placeTitle).foregroundStyle(.secondary)
-                Spacer()
+            ModeHeader(symbol: "square.on.square", title: L("dupes.title"), detail: model.placeTitle,
+                       done: { model.showDupes = false }) {
                 Toggle(L("dupes.similar"), isOn: $dupes.similar).toggleStyle(.checkbox)
                 Button(dupes.phase == .idle ? L("dupes.find") : L("dupes.again")) { dupes.scan(scope: model.dupesScope) }
                     .disabled(dupes.phase == .scanning || dupes.phase == .cleaning)
-                Button { model.showDupes = false } label: { Image(systemName: "xmark") }
-                    .buttonStyle(.borderless)
-                    .help(L("dupes.close"))
             }
-            .padding(10)
             Divider()
             content
             if !dupes.groups.isEmpty {
@@ -199,13 +192,14 @@ struct DuplicatesView: View {
             ForEach(g.files, id: \.path) { f in
                 let kept = dupes.keep.contains(f.path)
                 HStack(spacing: 8) {
-                    Button { dupes.toggle(f, in: g) } label: {
-                        Image(systemName: kept ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(kept ? Color.green : Color.secondary)
+                    // One control: the mark and its word together.
+                    HStack(spacing: 4) {
+                        Image(systemName: kept ? "checkmark.circle.fill" : "trash.circle")
                             .font(.title3)
+                        Text(kept ? L("dupes.keep") : L("dupes.trashOne")).font(.caption.weight(.semibold))
                     }
-                    .buttonStyle(.plain)
-                    .help(kept ? L("dupes.kept") : L("dupes.goes"))
+                    .foregroundStyle(kept ? Color.green : Color.red)
+                    .frame(width: 74, alignment: .leading)
                     FileIcon(path: f.path, size: 40, thumbnail: true)
                     VStack(alignment: .leading, spacing: 1) {
                         Text((f.path as NSString).lastPathComponent).lineLimit(1).truncationMode(.middle)
@@ -217,13 +211,11 @@ struct DuplicatesView: View {
                     Text(f.summary.components(separatedBy: " · ").filter { !$0.hasSuffix("bpp") }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Text(bytesText(f.size)).font(.caption).monospacedDigit().frame(width: 70, alignment: .trailing)
-                    Text(kept ? L("dupes.keep") : L("dupes.trashOne"))
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(kept ? Color.green : Color.red)
-                        .frame(width: 60, alignment: .trailing)
                 }
                 .padding(.vertical, 2)
                 .contentShape(Rectangle())
+                .onTapGesture { dupes.toggle(f, in: g) } // the whole row switches Keep / Trash
+                .help(kept ? L("dupes.kept") : L("dupes.goes"))
                 .contextMenu {
                     Button(L("action.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: f.path)]) }
                 }

@@ -45,7 +45,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep", "dark"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

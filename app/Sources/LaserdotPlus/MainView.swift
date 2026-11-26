@@ -40,7 +40,7 @@ struct MainView: View {
                 TrayBar(model: model)
             }
             Divider()
-            BottomBar(model: model)
+            BottomBar(model: model, drives: drives)
         }
         .navigationTitle(title)
     }
@@ -97,14 +97,22 @@ struct TopArea: View {
                 .help(L("sort.by"))
                 // The modes, apart from the view controls.
                 Divider().frame(height: 18).padding(.horizontal, 2)
-                Button { model.showDupes.toggle() } label: { Label(L("dupes.title"), systemImage: "square.on.square") }
-                    .help(L("dupes.menu"))
-                Button { model.startSweep() } label: { Label(L("sweep.button"), systemImage: "questionmark.square.dashed") }
-                    .help(L("sweep.help"))
-                    .disabled(model.results.isEmpty)
-                Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
-                    .help(L("review.start"))
-                    .disabled(model.results.isEmpty)
+                // The tools, in one menu (the row was crowded and the search
+                // box shrank): each with its shortcut.
+                Menu {
+                    Button { model.startSweep() } label: { Label(L("sweep.menu"), systemImage: "questionmark.square.dashed") }
+                        .keyboardShortcut("e")
+                        .disabled(model.results.isEmpty)
+                    Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
+                        .keyboardShortcut("r")
+                        .disabled(model.results.isEmpty)
+                    Button { model.showDupes = true } label: { Label(L("dupes.menu"), systemImage: "square.on.square") }
+                        .keyboardShortcut("d", modifiers: [.command, .shift])
+                } label: {
+                    Label(L("tools.title"), systemImage: "wand.and.stars")
+                }
+                .fixedSize()
+                .help(L("tools.help"))
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
@@ -198,6 +206,7 @@ struct FilesArea: View {
 /// (indexing, a notice) on the right.
 struct BottomBar: View {
     @ObservedObject var model: LibraryModel
+    @ObservedObject var drives: DrivesModel
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -227,6 +236,12 @@ struct BottomBar: View {
                 Text(countText(Int(model.total), "item")).foregroundStyle(.secondary).monospacedDigit()
             } else {
                 Text(countText(Int(model.total), "item")).monospacedDigit()
+                if !model.canLoadMore, !model.results.isEmpty {
+                    Text(bytesText(model.results.reduce(0) { $0 + $1.size })).foregroundStyle(.secondary).monospacedDigit()
+                }
+                if case let .drive(name) = model.place, let d = drives.drives.first(where: { $0.name == name }), d.totalBytes > 0 {
+                    Text(String(format: L("drive.free"), bytesText(d.freeBytes))).foregroundStyle(.secondary)
+                }
                 if model.total > 0 {
                     Button(String(format: L("results.selectAll"), model.total)) { model.selectAll() }.buttonStyle(.link)
                 }

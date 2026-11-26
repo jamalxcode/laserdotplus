@@ -14,15 +14,10 @@ struct ReviewView: View {
         VStack(spacing: 10) {
             if let i = model.reviewIndex, model.reviewItems.indices.contains(i) {
                 let h = model.reviewItems[i]
-                HStack {
-                    if model.sweep != nil {
-                        Label(L("sweep.title"), systemImage: "questionmark.square.dashed").font(.headline)
-                    }
-                    Text(String(format: L("review.position"), i + 1, model.sweep?.count ?? Int(model.total)))
-                        .foregroundStyle(.secondary).monospacedDigit()
-                    Spacer()
-                    Button(L("review.done")) { model.reviewIndex = nil }.keyboardShortcut(.cancelAction)
-                }
+                ModeHeader(symbol: model.sweep != nil ? "questionmark.square.dashed" : "rectangle.stack.badge.play",
+                           title: model.sweep != nil ? L("sweep.title") : L("review.start"),
+                           detail: String(format: L("review.position"), i + 1, model.sweep?.count ?? Int(model.total)),
+                           done: { model.reviewIndex = nil }) { EmptyView() }
                 // The preview takes the room left: the buttons always show.
                 GeometryReader { g in
                     let edge = max(120, min(g.size.width, g.size.height - (h.kind == "video" ? 90 : 0)))

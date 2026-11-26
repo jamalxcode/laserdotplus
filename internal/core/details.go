@@ -59,7 +59,7 @@ func (ld *Laserdot) Details(path string) (*FileDetails, error) {
 }
 
 func detailSections(r *media.Record) []DetailSection {
-	var out []DetailSection
+	out := []DetailSection{} // never null: the app reads an empty list
 	add := func(id string, rows []DetailRow) {
 		if len(rows) > 0 {
 			out = append(out, DetailSection{ID: id, Rows: rows})
