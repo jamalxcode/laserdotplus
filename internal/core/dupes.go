@@ -294,7 +294,7 @@ func (ld *Laserdot) FindDuplicates(opts DupeOptions) (*DupeReport, error) {
 		}
 		for dir, d := range onDrive {
 			if !ld.released(dir) {
-				_ = d.save() // a read-only drive keeps none; the scan goes on
+				_ = d.saveIfDue() // a read-only drive keeps none; the scan goes on
 			}
 		}
 		if len(keys) == 0 {
@@ -519,6 +519,9 @@ type dupeRun struct {
 	released func(path string) bool
 	// found: the groups found so far (shown while the scan goes on).
 	found func(groups []DupeGroup)
+	// tick: called about once a second while a step reads files (from the
+	// loop that records what was read, so it may look at the fingerprints).
+	tick func()
 }
 
 // saveEvery: fingerprints are saved while a scan runs, so quitting, an
@@ -573,7 +576,7 @@ func compute(cands []cand, fps []index.Fingerprint, which []int, rep *DupeReport
 	}()
 	var done uint64
 	var pending []int
-	last := time.Now()
+	last, lastTick := time.Now(), time.Now()
 	for k := range finished {
 		i := which[k]
 		fps[i] = out[k].fp
@@ -588,6 +591,10 @@ func compute(cands []cand, fps []index.Fingerprint, which []int, rep *DupeReport
 		if time.Since(last) >= saveEvery {
 			run.save(pending)
 			pending, last = nil, time.Now()
+		}
+		if run.tick != nil && time.Since(lastTick) >= time.Second {
+			run.tick()
+			lastTick = time.Now()
 		}
 	}
 	run.save(pending)
@@ -658,7 +665,66 @@ func exactPass(cands []cand, fps []index.Fingerprint, s sets, exactRoot []int, r
 			}
 		}
 	}
-	slices.Sort(needQuick)
+	// Biggest files first, a size at a time: the copies that free the most
+	// space show first, and each size's group is complete early.
+	slices.SortFunc(needQuick, func(a, b int) int {
+		if c := cmp.Compare(cands[b].size, cands[a].size); c != 0 {
+			return c
+		}
+		return cmp.Compare(a, b)
+	})
+	// While reading (the owner: "show results as soon as something is found
+	// rather than finish the whole drive"): what is known so far, every second
+	// — same size and samples is a likely copy, the same whole-file hash an
+	// exact one.
+	soFar := func() {
+		type key struct {
+			size uint64
+			h    [32]byte
+		}
+		groups := map[key][]int{}
+		for _, v := range bySize {
+			if len(v) > 1 {
+				for _, i := range v {
+					if fps[i].Quick != nil {
+						k := key{cands[i].size, *fps[i].Quick}
+						groups[k] = append(groups[k], i)
+					}
+				}
+			}
+		}
+		var out []DupeGroup
+		for _, v := range groups {
+			if len(v) < 2 {
+				continue
+			}
+			byFull := map[[32]byte][]int{}
+			var unsure []int
+			for _, i := range v {
+				if fps[i].Full != nil {
+					byFull[*fps[i].Full] = append(byFull[*fps[i].Full], i)
+				} else {
+					unsure = append(unsure, i)
+				}
+			}
+			for _, w := range byFull {
+				if len(w) > 1 {
+					out = append(out, groupOf(cands, w, DupeExact))
+				} else {
+					unsure = append(unsure, w...)
+				}
+			}
+			if len(unsure) > 1 {
+				out = append(out, groupOf(cands, unsure, DupeLikely))
+			}
+		}
+		sortGroups(out)
+		run.found(out)
+	}
+	if run.found != nil {
+		run.tick = soFar
+		defer func() { run.tick = nil }()
+	}
 	compute(cands, fps, needQuick, rep, "quick", run, func(c *cand, fp *index.Fingerprint) (uint64, bool) {
 		h, err := media.QuickHash(c.path, c.size)
 		if err != nil {
@@ -707,7 +773,12 @@ func exactPass(cands []cand, fps []index.Fingerprint, s sets, exactRoot []int, r
 			}
 		}
 	}
-	slices.Sort(needFull)
+	slices.SortFunc(needFull, func(a, b int) int {
+		if c := cmp.Compare(cands[b].size, cands[a].size); c != 0 {
+			return c
+		}
+		return cmp.Compare(a, b)
+	})
 	compute(cands, fps, needFull, rep, "full", run, func(c *cand, fp *index.Fingerprint) (uint64, bool) {
 		h, err := media.FullHash(c.path)
 		if err != nil {

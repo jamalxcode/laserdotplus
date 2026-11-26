@@ -23,6 +23,8 @@ struct LaserdotPlusApp: App {
                 Toggle(L("updates.daily"), isOn: $updates.daily)
             }
             CommandGroup(after: .pasteboard) {
+                Button(L("menu.find")) { delegate.model.focusSearch += 1 }
+                    .keyboardShortcut("f")
                 Button(L("menu.selectAll")) { delegate.model.selectAll() }
                     .keyboardShortcut("a", modifiers: [.command, .option])
             }
@@ -45,6 +47,10 @@ struct LaserdotPlusApp: App {
                 Button(L("action.quickLook")) { delegate.model.quickLook() }.keyboardShortcut("y")
                 Button(L("filters.clear")) { delegate.model.clearFilters() }.keyboardShortcut(.delete, modifiers: [.command, .option])
                 Divider()
+            }
+            CommandGroup(replacing: .help) {
+                Button(L("shortcuts.title")) { WhatsNew.showShortcuts() }.keyboardShortcut("/", modifiers: .command)
+                Button(L("whatsNew.menu")) { WhatsNew.show(after: nil) }
             }
         }
     }
@@ -80,6 +86,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.model.notice = n.object as? String
         }
         Updates.shared.startChecking()
+        if SelfTest.outDir == nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { WhatsNew.showIfUpdated() }
+        }
         if let out = SelfTest.outDir {
             selfTest = SelfTestRunner(model: model, drives: drives, out: out)
             selfTest?.run()

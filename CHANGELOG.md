@@ -2,6 +2,25 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.22
+
+- **Results while it works.** Clean Up Junk lists what it finds as it walks the drive, with how many folders it has
+  looked through, the one it is in, and **Stop** (what was found stays; empty folders are known at the end). Find
+  Duplicates now shows matches every second while it reads — the biggest files first, so the copies that free the
+  most space show first — likely copies, then confirmed ones as they are read whole.
+- **Last opened, everywhere it helps:** a **Last Opened** column in the list (click to sort), and Big & Old can look
+  for big files **not opened** for 1, 2 or 5 years ("Never opened" when macOS has no record).
+- **Compare** in Find Duplicates: a group's copies side by side, big, with their details; Keep/Trash on each; Play in
+  Quick Look goes through them one after another. Keep and Trash marks are now blue and vermillion
+  (colour-blind safe) with their icons.
+- **Problems stay until you dismiss them** (e.g. "3 could not be moved"), with an ✕; other messages still fade.
+- **What's New** after an update, and **Help ▸ Keyboard Shortcuts** (⌘/) — and **⌘F** puts you in the search box.
+- A drive's Trash line says the free space now and after emptying ("120 GB free now → 168 GB").
+- Saved views: right-click to **Rename…**, **Move Left** or **Move Right**.
+- Faster and safer on big drives: a drive's fingerprints are written once a minute while a scan runs (and at the end),
+  in a file of this Mac's own — two Macs using the same drive no longer undo each other's work.
+- Removed code nothing used any more.
+
 ## 0.1.21
 
 - **The dates show at the top.** Under the file's name, with its kind, size and place: Created, Modified, Last

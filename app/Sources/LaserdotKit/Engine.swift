@@ -138,24 +138,12 @@ public final class Engine: @unchecked Sendable {
             catchUp: s.catchUp, changes: s.changes)
     }
 
-    /// Whether the engine is indexing a folder now: one small request (the
-    /// menu-bar dot asks it; nil when the engine does not answer).
-    public func indexingNow() -> Bool? {
-        guard let s = try? call(.status, as: Wire.Status.self) else { return nil }
-        return s.indexing != nil
-    }
-
     public func search(query: String, limit: Int = 100, offset: Int = 0, sort: SortKey = .relevance, reverse: Bool = false) throws -> Results {
         let r = try quickCall(.search(query: query, sort: sort, reverse: reverse, offset: offset, limit: limit, typo: true),
                               as: Wire.SearchResults.self)
         return Results(
             total: r.total, hits: r.hits.map(Hit.init), elapsedMs: Double(r.elapsedUs) / 1000,
             typoFallback: r.typoFallback, notes: r.warnings.map(\.message))
-    }
-
-    /// Forget which results were opened (Settings ▸ Clear History).
-    public func clearOpens() throws {
-        _ = try call(.clearOpens, as: String.self)
     }
 
     /// Folders never indexed.
@@ -171,24 +159,6 @@ public final class Engine: @unchecked Sendable {
     @discardableResult
     public func include(path: String) throws -> [String] {
         try call(.include(path: path), as: [String].self)
-    }
-
-    /// The last lines laserdotd wrote (for Save Diagnostics).
-    public func logTail() -> [String] {
-        logLock.lock()
-        defer { logLock.unlock() }
-        return log
-    }
-
-    /// The results opened most recently (empty with older daemons).
-    public func recentOpens(limit: Int = 8) -> [Hit] {
-        ((try? quickCall(.recentOpens(limit: limit), as: [Wire.Hit].self)) ?? []).map(Hit.init)
-    }
-
-    /// Note that the user opened `path` (spec §6.2). Older daemons answer
-    /// `unsupported`; that is fine.
-    public func recordOpen(path: String) {
-        _ = try? call(.opened(path: path), as: String.self)
     }
 
     /// Files in `folder` were renamed, moved, trashed or made by the app:
@@ -406,49 +376,10 @@ public final class Engine: @unchecked Sendable {
 
     // MARK: watchdog
 
-    /// The daemon answers a ping within `timeout` seconds, on a connection of
-    /// its own (so a slow request on the shared one does not count).
-    public func isAlive(timeout: TimeInterval = 5) -> Bool {
-        guard let c = try? DaemonClient(socketPath: socketPath, timeout: timeout) else { return false }
-        return (try? c.call(.ping, as: String.self)) == "pong"
-    }
-
-    /// Whether the daemon this app started is still running (nil: this app
-    /// did not start it).
-    public var childRunning: Bool? {
-        child.map(\.isRunning)
-    }
-
-    /// The daemon this app started is still within its start-up time (the
-    /// watchdog leaves it alone meanwhile).
-    public var childStarting: Bool {
-        guard let p = child, p.isRunning else { return false }
-        return Date().timeIntervalSince(childStarted) < Self.startGrace
-    }
-
     /// The daemon this app started (the self-test kills it to check the
     /// watchdog).
     public var childPID: Int32? {
         child.map(\.processIdentifier)
-    }
-
-    /// The watchdog: stop a daemon that stopped answering and start a fresh
-    /// one. The process is ended first (without the shared lock, which a
-    /// request stuck on the hung daemon may hold): that also breaks the stuck
-    /// request, so the lock frees.
-    public func restartDaemon() {
-        if retired { return }
-        if let p = child, p.isRunning {
-            p.terminate()
-            let deadline = Date().addingTimeInterval(3)
-            while p.isRunning && Date() < deadline { usleep(50_000) }
-            if p.isRunning { kill(p.processIdentifier, SIGKILL) }
-        }
-        lock.lock()
-        child = nil
-        client = nil
-        lock.unlock()
-        _ = status() // starts the bundled daemon again
     }
 
     /// Run one request on the shared connection: reconnect once if it broke,

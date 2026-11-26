@@ -79,4 +79,57 @@ extension Engine {
     public func junk(path: String) throws -> [JunkItem] {
         (try longCall(longJobConnection(), .junk(path: path), as: [JunkItem]?.self)) ?? []
     }
+
+    /// The running junk walk: found so far, folders gone through, the one it
+    /// is in (nil: an older engine, or no answer). On a connection of its own.
+    public func junkFound() -> JunkProgress? {
+        try? longCall(longJobConnection(), .junkFound, as: JunkProgress.self)
+    }
+
+    /// End the running junk walk early (it returns what it found).
+    public func stopJunk() {
+        _ = try? longCall(longJobConnection(), .junkStop, as: Bool.self)
+    }
+}
+
+/// A junk walk while it runs.
+public struct JunkProgress: Decodable, Sendable {
+    public var running: Bool
+    public var folders: UInt64
+    public var current: String
+    public var items: [JunkItem]
+
+    enum CodingKeys: String, CodingKey { case running, folders, current, items }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        running = (try? c.decode(Bool.self, forKey: .running)) ?? false
+        folders = (try? c.decode(UInt64.self, forKey: .folders)) ?? 0
+        current = (try? c.decode(String.self, forKey: .current)) ?? ""
+        items = (try? c.decode([JunkItem].self, forKey: .items)) ?? []
+    }
+}
+
+/// One file's dates (Unix seconds; 0: not recorded).
+public struct FileTime: Decodable, Hashable, Sendable {
+    public var path: String
+    public var created: Int64
+    public var modified: Int64
+    public var opened: Int64
+    public var added: Int64
+}
+
+extension Engine {
+    /// The dates of these files (last opened as macOS records it), read from
+    /// the files, on a connection of its own; by the page.
+    public func fileTimes(_ paths: [String]) -> [FileTime] {
+        guard !paths.isEmpty else { return [] }
+        var out: [FileTime] = []
+        let line = longJobConnection()
+        for start in stride(from: 0, to: paths.count, by: 2000) {
+            let batch = Array(paths[start..<min(paths.count, start + 2000)])
+            out += (try? longCall(line, .fileTimes(paths: batch), as: [FileTime]?.self)) ?? []
+        }
+        return out
+    }
 }

@@ -318,3 +318,16 @@ file time attributes are not there, include them". They were there — at the bo
 the storyboard, in small grey type. Decided: every date goes in the first block under the name; a date macOS did not
 record says "Not recorded" rather than vanishing (so the owner can tell it was looked for); titles in bold at body
 size, section titles as headlines.
+
+## 40. The second critique, done; results while it works (0.1.22)
+
+- The owner: "do all, remove unused code". Last opened can't be indexed cheaply (one attribute read per file while
+  indexing breaks the speed rules), so it is read for what is on screen: the list's page and Big & Old's candidates.
+  The search language gets no `opened:` filter for the same reason. Unused code removed: thirteen app functions the
+  window never called (among them recording opens, which Laserdot+ must not do anyway); the engine had none.
+- The owner: "the clean up junk and find duplicates take too long, it would be useful to show results as soon as
+  something is found rather than finish the whole drive or task". Junk lists finds as it walks, with Stop; duplicates
+  publish what they know every second and read the biggest files first. Move to Trash waits for the end or Stop, so
+  nothing is trashed on a half-read list.
+- The owner then asked for a review of what could be more Mac-like, "without losing any functionality" (answered as
+  a list, not built yet).

@@ -41,3 +41,16 @@ func TestDetailsDescribeAFile(t *testing.T) {
 		t.Errorf("a folder's dates: %+v", f)
 	}
 }
+
+// The dates of the rows on screen, in one request; a file that is gone is left out.
+func TestFileTimesOfSeveralFiles(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	writeAged(t, filepath.Join(base, "a.txt"), []byte("a"))
+	writeAged(t, filepath.Join(base, "b.txt"), []byte("b"))
+	ld, _ := Open(filepath.Join(base, "i.db"))
+	defer ld.Close()
+	got := ld.FileTimes([]string{filepath.Join(base, "a.txt"), filepath.Join(base, "gone.txt"), filepath.Join(base, "b.txt")})
+	if len(got) != 2 || got[0].Modified == 0 || got[1].Path != filepath.Join(base, "b.txt") {
+		t.Errorf("%+v", got)
+	}
+}

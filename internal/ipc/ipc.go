@@ -102,6 +102,13 @@ const (
 	// OpJunk (Laserdot+): system files, unfinished downloads, empty files and
 	// folders under Path (a drive's mount; "" every place). Walks the disk.
 	OpJunk = "junk"
+	// OpJunkFound (Laserdot+): the running junk walk's progress and finds so far.
+	OpJunkFound = "junk_found"
+	// OpJunkStop (Laserdot+): end the running junk walk early.
+	OpJunkStop = "junk_stop"
+	// OpFileTimes (Laserdot+): the dates of each of Paths (created, modified,
+	// last opened, added), read from the files for the rows on screen.
+	OpFileTimes = "file_times"
 	// OpUnreadable: what the last full index of each folder could not read.
 	OpUnreadable = "unreadable"
 	// OpBackground pauses or resumes background work (Paused): the app pauses
@@ -122,6 +129,8 @@ type Request struct {
 	Typo    *bool  `json:"typo,omitempty"`
 	// index, forget
 	Path string `json:"path,omitempty"`
+	// file_times
+	Paths []string `json:"paths,omitempty"`
 	// background
 	Paused *bool `json:"paused,omitempty"`
 	// hint, section_at, completions: caret position (runes); lang: en/ar.

@@ -446,6 +446,13 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		return result(s.ld.Unreadable())
 	case ipc.OpDetails:
 		return result(s.ld.Details(req.Path))
+	case ipc.OpFileTimes:
+		return ok(s.ld.FileTimes(req.Paths))
+	case ipc.OpJunkFound:
+		return ok(s.ld.JunkFound())
+	case ipc.OpJunkStop:
+		s.ld.StopJunk()
+		return ok(true)
 	case ipc.OpJunk:
 		return result(s.ld.Junk(req.Path))
 	case ipc.OpSnippet:

@@ -125,6 +125,11 @@ final class SelfTestRunner {
                         v.simulate(.leftMouseDown, at: ca); v.simulate(.leftMouseUp, at: ca)
                         v.move(124)
                         self.report["arrow_moves"] = self.model.selection == [b.key]
+                        // And a click delivered by the window (hit-testing through
+                        // SwiftUI's layers, as a real click is).
+                        self.model.selection = []
+                        v.clickThroughWindow(at: ca)
+                        self.report["window_click"] = self.model.selection == [a.key]
                         let from = CGPoint(x: a.value.minX - 3, y: a.value.minY - 3)
                         let to = CGPoint(x: b.value.midX, y: b.value.midY)
                         v.simulate(.leftMouseDown, at: from)

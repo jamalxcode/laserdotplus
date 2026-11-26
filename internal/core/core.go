@@ -153,6 +153,10 @@ type Laserdot struct {
 	// dupeFound: the groups the running scan has found so far (shown as they
 	// come, the owner: "a detection as soon as it happens").
 	dupeFound atomic.Pointer[[]DupeGroup]
+	// junk: the running junk walk (what it found so far); junkStop ends it.
+	junkMu   sync.Mutex
+	junk     JunkProgress
+	junkStop atomic.Bool
 	// fpKey: this Mac's key that signs the fingerprints kept on drives.
 	fpKeyOnce  sync.Once
 	fpKeyBytes []byte

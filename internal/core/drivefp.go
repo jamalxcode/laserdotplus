@@ -8,10 +8,12 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/jamalxcode/laserdotplus/internal/index"
 )
@@ -29,7 +31,20 @@ import (
 // write — another Mac's, a damaged or forged one — is ignored and the files
 // are read again. Encrypted drives keep none (the file is not encrypted).
 
-const driveFPFile = "fingerprints.bin"
+// driveFPFile: the file of the Mac whose key is key — one per Mac, so two
+// Macs using the same drive do not overwrite each other's work. (0.1.19 wrote
+// one "fingerprints.bin"; it is read once if this Mac signed it, then left.)
+func driveFPFile(key []byte) string {
+	sum := sha256.Sum256(append([]byte("laserdotplus-fp-file"), key...))
+	return fmt.Sprintf("fingerprints-%x.bin", sum[:6])
+}
+
+const legacyDriveFPFile = "fingerprints.bin"
+
+// driveFPSaveEvery: while a scan runs, the file is written at most this
+// often (a rewrite of a big drive's file over USB is not free); and always
+// at the end.
+const driveFPSaveEvery = time.Minute
 
 var driveFPMagic = []byte("LDPLUSFP1\n")
 
@@ -61,6 +76,7 @@ type driveFPs struct {
 	key   []byte
 	m     map[string]index.Fingerprint
 	dirty bool
+	saved time.Time
 }
 
 func loadDriveFPs(dir string, key []byte) *driveFPs {
@@ -68,7 +84,11 @@ func loadDriveFPs(dir string, key []byte) *driveFPs {
 	if len(key) != 32 {
 		return d
 	}
-	b, err := os.ReadFile(filepath.Join(dir, driveFPFile))
+	d.saved = time.Now()
+	b, err := os.ReadFile(filepath.Join(dir, driveFPFile(key)))
+	if err != nil {
+		b, err = os.ReadFile(filepath.Join(dir, legacyDriveFPFile))
+	}
 	if err != nil || len(b) < len(driveFPMagic)+32 || !bytes.HasPrefix(b, driveFPMagic) {
 		return d
 	}
@@ -101,6 +121,17 @@ func (d *driveFPs) put(rel string, f index.Fingerprint) {
 	d.mu.Unlock()
 }
 
+// saveIfDue: save, if the last save was a while ago.
+func (d *driveFPs) saveIfDue() error {
+	d.mu.Lock()
+	due := time.Since(d.saved) >= driveFPSaveEvery
+	d.mu.Unlock()
+	if !due {
+		return nil
+	}
+	return d.save()
+}
+
 // save writes the file again (to a temporary file, then renamed) when
 // something changed. A read-only drive just keeps nothing.
 func (d *driveFPs) save() error {
@@ -109,13 +140,14 @@ func (d *driveFPs) save() error {
 	if !d.dirty || len(d.key) != 32 {
 		return nil
 	}
+	d.saved = time.Now()
 	var buf bytes.Buffer
 	buf.Write(driveFPMagic)
 	encodeDriveFPs(&buf, d.m)
 	mac := hmac.New(sha256.New, d.key)
 	mac.Write(buf.Bytes())
 	buf.Write(mac.Sum(nil))
-	p := filepath.Join(d.dir, driveFPFile)
+	p := filepath.Join(d.dir, driveFPFile(d.key))
 	tmp := p + ".tmp"
 	if err := os.WriteFile(tmp, buf.Bytes(), 0o600); err != nil {
 		return err

@@ -49,3 +49,29 @@ func TestFindJunk(t *testing.T) {
 		}
 	}
 }
+
+// The walk reports each find as it goes (the app shows them at once), and how
+// far it has got; the engine's progress is empty once it is done.
+func TestJunkShowsAsItIsFound(t *testing.T) {
+	root := t.TempDir()
+	for _, rel := range []string{"A/.DS_Store", "B/.DS_Store", "C/Thumbs.db"} {
+		p := filepath.Join(root, rel)
+		os.MkdirAll(filepath.Dir(p), 0o755)
+		os.WriteFile(p, []byte("x"), 0o644)
+	}
+	var seen []string
+	var folders int
+	all := findJunk(root, nil, &junkWatch{
+		found: func(j JunkItem) { seen = append(seen, j.Path) },
+		dir:   func(string) { folders++ },
+	})
+	if len(seen) != len(all) || len(seen) != 6 || folders < 3 { // 3 files + their 3 folders (junk only)
+		t.Errorf("seen %d of %d, %d folders", len(seen), len(all), folders)
+	}
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	ld, _ := Open(filepath.Join(base, "i.db"))
+	defer ld.Close()
+	if items, _ := ld.Junk(root); len(items) != 6 || ld.JunkFound().Running {
+		t.Errorf("%d items, running %v", len(items), ld.JunkFound().Running)
+	}
+}

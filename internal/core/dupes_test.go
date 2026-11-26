@@ -528,7 +528,7 @@ func TestDriveFingerprintsStayOnTheDrive(t *testing.T) {
 	if err != nil || len(first.Groups) != 1 || first.Read == 0 {
 		t.Fatalf("%v %+v", err, first)
 	}
-	fp := filepath.Join(drive, ".laserdot", driveFPFile)
+	fp := filepath.Join(drive, ".laserdot", driveFPFile(m.ld.fpKey()))
 	if _, err := os.Stat(fp); err != nil {
 		t.Fatalf("no fingerprints on the drive: %v", err)
 	}
@@ -543,5 +543,25 @@ func TestDriveFingerprintsStayOnTheDrive(t *testing.T) {
 	third, _ := m.ld.FindDuplicates(opts)
 	if third.Read == 0 || len(third.Groups) != 1 {
 		t.Errorf("a forged file was trusted: %+v", third)
+	}
+}
+
+// Two Macs: each keeps its own file on the drive, so neither undoes the other's.
+func TestEachMacKeepsItsOwnFingerprintFile(t *testing.T) {
+	a, b := []byte(strings.Repeat("a", 32)), []byte(strings.Repeat("b", 32))
+	if driveFPFile(a) == driveFPFile(b) || driveFPFile(a) == legacyDriveFPFile {
+		t.Fatal(driveFPFile(a), driveFPFile(b))
+	}
+	dir := t.TempDir()
+	da := loadDriveFPs(dir, a)
+	da.put("x.bin", index.Fingerprint{Size: 1, Modified: 2})
+	if err := da.save(); err != nil {
+		t.Fatal(err)
+	}
+	if got := loadDriveFPs(dir, b); len(got.m) != 0 {
+		t.Error("another Mac trusted this Mac's file")
+	}
+	if got := loadDriveFPs(dir, a); len(got.m) != 1 {
+		t.Error("this Mac lost its own file")
 	}
 }

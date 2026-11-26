@@ -97,6 +97,22 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Live results (0.1.22):** junk: `findJunk` reports each find and folder to `ld.junk` (`JunkProgress`); the app
+  polls `junk_found` every second on its own connection and stops with `junk_stop`; Move to Trash waits for the end
+  or Stop. Duplicates: `compute` calls `run.tick` about once a second from the loop that records reads; during the
+  exact pass it publishes `soFar` (same size+samples = likely, same full hash = exact); files are read biggest first.
+- **Last opened (0.1.22):** `file_times` (paths → created/modified/opened/added, read from the files, ≤2000 a
+  request); the list fills `Hit.opened` for each loaded page (Last Opened column, sorted locally); Big & Old ▸ Not
+  opened reads the candidates' dates and keeps those older than the cut-off (no record = never opened).
+- **Compare (0.1.22):** `CompareView` sheet per group (frames for videos, pictures otherwise), Keep/Trash per copy,
+  Quick Look over the group. Keep/Trash colours are Okabe–Ito blue/vermillion.
+- **Messages (0.1.22):** `notice` fades after 8 s; `trouble` (moves that failed, a failed rename) stays with ✕.
+  What's New (`WhatsNew.swift`, the bundled CHANGELOG via `Changelog` in LaserdotKit, unit-tested) shows once per new
+  version; Help ▸ Keyboard Shortcuts (⌘/); ⌘F focuses the search box.
+- **Drive fingerprints (0.1.22):** `fingerprints-<id>.bin`, the id derived from this Mac's key (one file per Mac;
+  0.1.19's `fingerprints.bin` is read once); written at most once a minute during a scan (`saveIfDue`), always at
+  the end. `TestEachMacKeepsItsOwnFingerprintFile`; `TestManyFilesStayQuick` (20,000 files: index, Space, dates,
+  two duplicate scans, with time budgets). The self-test also clicks through the window (`clickThroughWindow`).
 - **Dates in the pane (0.1.21):** `facts` shows them under the name (from the `dates` section once read, the hit's
   dates before); Last opened / Added read "Not recorded" when absent; the `dates` section is not repeated below.
   Labels are `.callout` semibold, section titles `.headline`. The bottom bar labels Modified, Created and Opened.

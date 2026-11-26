@@ -43,6 +43,24 @@ final class SavedViews: ObservableObject {
         write()
     }
 
+    func rename(_ name: String, to new: String) {
+        let n = new.trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty, n != name else { return }
+        views.removeAll { $0.name == n } // a view of that name is replaced
+        guard let i = views.firstIndex(where: { $0.name == name }) else { return }
+        views[i].name = n
+        write()
+    }
+
+    /// Move a view one place left (-1) or right (+1).
+    func move(_ name: String, by delta: Int) {
+        guard let i = views.firstIndex(where: { $0.name == name }) else { return }
+        let j = i + delta
+        guard views.indices.contains(j) else { return }
+        views.swapAt(i, j)
+        write()
+    }
+
     func remove(_ name: String) {
         views.removeAll { $0.name == name }
         write()
@@ -104,7 +122,15 @@ struct SavedViewsStrip: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .fixedSize()
-                    .contextMenu { Button(L("views.remove")) { views.remove(v.name) } }
+                    .contextMenu {
+                        Button(L("views.rename")) {
+                            if let n = Self.askName(L("views.rename.title"), current: v.name) { views.rename(v.name, to: n) }
+                        }
+                        Button(L("views.moveLeft")) { views.move(v.name, by: -1) }.disabled(views.views.first == v)
+                        Button(L("views.moveRight")) { views.move(v.name, by: 1) }.disabled(views.views.last == v)
+                        Divider()
+                        Button(L("views.remove")) { views.remove(v.name) }
+                    }
             }
             Button { model.saveViewPrompt() } label: { Image(systemName: "bookmark.badge.plus") }
                 .buttonStyle(.borderless)
@@ -113,6 +139,19 @@ struct SavedViewsStrip: View {
         }
         .onAppear { reload() }
         .onChange(of: model.place) { _, _ in reload() }
+    }
+
+    static func askName(_ title: String, current: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.stringValue = current
+        alert.accessoryView = field
+        alert.addButton(withTitle: L("views.rename"))
+        alert.addButton(withTitle: L("action.cancel"))
+        alert.window.initialFirstResponder = field
+        guard alert.runFront() == .alertFirstButtonReturn else { return nil }
+        return field.stringValue
     }
 
     private func reload() { views.load(SavedViews.file(for: model.place, dbPath: model.engine.dbPath)) }

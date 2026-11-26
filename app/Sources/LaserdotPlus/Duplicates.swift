@@ -227,6 +227,7 @@ struct DuplicatesView: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var dupes: DupesModel
     @Environment(\.undoManager) private var undo
+    @State private var comparing: CompareItem?
 
     /// Which copy to keep, for every group at once.
     private var keepMenu: some View {
@@ -290,6 +291,7 @@ struct DuplicatesView: View {
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .sheet(item: $comparing) { c in CompareView(group: c.group, dupes: dupes) }
     }
 
     @ViewBuilder private var content: some View {
@@ -375,7 +377,13 @@ struct DuplicatesView: View {
 
     private func group(_ g: DuplicateGroup) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L("dupes.kind." + g.kind)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            HStack {
+                Text(L("dupes.kind." + g.kind)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Button { comparing = CompareItem(group: g) } label: { Label(L("dupes.compare"), systemImage: "rectangle.split.3x1") }
+                    .controlSize(.small)
+                    .help(L("dupes.compare.help"))
+            }
             ForEach(g.files, id: \.path) { f in
                 let kept = dupes.keep.contains(f.path)
                 HStack(spacing: 8) {
@@ -385,7 +393,8 @@ struct DuplicatesView: View {
                             .font(.title3)
                         Text(kept ? L("dupes.keep") : L("dupes.trashOne")).font(.caption.weight(.semibold))
                     }
-                    .foregroundStyle(kept ? Color.green : Color.red)
+                    // Okabe–Ito blue and vermillion (colour-blind safe), with the icon and word.
+                    .foregroundStyle(kept ? Palette.place : Palette.kind("video"))
                     .frame(width: 74, alignment: .leading)
                     FileIcon(path: f.path, size: 40, thumbnail: true)
                     VStack(alignment: .leading, spacing: 1) {
@@ -410,5 +419,64 @@ struct DuplicatesView: View {
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.06)))
+    }
+}
+
+/// One group's copies side by side, to choose which to keep by looking (the
+/// critique: choosing from text alone is hard). Quick Look plays them one
+/// after another (← →).
+struct CompareItem: Identifiable {
+    let id = UUID()
+    let group: DuplicateGroup
+}
+
+struct CompareView: View {
+    let group: DuplicateGroup
+    @ObservedObject var dupes: DupesModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text(L("dupes.kind." + group.kind)).font(.headline)
+                Spacer()
+                Button(L("dupes.compare.quickLook")) {
+                    QuickLook.shared.toggle(group.files.map { URL(fileURLWithPath: $0.path) }, at: 0)
+                }
+                Button(L("action.done")) { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(group.files, id: \.path) { f in
+                        let kept = dupes.keep.contains(f.path)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Group {
+                                if Palette.kind(ofExtension: (f.path as NSString).pathExtension) == "video" {
+                                    ScrubThumb(path: f.path, size: 260)
+                                } else {
+                                    FileIcon(path: f.path, size: 260, thumbnail: true)
+                                }
+                            }
+                            .frame(width: 270, height: 200)
+                            Text((f.path as NSString).lastPathComponent).font(.callout.weight(.semibold)).lineLimit(2)
+                            Text(whereText(f.path)).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                            Text(f.summary).font(.caption).lineLimit(2)
+                            Text("\(bytesText(f.size)) · \(String(format: L("bar.modified"), dateText(f.modified)))")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Button { dupes.toggle(f, in: group) } label: {
+                                Label(kept ? L("dupes.keep") : L("dupes.trashOne"), systemImage: kept ? "checkmark.circle.fill" : "trash.circle")
+                            }
+                            .foregroundStyle(kept ? Palette.place : Palette.kind("video"))
+                        }
+                        .frame(width: 270)
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 8).strokeBorder(kept ? Palette.place : Color.secondary.opacity(0.3), lineWidth: kept ? 2 : 1))
+                    }
+                }
+                .padding(4)
+            }
+        }
+        .padding(16)
+        .frame(minWidth: 620, minHeight: 420)
     }
 }

@@ -16,6 +16,9 @@ public enum DaemonRequest: Encodable, Sendable {
     case details(path: String)
     /// Laserdot+: the junk under a folder ("" every place); walks the disk.
     case junk(path: String)
+    case fileTimes(paths: [String])
+    case junkFound
+    case junkStop
     case forget(path: String)
     case refresh
     case roots
@@ -96,6 +99,9 @@ public enum DaemonRequest: Encodable, Sendable {
         case .index: return "index"
         case .details: return "details"
         case .junk: return "junk"
+        case .fileTimes: return "file_times"
+        case .junkFound: return "junk_found"
+        case .junkStop: return "junk_stop"
         case .forget: return "forget"
         case .opened: return "opened"
         case .recentOpens: return "recent_opens"
@@ -144,7 +150,7 @@ public enum DaemonRequest: Encodable, Sendable {
     }
 
     private enum Key: String, CodingKey {
-        case op, query, sort, reverse, offset, limit, typo, path, mount, passphrase, options, request, settings, cursor, lang, paused
+        case op, query, sort, reverse, offset, limit, typo, path, paths, mount, passphrase, options, request, settings, cursor, lang, paused
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -186,6 +192,8 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(lang, forKey: .lang)
         case let .recentOpens(limit):
             try c.encode(limit, forKey: .limit)
+        case let .fileTimes(paths):
+            try c.encode(paths, forKey: .paths)
         case let .storage(path, limit):
             try c.encode(path, forKey: .path)
             try c.encode(limit, forKey: .limit)
@@ -195,7 +203,7 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(path, forKey: .path)
             try c.encode(query, forKey: .query)
         case .ping, .status, .refresh, .roots, .stats, .shutdown, .drives, .contentStatus, .updateContent, .valueCounts,
-             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound:
+             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound, .junkFound, .junkStop:
             break
         }
     }

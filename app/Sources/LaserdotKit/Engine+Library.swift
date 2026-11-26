@@ -49,12 +49,6 @@ extension Engine {
         try call(.driveDetach(mount: mount), as: Bool.self)
     }
 
-    /// Let go of a drive about to be ejected, on a connection of its own (a
-    /// slow request on the shared one must not delay an eject).
-    public func driveRelease(mount: String) throws -> Bool {
-        try longCall(longJobConnection(), .driveDetach(mount: mount), as: Bool.self)
-    }
-
     @discardableResult
     public func driveRebuild(mount: String, passphrase: String?) throws -> String {
         let s = try longCall(longJobConnection(), .driveRebuild(mount: mount, passphrase: passphrase), as: Wire.IndexStats.self)
@@ -112,14 +106,6 @@ extension Engine {
         info(try call(.contentStatus, as: Wire.ContentStatus.self))
     }
 
-    /// Leave source code out of content search (or put it back).
-    public func setContentSkipCode(_ skip: Bool) throws -> ContentInfo {
-        var settings = try call(.contentStatus, as: Wire.ContentStatus.self).settings ?? .defaultForHome
-        settings.skipCode = skip
-        _ = try call(.setContentSettings(settings: settings), as: Wire.ContentStatus.self)
-        return try contentInfo()
-    }
-
     /// What fills a folder ("" = the indexed folders), largest first.
     /// Look at every indexed folder again: deleted files leave the index,
     /// new and changed ones come in. Returns (added, removed).
@@ -141,13 +127,6 @@ extension Engine {
 
     public func storage(path: String, limit: Int = 60) throws -> Wire.StorageReport {
         try call(.storage(path: path, limit: limit), as: Wire.StorageReport.self)
-    }
-
-    /// Pause background work (contents, Tier 2) or resume it.
-    /// Returns whether background work is now paused (nil: no answer).
-    @discardableResult
-    public func setBackground(paused: Bool) -> Bool? {
-        (try? call(.background(paused: paused), as: [String: Bool].self))?["paused"]
     }
 
     /// Read the text of new and changed documents now (it also happens in

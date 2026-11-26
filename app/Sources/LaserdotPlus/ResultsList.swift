@@ -28,6 +28,10 @@ struct ResultsList: View {
                 Text(h.created > 0 ? dateText(h.created) : "").foregroundStyle(.secondary).lineLimit(1)
             }
             .width(min: 110, ideal: 150)
+            TableColumn(L("column.opened"), value: \Hit.opened) { h in
+                Text(h.opened > 0 ? dateText(h.opened) : "—").foregroundStyle(.secondary).lineLimit(1)
+            }
+            .width(min: 110, ideal: 150)
             TableColumn(L("column.details")) { h in Text(h.badges.joined(separator: " · ")).foregroundStyle(.secondary).lineLimit(1) }
                 .width(min: 80, ideal: 200)
             TableColumn(L("column.where")) { h in Text(whereText(h.path)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
@@ -50,6 +54,9 @@ struct ResultsList: View {
                 key = .kind
             } else if path == \Hit.created as PartialKeyPath<Hit> {
                 key = .created
+            } else if path == \Hit.opened as PartialKeyPath<Hit> {
+                model.sortByOpened(reverse: first.order == .reverse)
+                return
             } else {
                 key = .modified
             }

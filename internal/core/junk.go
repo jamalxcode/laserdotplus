@@ -37,8 +37,23 @@ var homeLibrary = func() string { h, _ := os.UserHomeDir(); return filepath.Join
 // folder after its contents: deepest first). A download is unfinished only
 // when untouched for a day (one still in progress is left alone). stop, when
 // it answers true, ends the walk early with what was found.
-func FindJunk(root string, stop func() bool) []JunkItem {
+func FindJunk(root string, stop func() bool) []JunkItem { return findJunk(root, stop, nil) }
+
+// junkWatch: what a walk reports as it goes (the owner: "show results as soon
+// as something is found rather than finish the whole drive").
+type junkWatch struct {
+	found func(JunkItem)
+	dir   func(string)
+}
+
+func findJunk(root string, stop func() bool, w *junkWatch) []JunkItem {
 	var out []JunkItem
+	add := func(j JunkItem) {
+		out = append(out, j)
+		if w != nil {
+			w.found(j)
+		}
+	}
 	nonEmpty := map[string]bool{} // folders holding something that is not junk
 	var dirs []string
 	dayAgo := time.Now().Add(-24 * time.Hour)
@@ -61,6 +76,9 @@ func FindJunk(root string, stop func() bool) []JunkItem {
 				return filepath.SkipDir
 			}
 			dirs = append(dirs, p)
+			if w != nil {
+				w.dir(p)
+			}
 			return nil
 		}
 		info, err := d.Info()
@@ -72,11 +90,11 @@ func FindJunk(root string, stop func() bool) []JunkItem {
 		case keepJunk[lower]:
 			nonEmpty[filepath.Dir(p)] = true
 		case scan.IsSystemJunk(name):
-			out = append(out, JunkItem{p, info.Size(), "system"})
+			add(JunkItem{p, info.Size(), "system"})
 		case scan.IsPartialDownload(name) && info.ModTime().Before(dayAgo):
-			out = append(out, JunkItem{p, info.Size(), "partial"})
+			add(JunkItem{p, info.Size(), "partial"})
 		case info.Size() == 0 && info.Mode().IsRegular() && !strings.HasPrefix(name, "."):
-			out = append(out, JunkItem{p, 0, "empty_file"})
+			add(JunkItem{p, 0, "empty_file"})
 		default:
 			nonEmpty[filepath.Dir(p)] = true
 		}
@@ -93,7 +111,7 @@ func FindJunk(root string, stop func() bool) []JunkItem {
 			nonEmpty[filepath.Dir(d)] = true
 			continue
 		}
-		out = append(out, JunkItem{d, 0, "empty_folder"})
+		add(JunkItem{d, 0, "empty_folder"})
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Size > out[j].Size })
 	return out
@@ -116,11 +134,52 @@ func (ld *Laserdot) Junk(root string) ([]JunkItem, error) {
 		}
 		ld.mu.RUnlock()
 	}
+	ld.junkMu.Lock()
+	ld.junk = JunkProgress{Running: true, Items: []JunkItem{}}
+	ld.junkMu.Unlock()
+	ld.junkStop.Store(false)
+	w := &junkWatch{
+		found: func(j JunkItem) {
+			ld.junkMu.Lock()
+			ld.junk.Items = append(ld.junk.Items, j)
+			ld.junkMu.Unlock()
+		},
+		dir: func(d string) {
+			ld.junkMu.Lock()
+			ld.junk.Folders++
+			ld.junk.Current = d
+			ld.junkMu.Unlock()
+		},
+	}
 	var out []JunkItem
 	for _, r := range roots {
 		if fi, err := os.Stat(r); err == nil && fi.IsDir() {
-			out = append(out, FindJunk(r, nil)...)
+			out = append(out, findJunk(r, ld.junkStop.Load, w)...)
 		}
 	}
+	ld.junkMu.Lock()
+	ld.junk = JunkProgress{Items: []JunkItem{}}
+	ld.junkMu.Unlock()
 	return out, nil
 }
+
+// JunkProgress: a junk walk while it runs — what it found so far, how many
+// folders it went through and the one it is in.
+type JunkProgress struct {
+	Running bool       `json:"running"`
+	Folders uint64     `json:"folders"`
+	Current string     `json:"current"`
+	Items   []JunkItem `json:"items"`
+}
+
+// JunkFound: the running walk's progress and finds (Running false: none).
+func (ld *Laserdot) JunkFound() JunkProgress {
+	ld.junkMu.Lock()
+	defer ld.junkMu.Unlock()
+	p := ld.junk
+	p.Items = append([]JunkItem{}, p.Items...)
+	return p
+}
+
+// StopJunk ends the running walk early; it returns what it found.
+func (ld *Laserdot) StopJunk() { ld.junkStop.Store(true) }

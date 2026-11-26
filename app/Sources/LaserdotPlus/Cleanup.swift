@@ -21,19 +21,67 @@ final class JunkModel: ObservableObject {
 
     var chosenBytes: UInt64 { items.filter { chosen.contains($0.path) }.reduce(0) { $0 + $1.size } }
 
+    /// While walking: folders gone through and the one it is in.
+    @Published var folders: UInt64 = 0
+    @Published var current = ""
+    private var poll: Timer?
+    private var earlier: [JunkItem] = [] // finished roots' finds (several roots)
+    private var stopped = false
+
     func scan(roots: [String]) {
         guard phase != .scanning else { return }
         phase = .scanning
+        items = []
+        chosen = []
+        earlier = []
+        stopped = false
+        folders = 0
+        current = ""
         let engine = self.engine
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            var found: [JunkItem] = []
-            for r in roots { found += (try? engine.junk(path: r)) ?? [] }
-            DispatchQueue.main.async {
-                self?.items = found
-                self?.chosen = Set(found.map(\.path)) // junk: all ticked
-                self?.phase = .done
+        // What is found shows as it is found (the owner: "show results as soon
+        // as something is found rather than finish the whole drive").
+        poll?.invalidate()
+        poll = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self, self.phase == .scanning else { return }
+            DispatchQueue.global(qos: .utility).async {
+                guard let p = engine.junkFound(), p.running else { return }
+                DispatchQueue.main.async {
+                    guard self.phase == .scanning else { return }
+                    self.take(self.earlier + p.items)
+                    self.folders = p.folders
+                    self.current = p.current
+                }
             }
         }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var found: [JunkItem] = []
+            for r in roots {
+                if DispatchQueue.main.sync(execute: { self?.stopped ?? true }) { break }
+                found += (try? engine.junk(path: r)) ?? []
+                let sofar = found
+                DispatchQueue.main.async { self?.earlier = sofar }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.poll?.invalidate()
+                self.take(found.sorted { $0.size > $1.size })
+                self.phase = .done
+            }
+        }
+    }
+
+    /// Show these, ticking new ones (junk: all ticked) and keeping the
+    /// user's untickings.
+    private func take(_ found: [JunkItem]) {
+        let shown = Set(items.map(\.path))
+        items = found
+        for j in found where !shown.contains(j.path) { chosen.insert(j.path) }
+    }
+
+    func stop() {
+        stopped = true
+        let engine = self.engine
+        DispatchQueue.global(qos: .userInitiated).async { engine.stopJunk() }
     }
 }
 
@@ -45,6 +93,11 @@ final class BigOldModel: ObservableObject {
     @Published var chosen: Set<String> = []
     @Published var minMB = 500
     @Published var years = 2
+    /// Old by: not changed (modified), or not opened (as macOS records it on
+    /// the file; a file with no record counts as never opened).
+    @Published var byOpened = false
+    /// Last opened, read from the files found (0: never recorded).
+    @Published var opened: [String: Int64] = [:]
     static let sizes = [100, 500, 1000, 5000]
     static let ages = [1, 2, 5]
     let engine: Engine
@@ -56,12 +109,20 @@ final class BigOldModel: ObservableObject {
         guard phase != .scanning else { return }
         phase = .scanning
         let size = minMB >= 1000 ? "fsize:>\(minMB / 1000)gb" : "fsize:>\(minMB)mb"
-        let q = [place, size, "before:\(years)y", "-kind:folder"].filter { !$0.isEmpty }.joined(separator: " ")
-        let engine = self.engine
+        let age = byOpened ? "" : "before:\(years)y"
+        let q = [place, size, age, "-kind:folder"].filter { !$0.isEmpty }.joined(separator: " ")
+        let (engine, wantOpened, ageYears) = (self.engine, self.byOpened, self.years)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let hits = (try? engine.search(query: q, limit: 2000, sort: .size, reverse: false))?.hits ?? []
+            var hits = (try? engine.search(query: q, limit: 5000, sort: .size, reverse: false))?.hits ?? []
+            var opened: [String: Int64] = [:]
+            if wantOpened {
+                let cutoff = Int64(Date().addingTimeInterval(-Double(ageYears) * 365.25 * 86400).timeIntervalSince1970)
+                for t in engine.fileTimes(hits.map(\.path)) { opened[t.path] = t.opened }
+                hits = hits.filter { (opened[$0.path] ?? 0) < cutoff }
+            }
             DispatchQueue.main.async {
                 self?.items = hits.sorted { $0.size > $1.size }
+                self?.opened = opened
                 self?.chosen = [] // big files: the user picks
                 self?.phase = .done
             }
@@ -122,10 +183,27 @@ struct CleanupView: View {
                     .disabled(junk.phase == .scanning)
             }
             Divider()
+            if junk.phase == .scanning {
+                // How far it has got, what it is reading, and Stop.
+                HStack(spacing: 10) {
+                    ProgressView().controlSize(.small)
+                    Text(String(format: L("cleanup.junk.progress"), junk.folders)).monospacedDigit()
+                    Text((junk.current as NSString).lastPathComponent).font(.caption).foregroundStyle(.secondary)
+                        .lineLimit(1).truncationMode(.middle)
+                    Spacer()
+                    if !junk.items.isEmpty {
+                        Text(String(format: L("dupes.soFar"), countText(junk.items.count, "file"))).font(.caption).foregroundStyle(.secondary)
+                    }
+                    Button(L("dupes.stop")) { junk.stop() }.help(L("cleanup.junk.stop.help"))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.accentColor.opacity(0.07))
+            }
             switch junk.phase {
             case .idle: message("trash.slash", L("cleanup.junk.intro"))
-            case .scanning: busy(L("cleanup.junk.scanning"))
-            case .done:
+            case .scanning where junk.items.isEmpty: busy(L("cleanup.junk.scanning"))
+            case .scanning, .done:
                 if junk.items.isEmpty {
                     message("checkmark.circle", L("cleanup.junk.none"))
                 } else {
@@ -135,7 +213,7 @@ struct CleanupView: View {
                             if junk.chosen.contains(j.path) { junk.chosen.remove(j.path) } else { junk.chosen.insert(j.path) }
                         }
                     }
-                    footer(count: junk.chosen.count, bytes: junk.chosenBytes) {
+                    footer(count: junk.chosen.count, bytes: junk.chosenBytes, enabled: junk.phase == .done) {
                         let paths = Array(junk.chosen)
                         model.trashPaths(paths, undo: undo)
                         junk.items.removeAll { paths.contains($0.path) }
@@ -156,7 +234,13 @@ struct CleanupView: View {
                     ForEach(BigOldModel.sizes, id: \.self) { mb in Text(mb >= 1000 ? "\(mb / 1000) GB" : "\(mb) MB").tag(mb) }
                 }
                 .fixedSize()
-                Picker(L("cleanup.untouched"), selection: $big.years) {
+                Picker("", selection: $big.byOpened) {
+                    Text(L("cleanup.notChanged")).tag(false)
+                    Text(L("cleanup.notOpened")).tag(true)
+                }
+                .labelsHidden()
+                .fixedSize()
+                Picker(L("cleanup.for"), selection: $big.years) {
                     ForEach(BigOldModel.ages, id: \.self) { y in Text(String(format: L("cleanup.years"), y)).tag(y) }
                 }
                 .fixedSize()
@@ -172,7 +256,9 @@ struct CleanupView: View {
                     message("checkmark.circle", L("cleanup.big.none"))
                 } else {
                     List(big.items, id: \.path) { h in
-                        row(path: h.path, size: h.size, note: dateText(h.modified),
+                        row(path: h.path, size: h.size, note: big.byOpened
+                            ? (big.opened[h.path].flatMap { $0 > 0 ? String(format: L("bar.opened"), dateText($0)) : nil } ?? L("cleanup.neverOpened"))
+                            : String(format: L("bar.modified"), dateText(h.modified)),
                             chosen: big.chosen.contains(h.path), isDir: false) {
                             if big.chosen.contains(h.path) { big.chosen.remove(h.path) } else { big.chosen.insert(h.path) }
                         }
@@ -210,7 +296,8 @@ struct CleanupView: View {
         }
     }
 
-    private func footer(count: Int, bytes: UInt64, trash: @escaping () -> Void) -> some View {
+    /// `enabled` false while a walk still runs (Stop ends it at once).
+    private func footer(count: Int, bytes: UInt64, enabled: Bool = true, trash: @escaping () -> Void) -> some View {
         HStack {
             Text(String(format: L("cleanup.chosen"), countText(count, "file"), bytesText(bytes))).foregroundStyle(.secondary)
             Spacer()
@@ -223,7 +310,7 @@ struct CleanupView: View {
                 if a.runFront() == .alertFirstButtonReturn { trash() }
             }
             .keyboardShortcut(.defaultAction)
-            .disabled(count == 0)
+            .disabled(count == 0 || !enabled)
         }
         .padding(10)
     }

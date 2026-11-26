@@ -151,6 +151,7 @@ struct SearchBox: View {
             TextField(model.pills.isEmpty ? L("search.prompt") : "", text: $model.text)
                 .textFieldStyle(.plain)
                 .focused($focused)
+                .onChange(of: model.focusSearch) { _, _ in focused = true }
             if !model.text.isEmpty || model.hasFilters {
                 Button {
                     model.text = ""
@@ -268,7 +269,14 @@ struct BottomBar: View {
                 Button(L("results.more")) { model.loadMore() }.buttonStyle(.link)
             }
             Spacer(minLength: 8)
-            if let n = model.notice {
+            if let t = model.trouble {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Text(t).lineLimit(2).textSelection(.enabled)
+                    Button { model.trouble = nil } label: { Image(systemName: "xmark.circle.fill") }
+                        .buttonStyle(.plain).foregroundStyle(.secondary).help(L("trouble.dismiss"))
+                }
+            } else if let n = model.notice {
                 Text(n).foregroundStyle(.secondary).lineLimit(1)
             }
             if let text = model.indexingText {

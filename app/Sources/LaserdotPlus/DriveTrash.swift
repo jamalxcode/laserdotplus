@@ -8,6 +8,8 @@ import SwiftUI
 final class DriveTrash: ObservableObject {
     static let shared = DriveTrash()
     @Published private(set) var bytes: [String: UInt64] = [:]
+    /// The drive's free space now (with the Trash still full).
+    @Published private(set) var free: [String: UInt64] = [:]
     private var counting: Set<String> = []
 
     /// The drive's own Trash folder (`<drive>/.Trashes/<uid>`).
@@ -27,9 +29,12 @@ final class DriveTrash: ObservableObject {
                     total += UInt64(v.totalFileAllocatedSize ?? v.fileSize ?? 0)
                 }
             }
+            let free = (try? URL(fileURLWithPath: mount).resourceValues(forKeys: [.volumeAvailableCapacityKey]))?
+                .volumeAvailableCapacity.map { UInt64(max(0, $0)) }
             DispatchQueue.main.async {
                 self?.counting.remove(mount)
                 self?.bytes[mount] = total
+                if let free { self?.free[mount] = free }
             }
         }
     }
@@ -51,6 +56,11 @@ struct DriveTrashLine: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Label(String(format: L("trash.waiting"), bytesText(b)), systemImage: "trash")
                         .font(.caption)
+                    if let f = trash.free[mount] {
+                        // Before and after: what emptying the Trash gives back.
+                        Text(String(format: L("trash.freeAfter"), bytesText(f), bytesText(f + b)))
+                            .font(.caption.weight(.semibold))
+                    }
                     Text(L("trash.help")).font(.caption2).foregroundStyle(.secondary)
                     Button(L("trash.open")) { DriveTrash.openTrash() }.controlSize(.small)
                 }

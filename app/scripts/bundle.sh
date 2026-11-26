@@ -30,6 +30,8 @@ if [ -x build/ffmpeg/ffprobe ]; then
 fi
 for b in "$BIN"/*.bundle; do [ -e "$b" ] && cp -R "$b" "$APP/Contents/Resources/"; done
 cp Info.plist "$APP/Contents/Info.plist"
+# What's New after an update reads it (WhatsNew.swift).
+cp ../CHANGELOG.md "$APP/Contents/Resources/CHANGELOG.md"
 for lang in en ar; do
   mkdir -p "$APP/Contents/Resources/$lang.lproj"
   printf '"CFBundleDisplayName" = "Laserdot+";\n"CFBundleName" = "Laserdot+";\n' > "$APP/Contents/Resources/$lang.lproj/InfoPlist.strings"

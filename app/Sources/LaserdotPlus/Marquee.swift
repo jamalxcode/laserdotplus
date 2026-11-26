@@ -202,6 +202,20 @@ final class MouseCatcherView: NSView, NSDraggingSource {
         setBox(nil)
     }
 
+    /// A click sent through the window, as macOS delivers a real one: it is
+    /// routed by hit-testing (the self-test checks that clicks reach this
+    /// view through SwiftUI's layers).
+    func clickThroughWindow(at p: CGPoint) {
+        guard let w = window else { return }
+        let loc = convert(p, to: nil)
+        for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+            if let e = NSEvent.mouseEvent(with: type, location: loc, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                          windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
+                w.sendEvent(e)
+            }
+        }
+    }
+
     /// A click or drag as the mouse would make it, at tile coordinates (the
     /// self-test: the events go straight to this view's handlers).
     func simulate(_ type: NSEvent.EventType, at p: CGPoint, flags: NSEvent.ModifierFlags = [], clicks: Int = 1) {
