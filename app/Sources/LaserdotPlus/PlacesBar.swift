@@ -27,7 +27,7 @@ struct PlacesBar: View {
         let on = model.place == p
         let button = Button { model.place = p } label: {
             HStack(spacing: 4) {
-                Image(systemName: symbol)
+                Image(systemName: symbol).foregroundStyle(on ? Color.white : Palette.place)
                 Text(title)
                 if let detail { Text(detail).foregroundStyle(on ? Color.white.opacity(0.8) : Color.secondary) }
             }
@@ -35,7 +35,7 @@ struct PlacesBar: View {
         }
         .controlSize(.regular)
         .fixedSize()
-        if on { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
+        if on { button.buttonStyle(.borderedProminent).tint(Palette.place) } else { button.buttonStyle(.bordered) }
     }
 
     @ViewBuilder private func drive(_ d: Drive) -> some View {
@@ -44,6 +44,7 @@ struct PlacesBar: View {
         let label = HStack(spacing: 5) {
             Image(systemName: drives.isWaiting(d) ? "hourglass" : d.state == "locked" ? "lock.fill"
                   : !(d.detail ?? "").isEmpty ? "exclamationmark.triangle" : d.readOnly ? "lock" : "externaldrive")
+                .foregroundStyle(on ? Color.white : Palette.place)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     Text(d.name).fontWeight(.medium)
@@ -54,7 +55,7 @@ struct PlacesBar: View {
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
                             Capsule().fill((on ? Color.white : Color.secondary).opacity(0.25))
-                            Capsule().fill(on ? Color.white : Color.accentColor)
+                            Capsule().fill(on ? Color.white : Palette.place)
                                 .frame(width: g.size.width * CGFloat(Double(d.totalBytes - min(d.freeBytes, d.totalBytes)) / Double(d.totalBytes)))
                         }
                     }
@@ -86,6 +87,6 @@ struct PlacesBar: View {
             if d.state == "unindexed" { Button(L("drive.index")) { drives.index(d) } }
             if d.state == "locked" { Button(L("drive.unlock")) { drives.unlock(d) } }
         }
-        if on { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
+        if on { button.buttonStyle(.borderedProminent).tint(Palette.place) } else { button.buttonStyle(.bordered) }
     }
 }

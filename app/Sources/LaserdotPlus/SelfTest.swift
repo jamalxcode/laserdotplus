@@ -207,6 +207,9 @@ final class SelfTestRunner {
     /// with a suggested name once its details are read.
     private func sweep() {
         model.clearFilters()
+        // The kinds' colour-blind-safe colours: each its own; file types take their kind's.
+        report["kind_colors"] = Set(["video", "image", "audio", "document", "folder", "archive"].map { "\(Palette.kind($0))" }).count
+        report["type_kinds"] = ["mp4", "png", "txt", "csv", "mp3", "zip"].map(Palette.kind(ofExtension:))
         waitFor(10, { self.model.results.count >= 10 }) { _ in
             self.model.startSweep()
             self.report["sweep_names"] = self.model.sweep?.map(\.name).sorted() ?? []

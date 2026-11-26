@@ -262,3 +262,11 @@ into the drive's `.Trashes/<uid>` itself — the right place, but the Finder doe
 Put Back can't work. Decided: the engine still checks each copy (unchanged, not the kept one) right before; the app
 then moves exactly those with macOS's call, off the main thread, undoable with ⌘Z. Copies already moved by 0.1.15 are
 in `/Volumes/<drive>/.Trashes/<uid>`.
+
+## 34. Colour-blind-friendly places and kinds (0.1.17)
+
+The owner: "the folder tab volume for the volumes is very intutive and useful, lets give it a color blind friendly
+color, and have the next level of tab for document type also colored for a colorblind friewndly viewer". Decided:
+the Okabe–Ito palette (already the bands' stripes), never colour alone — every coloured chip keeps an icon. Places
+are one colour (blue) since they are one family; each kind its own colour, and a file type (TXT, MP4) its kind's, so
+the two rows read together. Labels stay in the normal text colour on a light tint, readable in light and dark.

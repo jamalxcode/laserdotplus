@@ -114,7 +114,17 @@ struct ChoiceBands: View {
         }
     }
 
-    private func liveChip(_ o: RefineOption, label: String, in g: RefineGroup) -> some View {
+    @ViewBuilder private func liveChip(_ o: RefineOption, label: String, in g: RefineGroup) -> some View {
+        // Kinds and file types wear their kind's colour and icon.
+        if let kind = Palette.kind(ofToken: o.token), g.id == "kind" || g.id == "type" {
+            chipButton(o, label: label, in: g, icon: Palette.kindIcon(kind), color: Palette.kind(kind))
+                .buttonStyle(TintedChipStyle(color: Palette.kind(kind)))
+        } else {
+            chipButton(o, label: label, in: g, icon: nil, color: nil)
+        }
+    }
+
+    private func chipButton(_ o: RefineOption, label: String, in g: RefineGroup, icon: String?, color: Color?) -> some View {
         Button {
             if NSEvent.modifierFlags.contains(.option) {
                 model.exclude(g.id, o.token, label: label)
@@ -122,7 +132,13 @@ struct ChoiceBands: View {
                 model.toggle(g.id, o.token, label: label)
             }
         } label: {
-            Text("\(label) ").font(.system(size: 12)) + Text(o.count > 0 ? "\(o.count)" : "").font(.system(size: 12)).foregroundColor(.secondary)
+            HStack(spacing: 3) {
+                if let icon, let color {
+                    Image(systemName: icon).font(.system(size: 10, weight: .semibold)).foregroundStyle(color)
+                        .accessibilityHidden(true)
+                }
+                Text("\(label) ").font(.system(size: 12)) + Text(o.count > 0 ? "\(o.count)" : "").font(.system(size: 12)).foregroundColor(.secondary)
+            }
         }
         .help(String(format: L("choices.help"), label))
         .contextMenu {
@@ -180,6 +196,13 @@ struct FilterPills: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
 
+    /// A place's pill is the places' blue; a kind's or type's, its kind's colour.
+    static func tint(_ p: LibraryModel.Pill) -> Color {
+        if p.isPlace { return Palette.place }
+        if let k = Palette.kind(ofToken: p.token) { return Palette.kind(k) }
+        return .accentColor
+    }
+
     var body: some View {
         HStack(spacing: 3) {
             ForEach(model.pills, id: \.token) { p in
@@ -201,7 +224,8 @@ struct FilterPills: View {
                 .font(.caption)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Capsule().fill(Color.accentColor.opacity(p.excluded ? 0.10 : 0.20)))
+                .background(Capsule().fill(Self.tint(p).opacity(p.excluded ? 0.10 : 0.22)))
+                .overlay(Capsule().strokeBorder(Self.tint(p).opacity(p.excluded ? 0.3 : 0.7), lineWidth: 1))
                 .fixedSize()
             }
         }

@@ -36,6 +36,9 @@ check("private" not in r.get("friendly_path", "private") and r.get("friendly_pat
 check(r.get("drive_delete") is True, f"a file deleted on the exFAT drive outside Laserdot+ leaves the list (listed {r.get('drive_listed')})")
 names = r.get("sweep_names", [])
 check("VID_2034.mp4" in names and "IMG_0001.png" in names and not any("trip" in n for n in names), f"What Is This? goes through the unclear names only (got {names})")
+check(r.get("kind_colors") == 6, f"each kind has a colour of its own (got {r.get('kind_colors')})")
+check(r.get("type_kinds") == ["video", "image", "document", "document", "audio", "archive"],
+      f"file types take their kind's colour (got {r.get('type_kinds')})")
 check(bool(r.get("sweep_suggestion")), f"a better name is suggested (got {r.get('sweep_suggestion')!r})")
 check(set(r.get("junk_whys", [])) >= {"system", "partial", "empty_folder"}, f"Clean Up ▸ Junk finds system files, unfinished downloads and empty folders (got {r.get('junk_whys')})")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
