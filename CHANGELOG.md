@@ -2,11 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
-## 0.1.7
+## 0.1.8
 
 - **Files deleted in Finder leave the list on drives too.** Some drives (exFAT ones, like most portable drives) don't
   always tell macOS what changed, so a file deleted in Finder could stay listed. Laserdot+ now also checks every few
   seconds that the listed files are still there, drops those that are gone, and has the engine re-read their folders.
+
+## 0.1.7
+
 - **The T5 EVO stuck on "Opening its index…" — found and fixed.** An old copy of Laserdot+'s engine, left running
   after a force quit or an update, still held the drive's index, so the new one waited for it for ever. A new engine
   now stops any old one on the same index before it starts, and an engine asked to stop never lingers more than

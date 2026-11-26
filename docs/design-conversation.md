@@ -163,7 +163,7 @@ for ever. Decided: an engine takes an exclusive lock beside the index (`laserdot
 anything; an older engine still holding it (one that no longer answers on the socket — a live one is simply used) is
 asked to stop, then stopped.
 
-## 22. Deleted in Finder, still listed (0.1.7)
+## 22. Deleted in Finder, still listed (0.1.8)
 
 "I deleted some media files from the Finder that were bad, but Laserdot+ did not refresh to show they are deleted."
 The list follows the engine, which follows macOS file events — and on exFAT drives (the T5 EVO) those can go missing.
