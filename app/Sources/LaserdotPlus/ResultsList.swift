@@ -119,4 +119,5 @@ struct OpenWithMenu: View {
                 }
             }
         }
+    }
 }
