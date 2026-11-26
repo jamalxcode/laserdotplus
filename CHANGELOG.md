@@ -2,6 +2,11 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.24
+
+- The sidebar and the inspector start a little narrower, so the sidebar, the files and the inspector all fit even in
+  the smallest window (the sidebar's edge was cut off).
+
 ## 0.1.23
 
 - **A Mac window, laid out like Finder.** Places, drives and saved views are in a **sidebar** (each drive with its
