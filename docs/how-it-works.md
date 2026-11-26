@@ -78,3 +78,6 @@
   detail; the app shows "Couldn't open its index · click to try again" (reason in the tooltip), not the hourglass.
 - **All the choices** (More choices): live values show as chips; a group's values with no results fold into "+N"
   (`ChoiceBands.revealed` unfolds one group); bands with nothing to choose become one line, "Nothing to choose now: …".
+- **One engine per index:** `laserdotd` takes an exclusive `flock` on `laserdotd.lock` beside the index (it holds
+  its pid) before opening it (`daemon.TakeOver`). An older engine that still holds it — left behind by a force quit or
+  an update, not answering on the socket — gets SIGTERM, then SIGKILL; otherwise it would keep drives' indexes open.

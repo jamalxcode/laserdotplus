@@ -122,11 +122,20 @@ func run() error {
 		return nil
 	}
 
+	// 3. One engine per index: an older one that no longer answers (left
+	// behind by a force quit or an update) is stopped, or it keeps drives'
+	// indexes open and the new one waits on them for ever.
+	lock, err := daemon.TakeOver(filepath.Join(filepath.Dir(db), "laserdotd.lock"))
+	if err != nil {
+		return err
+	}
+	defer lock.Close()
+
 	// A bug is caught, written beside the index (laserdotd-crash.log, never
 	// sent anywhere; Save Diagnostics includes it) and the daemon carries on.
 	crash.SetLog(filepath.Join(filepath.Dir(db), "laserdotd-crash.log"))
 
-	// 3. The index (read as a background process: never at the expense of
+	// 4. The index (read as a background process: never at the expense of
 	// the user's apps).
 	background := daemon.StepBack()
 	ld, err := core.Open(db)
@@ -157,7 +166,7 @@ func run() error {
 	st := ld.Stats()
 	fmt.Fprintf(os.Stderr, "laserdotd: %d entries loaded in %d ms\n", st.Entries, st.LoadMS)
 
-	// 4. Serve. The socket opens first: writing the snapshot after a rebuild
+	// 5. Serve. The socket opens first: writing the snapshot after a rebuild
 	// takes a while on a big index, and the app waits for an answer.
 	srv, err := daemon.Listen(ld, socket)
 	if err != nil {

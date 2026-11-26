@@ -154,3 +154,11 @@ has passed); still once a day at most, still only GitHub, still nothing sent abo
 enough: with a drive still opening, nothing is available and every band still showed. Decided: in each group the
 unavailable values fold into a small "+N" (click to unfold); bands with nothing to choose fold into one line at the
 bottom naming their groups. (The T5 EVO still opening is being looked at on the owner's Mac.)
+
+## 21. Two engines at once (0.1.7)
+
+The owner's Mac showed two `laserdotd` processes from Laserdot+.app, both with the T5 EVO's index open: one left
+behind (21 minutes old, after a force quit / update) and the current one, which waited on it — "Opening its index…"
+for ever. Decided: an engine takes an exclusive lock beside the index (`laserdotd.lock`, with its pid) before opening
+anything; an older engine still holding it (one that no longer answers on the socket — a live one is simply used) is
+asked to stop, then stopped.
