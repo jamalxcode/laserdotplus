@@ -125,11 +125,6 @@ final class SelfTestRunner {
                         v.simulate(.leftMouseDown, at: ca); v.simulate(.leftMouseUp, at: ca)
                         v.move(124)
                         self.report["arrow_moves"] = self.model.selection == [b.key]
-                        // And a click delivered by the window (hit-testing through
-                        // SwiftUI's layers, as a real click is).
-                        self.model.selection = []
-                        v.clickThroughWindow(at: ca)
-                        self.report["window_click"] = self.model.selection == [a.key]
                         let from = CGPoint(x: a.value.minX - 3, y: a.value.minY - 3)
                         let to = CGPoint(x: b.value.midX, y: b.value.midY)
                         v.simulate(.leftMouseDown, at: from)
@@ -145,6 +140,15 @@ final class SelfTestRunner {
                     self.after(0.5) {
                     self.report["marquee_count"] = self.model.selection.count
                     self.shot("marquee")
+                    // A click put in the event queue, as macOS delivers a real one
+                    // (hit-testing through SwiftUI's layers).
+                    self.model.selection = []
+                    let firstTile = MarqueeSelect.lastFrames.min { ($0.value.minY, $0.value.minX) < ($1.value.minY, $1.value.minX) }
+                    if let v = MouseCatcherView.current, let t = firstTile {
+                        v.postClick(at: CGPoint(x: t.value.midX, y: t.value.midY))
+                    }
+                    self.after(1) {
+                    self.report["window_click"] = firstTile.map { self.model.selection == [$0.key] } ?? false
                     self.model.clearFilters()
                     self.model.viewMode = .sheet
                     self.after(3) {
@@ -156,6 +160,7 @@ final class SelfTestRunner {
                             self.model.viewMode = .list
                             self.details()
                         }
+                    }
                     }
                     }
                 }
