@@ -111,3 +111,6 @@
   `PlacesBar`. The self-test shoots `dark.png` (NSApp in dark aqua). English only for now (the owner's call).
 - **Duplicates' size limit:** `DupesModel.minMB` (default 100, remembered) adds `fsize:>NNmb` / `fsize:>Ngb` to the
   place's token in the scope given to `findDuplicates`; smaller files are never read.
+- **Clean Up** (`Cleanup.swift`): tabs Duplicates (`DupesModel`), Junk (`JunkModel` → engine `junk` op →
+  `core.FindJunk`, a walk of the drive's mount / this Mac's roots / every place) and Big & old (`BigOldModel`, a search
+  `fsize:>… before:…y -kind:folder`). Chosen files go through `trashPaths` (Trash, undoable) after an alert.

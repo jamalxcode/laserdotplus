@@ -181,7 +181,7 @@ struct PlaceSummary: View {
                     Text(String(format: L("summary.dupes"), countText(dupes.groups.count, "group"), bytesText(dupes.bytesToFree)))
                         .font(.caption)
                 }
-                Button(L("summary.findDupes")) { model.showDupes = true }
+                Button(L("summary.findDupes")) { model.openCleanup(.duplicates) }
                     .controlSize(.small)
             }
             .padding(14)

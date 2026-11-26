@@ -29,7 +29,7 @@ struct LaserdotPlusApp: App {
             CommandGroup(after: .newItem) {
                 Button(L("menu.indexFolder")) { delegate.model.chooseFolderToIndex() }
                     .keyboardShortcut("i", modifiers: [.command, .shift])
-                Button(L("dupes.menu")) { delegate.model.showDupes = true }
+                Button(L("dupes.menu")) { delegate.model.openCleanup(.duplicates) }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
             }
             // Into macOS's own View menu (a second one was added beside it).

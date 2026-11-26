@@ -37,6 +37,7 @@ check(r.get("drive_delete") is True, f"a file deleted on the exFAT drive outside
 names = r.get("sweep_names", [])
 check("VID_2034.mp4" in names and "IMG_0001.png" in names and not any("trip" in n for n in names), f"What Is This? goes through the unclear names only (got {names})")
 check(bool(r.get("sweep_suggestion")), f"a better name is suggested (got {r.get('sweep_suggestion')!r})")
+check(set(r.get("junk_whys", [])) >= {"system", "partial", "empty_folder"}, f"Clean Up ▸ Junk finds system files, unfinished downloads and empty folders (got {r.get('junk_whys')})")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")
@@ -45,7 +46,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep", "dark"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep", "dark", "junk"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

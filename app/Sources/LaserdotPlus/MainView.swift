@@ -32,7 +32,7 @@ struct MainView: View {
                 if model.reviewIndex != nil {
                     ReviewView(model: model)
                 } else if model.showDupes {
-                    DuplicatesView(model: model, dupes: model.dupes)
+                    CleanupView(model: model, drives: drives, junk: model.junk, big: model.bigOld)
                 }
             }
             if !model.tray.isEmpty {
@@ -106,8 +106,13 @@ struct TopArea: View {
                     Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
                         .keyboardShortcut("r")
                         .disabled(model.results.isEmpty)
-                    Button { model.showDupes = true } label: { Label(L("dupes.menu"), systemImage: "square.on.square") }
+                    Divider()
+                    Button { model.openCleanup(.duplicates) } label: { Label(L("dupes.menu"), systemImage: "square.on.square") }
                         .keyboardShortcut("d", modifiers: [.command, .shift])
+                    Button { model.openCleanup(.junk) } label: { Label(L("cleanup.junk.menu"), systemImage: "trash.slash") }
+                        .keyboardShortcut("j", modifiers: [.command, .shift])
+                    Button { model.openCleanup(.bigOld) } label: { Label(L("cleanup.bigOld.menu"), systemImage: "externaldrive.badge.timemachine") }
+                        .keyboardShortcut("b", modifiers: [.command, .shift])
                 } label: {
                     Label(L("tools.title"), systemImage: "wand.and.stars")
                 }

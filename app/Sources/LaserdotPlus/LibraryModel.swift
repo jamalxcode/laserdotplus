@@ -31,6 +31,16 @@ final class LibraryModel: ObservableObject {
     /// The Find Duplicates panel is open over the files.
     @Published var showDupes = false
     lazy var dupes = DupesModel(engine: engine)
+    lazy var junk = JunkModel(engine: engine)
+    lazy var bigOld = BigOldModel(engine: engine)
+    /// Which clean-up the Clean Up screen shows.
+    @Published var cleanupTab = CleanupTab.duplicates
+
+    /// Open the Clean Up screen on one of its tabs.
+    func openCleanup(_ tab: CleanupTab) {
+        cleanupTab = tab
+        showDupes = true
+    }
 
     /// The place, in words (the duplicates panel's title).
     var placeTitle: String {

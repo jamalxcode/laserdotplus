@@ -157,6 +157,11 @@ jobs:
           echo paris > "$fx/Trips/2024/paris trip.txt"
           printf 'region,amount\nnorth,1\nsouth,2\n' > "$fx/Docs/sales.csv"
           echo trash me > "$fx/trashme.txt"
+          # Junk for Clean Up ▸ Junk: a system file, a download left unfinished
+          # two days ago, an empty folder.
+          echo x > "$fx/Photos/.DS_Store"
+          echo partial > "$fx/Docs/film.mkv.part" && touch -t "$(date -v-2d +%Y%m%d%H%M)" "$fx/Docs/film.mkv.part"
+          mkdir -p "$fx/Old/Empty"
           # A drive plugged in: indexed by itself, its index on the drive.
           d=$(mktemp -d)
           # exFAT, like most portable drives (the owner's T5 EVO): no reliable

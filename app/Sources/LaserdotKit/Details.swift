@@ -64,3 +64,19 @@ extension Engine {
         }
     }
 }
+
+/// A file or folder nobody needs (Laserdot+'s clean-up screen).
+public struct JunkItem: Decodable, Hashable, Sendable {
+    public var path: String
+    public var size: UInt64
+    /// system, partial, empty_file, empty_folder.
+    public var why: String
+}
+
+extension Engine {
+    /// The junk under a folder ("" every place): a walk of the disk, on a
+    /// connection of its own, no time limit.
+    public func junk(path: String) throws -> [JunkItem] {
+        (try longCall(longJobConnection(), .junk(path: path), as: [JunkItem]?.self)) ?? []
+    }
+}

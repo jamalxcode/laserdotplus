@@ -165,6 +165,20 @@ final class SelfTestRunner {
             self.report["dupes_problem"] = self.model.dupes.problem ?? ""
             self.after(2) {
                 self.shot("duplicates")
+                self.junk()
+            }
+        }
+    }
+
+    /// Clean Up ▸ Junk over this Mac's folders: the fixtures hold a .DS_Store,
+    /// a download left unfinished two days ago and an empty folder.
+    private func junk() {
+        model.openCleanup(.junk)
+        model.junk.scan(roots: model.status?.folders ?? [])
+        waitFor(60, { self.model.junk.phase == .done }) { _ in
+            self.report["junk_whys"] = Array(Set(self.model.junk.items.map(\.why))).sorted()
+            self.after(1) {
+                self.shot("junk")
                 self.model.showDupes = false
                 self.review()
             }

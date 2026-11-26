@@ -444,6 +444,8 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		return result(s.ld.Unreadable())
 	case ipc.OpDetails:
 		return result(s.ld.Details(req.Path))
+	case ipc.OpJunk:
+		return result(s.ld.Junk(req.Path))
 	case ipc.OpSnippet:
 		return ok(s.ld.Snippet(req.Path, strings.Fields(req.Query)))
 	case ipc.OpStorage:

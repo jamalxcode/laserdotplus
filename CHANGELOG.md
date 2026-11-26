@@ -2,6 +2,17 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.13
+
+- **Clean Up.** Tools ▸ Find Duplicates (⇧⌘D), **Clean Up Junk** (⇧⌘J) and **Big & Old Files** (⇧⌘B) open one screen
+  with three tabs for the current place:
+  - **Junk** — the files macOS and Windows leave in folders (.DS_Store, ._ files, Thumbs.db), downloads that never
+    finished (untouched for a day), empty files and empty folders; all ticked, untick what to keep.
+  - **Big & old** — files larger than 100 MB · 500 MB · 1 GB · 5 GB that nobody has touched for 1, 2 or 5+ years,
+    biggest first; nothing ticked, you choose.
+  - **Duplicates** — as before.
+  Each shows how much space you free and moves the chosen files to the Trash after a preview (Edit ▸ Undo).
+
 ## 0.1.12
 
 - **Find Duplicates only where the space is.** A **Larger than** choice (Any size · 10 MB · 100 MB · 1 GB, 100 MB to

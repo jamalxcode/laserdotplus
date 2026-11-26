@@ -14,6 +14,8 @@ public enum DaemonRequest: Encodable, Sendable {
     case index(path: String)
     /// Laserdot+: everything known about one file, for the details panel.
     case details(path: String)
+    /// Laserdot+: the junk under a folder ("" every place); walks the disk.
+    case junk(path: String)
     case forget(path: String)
     case refresh
     case roots
@@ -91,6 +93,7 @@ public enum DaemonRequest: Encodable, Sendable {
         case .search: return "search"
         case .index: return "index"
         case .details: return "details"
+        case .junk: return "junk"
         case .forget: return "forget"
         case .opened: return "opened"
         case .recentOpens: return "recent_opens"
@@ -152,7 +155,7 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(offset, forKey: .offset)
             try c.encode(limit, forKey: .limit)
             try c.encode(typo, forKey: .typo)
-        case let .index(path), let .details(path), let .forget(path), let .opened(path), let .exclude(path), let .include(path),
+        case let .index(path), let .details(path), let .junk(path), let .forget(path), let .opened(path), let .exclude(path), let .include(path),
              let .moreLike(path), let .touched(path):
             try c.encode(path, forKey: .path)
         case let .drivePlan(mount), let .driveDetach(mount), let .driveDelete(mount), let .driveEject(mount),

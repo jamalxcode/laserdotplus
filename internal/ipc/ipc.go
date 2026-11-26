@@ -97,6 +97,9 @@ const (
 	OpSnippet = "snippet"
 	// OpDetails (Laserdot+): everything known about one file (path).
 	OpDetails = "details"
+	// OpJunk (Laserdot+): system files, unfinished downloads, empty files and
+	// folders under Path (a drive's mount; "" every place). Walks the disk.
+	OpJunk = "junk"
 	// OpUnreadable: what the last full index of each folder could not read.
 	OpUnreadable = "unreadable"
 	// OpBackground pauses or resumes background work (Paused): the app pauses

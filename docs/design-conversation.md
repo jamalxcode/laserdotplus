@@ -227,3 +227,11 @@ English).
 "In Find Duplicates it would be useful to filter only large files — why wait for every file to be checked when the
 objective is just to save storage." Decided: a Larger than choice (any, 10 MB, 100 MB, 1 GB; 100 MB by default,
 remembered) adds `fsize:>…` to the search the comparison is limited to, so smaller files are never read.
+
+## 30. Clean Up (0.1.13)
+
+From the critique ("clean-up is scattered"). Decided: one Clean Up screen with Duplicates, Junk and Big & old tabs.
+Junk is never indexed (system files, partial downloads), so the engine walks the place's folders for it (`junk` op,
+`FindJunk`): system bookkeeping files (not a folder's custom icon or localized name), downloads untouched for a day,
+empty files, empty folders (deepest first); system and Laserdot folders are skipped. Big & old is a search
+(`fsize:>N before:Ny`), so it is instant. Everything goes to the Trash after a preview, with Undo.
