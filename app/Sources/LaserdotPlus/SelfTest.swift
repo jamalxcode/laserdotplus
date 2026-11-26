@@ -158,7 +158,8 @@ final class SelfTestRunner {
     private func duplicates() {
         model.showDupes = true
         model.dupes.similar = true
-        model.dupes.scan(scope: "")
+        model.dupes.minMB = 0 // the fixtures are small
+        model.dupes.scan(scope: model.dupes.scope(place: ""))
         waitFor(60, { self.model.dupes.phase == .done }) { _ in
             self.report["dupes_groups"] = self.model.dupes.groups.count
             self.report["dupes_problem"] = self.model.dupes.problem ?? ""

@@ -247,7 +247,7 @@
 "dupes.find" = "Find Duplicates";
 "dupes.again" = "Look Again";
 "dupes.close" = "Close duplicates";
-"dupes.intro" = "Find copies of the same file in this place — exact copies, and (if ticked) the same picture or video saved at another size or quality. The best copy of each is kept; the others go to the Trash, after a preview.";
+"dupes.intro" = "Find copies of the same file in this place — exact copies, and (if ticked) the same picture or video saved at another size or quality. Only files larger than the size chosen above are compared, so it is quick even on a big drive. The best copy of each is kept; the others go to the Trash, after a preview.";
 "dupes.scanning" = "Comparing files… big drives take a while; you can keep working.";
 "dupes.cleaning" = "Moving copies to the Trash…";
 "dupes.none" = "No duplicates here.";
@@ -293,3 +293,6 @@
 "drive.free" = "%@ free";
 "tools.title" = "Tools";
 "tools.help" = "What Is This? · Review · Find Duplicates";
+"dupes.larger" = "Larger than";
+"dupes.anySize" = "Any size";
+"dupes.larger.help" = "Only files larger than this are compared — smaller ones are never read, so a big drive is done much sooner. The space is in the big files anyway.";

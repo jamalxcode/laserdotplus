@@ -15,6 +15,19 @@ final class DupesModel: ObservableObject {
     @Published var phase = Phase.idle
     @Published var groups: [DuplicateGroup] = []
     @Published var similar = true
+    /// Only files larger than this many MB are compared (the owner: "why wait
+    /// for every file to be checked when the objective is just to save
+    /// storage"): smaller files are never read. 0: every file.
+    @Published var minMB: Int = (UserDefaults.standard.object(forKey: "dupes.minMB") as? Int) ?? 100 {
+        didSet { UserDefaults.standard.set(minMB, forKey: "dupes.minMB") }
+    }
+    static let sizes = [0, 10, 100, 1000]
+
+    /// The search the comparison is limited to: the place, and the size.
+    func scope(place: String) -> String {
+        let size = minMB > 0 ? (minMB >= 1000 ? "fsize:>\(minMB / 1000)gb" : "fsize:>\(minMB)mb") : ""
+        return [place, size].filter { !$0.isEmpty }.joined(separator: " ")
+    }
     /// Paths the user chose to keep (starts as the engine's recommendation).
     @Published var keep: Set<String> = []
     @Published var problem: String?
@@ -118,8 +131,15 @@ struct DuplicatesView: View {
         VStack(spacing: 0) {
             ModeHeader(symbol: "square.on.square", title: L("dupes.title"), detail: model.placeTitle,
                        done: { model.showDupes = false }) {
+                Picker(L("dupes.larger"), selection: $dupes.minMB) {
+                    ForEach(DupesModel.sizes, id: \.self) { mb in
+                        Text(mb == 0 ? L("dupes.anySize") : mb >= 1000 ? "\(mb / 1000) GB" : "\(mb) MB").tag(mb)
+                    }
+                }
+                .fixedSize()
+                .help(L("dupes.larger.help"))
                 Toggle(L("dupes.similar"), isOn: $dupes.similar).toggleStyle(.checkbox)
-                Button(dupes.phase == .idle ? L("dupes.find") : L("dupes.again")) { dupes.scan(scope: model.dupesScope) }
+                Button(dupes.phase == .idle ? L("dupes.find") : L("dupes.again")) { dupes.scan(scope: dupes.scope(place: model.dupesScope)) }
                     .disabled(dupes.phase == .scanning || dupes.phase == .cleaning)
             }
             Divider()

@@ -109,3 +109,5 @@
   `rename` moves it within its folder (a free name; undoable) and tells the engine.
 - **UI pass 2:** `ModeHeader` (shared by the covering modes), the Tools menu in `TopArea`, drive fullness bars in
   `PlacesBar`. The self-test shoots `dark.png` (NSApp in dark aqua). English only for now (the owner's call).
+- **Duplicates' size limit:** `DupesModel.minMB` (default 100, remembered) adds `fsize:>NNmb` / `fsize:>Ngb` to the
+  place's token in the scope given to `findDuplicates`; smaller files are never read.

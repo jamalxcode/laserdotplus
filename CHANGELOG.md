@@ -2,6 +2,12 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.12
+
+- **Find Duplicates only where the space is.** A **Larger than** choice (Any size · 10 MB · 100 MB · 1 GB, 100 MB to
+  start, remembered) limits the comparison to big files; smaller ones are never read, so a big drive is done far
+  sooner.
+
 ## 0.1.11
 
 - **A calmer window, second pass.** One **Tools** menu (What Is This?, Review, Find Duplicates — with their shortcuts)

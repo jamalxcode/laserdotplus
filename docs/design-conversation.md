@@ -221,3 +221,9 @@ engine sent `"sections": null` for files with no details, which lost the whole a
 "Ignore Arabic, focus on English; multi-languages will be done at a later stage." Decided: new strings in English
 only, the Arabic self-test run removed; the existing Arabic strings stay for later (a missing key falls back to
 English).
+
+## 29. Duplicates: only the big files (0.1.12)
+
+"In Find Duplicates it would be useful to filter only large files — why wait for every file to be checked when the
+objective is just to save storage." Decided: a Larger than choice (any, 10 MB, 100 MB, 1 GB; 100 MB by default,
+remembered) adds `fsize:>…` to the search the comparison is limited to, so smaller files are never read.
