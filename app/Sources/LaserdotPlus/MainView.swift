@@ -31,7 +31,7 @@ struct MainView: View {
                 TopArea(model: model, drives: drives)
                 Divider()
                 FilesArea(model: model, drives: drives)
-                    .frame(minWidth: 420, minHeight: 240)
+                    .frame(minWidth: 360, minHeight: 240)
                     // Review and Clean Up take the whole middle.
                     .overlay {
                         if model.reviewIndex != nil {

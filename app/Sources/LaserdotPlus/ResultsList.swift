@@ -18,25 +18,25 @@ struct ResultsList: View {
                     Text(h.name).lineLimit(1).truncationMode(.middle)
                 }
             }
-            .width(min: 160, ideal: 260)
+            .width(min: 120, ideal: 260)
             TableColumn(L("column.size"), value: \Hit.size) { h in
                 Text(h.isDir ? "" : bytesText(h.size)).monospacedDigit().foregroundStyle(.secondary)
             }
-            .width(min: 60, ideal: 80)
+            .width(min: 50, ideal: 80)
             TableColumn(L("column.modified"), value: \Hit.modified) { h in Text(dateText(h.modified)).foregroundStyle(.secondary).lineLimit(1) }
-                .width(min: 130, ideal: 160)
+                .width(min: 80, ideal: 160)
             TableColumn(L("column.created"), value: \Hit.created) { h in
                 Text(h.created > 0 ? dateText(h.created) : "").foregroundStyle(.secondary).lineLimit(1)
             }
-            .width(min: 110, ideal: 150)
+            .width(min: 70, ideal: 150)
             TableColumn(L("column.opened"), value: \Hit.opened) { h in
                 Text(h.opened > 0 ? dateText(h.opened) : "—").foregroundStyle(.secondary).lineLimit(1)
             }
-            .width(min: 110, ideal: 150)
+            .width(min: 70, ideal: 150)
             TableColumn(L("column.details")) { h in Text(h.badges.joined(separator: " · ")).foregroundStyle(.secondary).lineLimit(1) }
-                .width(min: 80, ideal: 200)
+                .width(min: 50, ideal: 200)
             TableColumn(L("column.where")) { h in Text(whereText(h.path)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
-                .width(min: 80, ideal: 200)
+                .width(min: 50, ideal: 200)
         }
         .contextMenu(forSelectionType: String.self) { ids in
             FileMenu(model: model, hits: model.results.filter { ids.contains($0.path) }, undo: undo)
