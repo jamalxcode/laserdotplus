@@ -202,7 +202,7 @@
 "review.keep" = "Keep";
 "review.trash" = "Trash";
 "review.move" = "Move";
-"review.keys" = "← → move · Space plays · K keep · T trash · M move · Esc done — nothing moves until you apply the tray";
+"review.keys" = "← → move · Space plays · K keep · T trash · M move · R rename to the suggestion · Esc done — nothing moves until you apply the tray";
 "tray.summary" = "Clean-up tray: %@ · %@ (%d to the Trash, %d to move)";
 "tray.show" = "Show";
 "tray.clear" = "Clear";
@@ -281,3 +281,12 @@
 "summary.dupes" = "Duplicates: %@ · %@ to free";
 "summary.findDupes" = "Find Duplicates…";
 "summary.hint" = "Select a file to see what it is.";
+"sweep.button" = "What Is This?";
+"sweep.menu" = "What Is This? (Unclear Names)";
+"sweep.title" = "What is this?";
+"sweep.help" = "Go through the files whose names say nothing (IMG_1234, VID_2034, untitled…), one at a time, with a better name suggested for each";
+"sweep.none" = "Every file here has a name that says something.";
+"sweep.renameTo" = "Rename to “%@”  R";
+"sweep.rename.help" = "A name from the file itself: its date, title or camera, and a video's resolution and length. Edit ▸ Undo puts the old name back.";
+"sweep.rename" = "Rename";
+"notice.renamed" = "Renamed to %@ (⌘Z puts the old name back)";

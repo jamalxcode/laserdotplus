@@ -197,3 +197,12 @@ From the critique: most bugs were found on the owner's Mac first. Decided: CI's 
 and the self-test deletes a file on it behind the app's back; engine tests cover a drive pulled out while attached,
 a stuck second engine, and opening a drive while a home-folder index holds the writer lock. Technical choices
 (made with, columns, rows, codec, HDR, chapters) wait under More choices.
+
+## 26. What is this? (0.1.11)
+
+The owner's first goal: "quickly scan through media … where the filename might not be enough to tell what it is".
+Decided: a sweep — review mode over only the files whose names say nothing (`NameSense.isUnclear`: a camera or app
+prefix with a number, a bare number or date stamp, a long hex id, "untitled", "Screenshot …" — unless other words
+follow), with a suggested name from the file's own details (`NameSense.suggest`: date taken or modified, title or
+camera or artist, a video's resolution and length). R renames (in the same folder, never over another file;
+Edit ▸ Undo renames back). Plain rules, no AI.

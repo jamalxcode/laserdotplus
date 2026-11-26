@@ -104,3 +104,6 @@
   itself, a file deleted on it outside the app must leave the list, and its file names must not appear on this Mac.
   Engine tests cover a second engine taking over, a drive pulled out while attached, and opening a drive while this
   Mac's index holds the writer lock.
+- **What Is This?** (`LibraryModel.startSweep`): `sweep` holds the listed files with unclear names; review mode walks
+  `reviewItems` (the sweep, else the results). `suggestedName` builds a name from the selected file's details;
+  `rename` moves it within its folder (a free name; undoable) and tells the engine.

@@ -8,13 +8,18 @@ import SwiftUI
 struct ReviewView: View {
     @ObservedObject var model: LibraryModel
     @FocusState private var focused: Bool
+    @Environment(\.undoManager) private var undo
 
     var body: some View {
         VStack(spacing: 10) {
-            if let i = model.reviewIndex, model.results.indices.contains(i) {
-                let h = model.results[i]
+            if let i = model.reviewIndex, model.reviewItems.indices.contains(i) {
+                let h = model.reviewItems[i]
                 HStack {
-                    Text(String(format: L("review.position"), i + 1, model.total)).foregroundStyle(.secondary).monospacedDigit()
+                    if model.sweep != nil {
+                        Label(L("sweep.title"), systemImage: "questionmark.square.dashed").font(.headline)
+                    }
+                    Text(String(format: L("review.position"), i + 1, model.sweep?.count ?? Int(model.total)))
+                        .foregroundStyle(.secondary).monospacedDigit()
                     Spacer()
                     Button(L("review.done")) { model.reviewIndex = nil }.keyboardShortcut(.cancelAction)
                 }
@@ -37,6 +42,12 @@ struct ReviewView: View {
                     Text(([kindText(h.kind), bytesText(h.size), dateText(h.modified)] + h.badges).joined(separator: " · "))
                         .foregroundStyle(.secondary).lineLimit(1)
                     Text(whereText(h.path)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    if let s = model.suggestedName(h) {
+                        Button { model.rename(h, to: s, undo: undo) } label: {
+                            Label(String(format: L("sweep.renameTo"), s), systemImage: "character.cursor.ibeam")
+                        }
+                        .help(L("sweep.rename.help"))
+                    }
                 }
                 HStack(spacing: 12) {
                     Button { model.reviewStep(-1) } label: { Label(L("review.previous"), systemImage: "chevron.left") }
@@ -59,8 +70,13 @@ struct ReviewView: View {
         .onKeyPress(.rightArrow) { model.reviewStep(1); return .handled }
         .onKeyPress(.space) { model.quickLook(); return .handled }
         .onKeyPress(.escape) { model.reviewIndex = nil; return .handled }
-        .onKeyPress(characters: CharacterSet(charactersIn: "ktmKTM")) { press in
+        .onKeyPress(characters: CharacterSet(charactersIn: "ktmrKTMR")) { press in
             switch press.characters.lowercased() {
+            case "r":
+                if let i = model.reviewIndex, model.reviewItems.indices.contains(i) {
+                    let h = model.reviewItems[i]
+                    if let s = model.suggestedName(h) { model.rename(h, to: s, undo: undo) }
+                }
             case "k": model.reviewDecide(nil)
             case "t": model.reviewDecide(.trash)
             default: model.reviewDecide(.move)

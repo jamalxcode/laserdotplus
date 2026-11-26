@@ -40,6 +40,7 @@ struct LaserdotPlusApp: App {
                 Button(L("view.timeline")) { delegate.model.viewMode = .timeline }.keyboardShortcut("4")
                 Divider()
                 Button(L("review.start")) { delegate.model.startReview() }.keyboardShortcut("r")
+                Button(L("sweep.menu")) { delegate.model.startSweep() }.keyboardShortcut("e")
                 Divider()
                 Button(L("action.quickLook")) { delegate.model.quickLook() }.keyboardShortcut("y")
                 Button(L("filters.clear")) { delegate.model.clearFilters() }.keyboardShortcut(.delete, modifiers: [.command, .option])

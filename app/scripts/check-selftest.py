@@ -34,6 +34,9 @@ check(r.get("choices_arranged") is True, "all the choices: what can be chosen co
 check(r.get("dupes_groups", 0) >= 1, f"Find Duplicates finds the same picture at several sizes (got {r.get('dupes_groups')} groups, problem {r.get('dupes_problem')!r})")
 check("private" not in r.get("friendly_path", "private") and r.get("friendly_path", "").endswith("rome trip.txt"), f"paths read like Finder's (got {r.get('friendly_path')!r})")
 check(r.get("drive_delete") is True, f"a file deleted on the exFAT drive outside Laserdot+ leaves the list (listed {r.get('drive_listed')})")
+names = r.get("sweep_names", [])
+check("VID_2034.mp4" in names and "IMG_0001.png" in names and not any("trip" in n for n in names), f"What Is This? goes through the unclear names only (got {names})")
+check(bool(r.get("sweep_suggestion")), f"a better name is suggested (got {r.get('sweep_suggestion')!r})")
 check(r.get("place_pill") == "This Mac", f"the chosen place is a pill in the search box (got {r.get('place_pill')!r})")
 check(r.get("this_mac_count", 0) >= 1, f"This Mac shows this Mac's files (got {r.get('this_mac_count')})")
 check("LDPlus" in r.get("drives", []), f"the plugged-in drive is listed (got {r.get('drives')})")
@@ -42,7 +45,7 @@ check(r.get("external_listed") is True and r.get("external_delete") is True,
       "a file deleted outside Laserdot+ (as in Finder) leaves the list by itself")
 check(r.get("select_all") is True, "Select All selects every file of the place")
 check(len(r.get("months", [])) >= 1, f"the timeline groups files by month (got {r.get('months')})")
-for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates"):
+for s in ("list", "filtered", "grid", "sheet", "timeline", "details", "review", "tray", "place", "marquee", "duplicates", "sweep"):
     check(s in r.get("screenshots", []), f"screenshot {s} taken")
 
 # Privacy, checked on the real Mac: the drive's index is on the drive, and

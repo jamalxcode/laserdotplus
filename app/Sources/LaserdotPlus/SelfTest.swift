@@ -167,7 +167,25 @@ final class SelfTestRunner {
             self.after(1) {
                 self.shot("tray")
                 self.model.clearTray()
-                self.thisMac()
+                self.sweep()
+            }
+        }
+    }
+
+    /// "What is this?": only the unclear names (IMG_000x, VID_2034), each
+    /// with a suggested name once its details are read.
+    private func sweep() {
+        model.clearFilters()
+        waitFor(10, { self.model.results.count >= 10 }) { _ in
+            self.model.startSweep()
+            self.report["sweep_names"] = self.model.sweep?.map(\.name).sorted() ?? []
+            self.waitFor(15, { self.model.sweep?.first.map { self.model.suggestedName($0) != nil } ?? false }) { _ in
+                self.report["sweep_suggestion"] = self.model.sweep?.first.flatMap { self.model.suggestedName($0) } ?? ""
+                self.after(2) {
+                    self.shot("sweep")
+                    self.model.reviewIndex = nil
+                    self.thisMac()
+                }
             }
         }
     }

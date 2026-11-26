@@ -4,6 +4,13 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 
 ## 0.1.11
 
+- **What Is This?** (⌘E, or the button by Review) goes through only the files whose names say nothing — IMG_1234,
+  VID_20240812_183011, DSC00042, untitled 3, a long id — one at a time, big, with K keep, T trash, M move, and a
+  **suggested name** built from the file itself: its date (when the photo was taken), its title or camera, a video's
+  resolution and length — "2023-08-14 Apple iPhone 12 Pro 1080p 0m42s.mp4". R (or the button) renames to it;
+  Edit ▸ Undo puts the old name back.
+- **The test drive is exFAT** (like most portable drives) and every change is checked on it before release: a file
+  deleted on it outside Laserdot+ must leave the list, a pulled-out drive must leave cleanly.
 - **Calmer choices.** Technical choices — what a file was made with, a data file's columns and rows, codec, HDR,
   chapters — wait under More choices instead of showing by default.
 

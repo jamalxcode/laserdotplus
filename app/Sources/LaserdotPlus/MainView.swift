@@ -99,6 +99,9 @@ struct TopArea: View {
                 Divider().frame(height: 18).padding(.horizontal, 2)
                 Button { model.showDupes.toggle() } label: { Label(L("dupes.title"), systemImage: "square.on.square") }
                     .help(L("dupes.menu"))
+                Button { model.startSweep() } label: { Label(L("sweep.button"), systemImage: "questionmark.square.dashed") }
+                    .help(L("sweep.help"))
+                    .disabled(model.results.isEmpty)
                 Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
                     .help(L("review.start"))
                     .disabled(model.results.isEmpty)

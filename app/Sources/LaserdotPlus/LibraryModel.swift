@@ -90,7 +90,12 @@ final class LibraryModel: ObservableObject {
     /// go to the Trash or to a folder; nothing moves until it is applied.
     @Published private(set) var tray: [String: TrayItem] = [:]
     /// Review mode: the result shown full-window (nil: not reviewing).
-    @Published var reviewIndex: Int?
+    @Published var reviewIndex: Int? { didSet { if reviewIndex == nil { sweep = nil } } }
+    /// The "What is this?" sweep: review mode over only the files whose
+    /// names say nothing (nil: review goes through every result).
+    @Published var sweep: [Hit]?
+    /// What review mode walks through.
+    var reviewItems: [Hit] { sweep ?? results }
 
     static let page = 500
     private var generation = 0
@@ -588,23 +593,83 @@ final class LibraryModel: ObservableObject {
 
     func startReview() {
         guard !results.isEmpty else { return }
+        sweep = nil
         let first = results.firstIndex { selection.contains($0.path) } ?? 0
         reviewIndex = first
+        selection = [results[first].path]
+    }
+
+    /// "What is this?": review mode over the listed files whose names say
+    /// nothing (IMG_1234, VID_2034, untitled…), with a suggested name each.
+    func startSweep() {
+        let unclear = results.filter { !$0.isDir && NameSense.isUnclear($0.name) }
+        guard let first = unclear.first else {
+            notice = L("sweep.none")
+            return
+        }
+        sweep = unclear
+        reviewIndex = 0
+        selection = [first.path]
     }
 
     func reviewStep(_ delta: Int) {
         guard let i = reviewIndex else { return }
+        let items = reviewItems
         let next = i + delta
-        if next >= results.count, canLoadMore { loadMore() }
-        reviewIndex = max(0, min(results.count - 1, next))
-        if let r = reviewIndex { selection = [results[r].path] }
+        if sweep == nil, next >= items.count, canLoadMore { loadMore() }
+        guard !items.isEmpty else { reviewIndex = nil; return }
+        reviewIndex = max(0, min(items.count - 1, next))
+        if let r = reviewIndex { selection = [items[r].path] }
+    }
+
+    /// The name suggested for a file, from its details (once they are read).
+    func suggestedName(_ h: Hit) -> String? {
+        guard let d = details, d.path == h.path else { return nil }
+        var rows: [String: String] = [:]
+        for s in d.sections { for r in s.rows where rows[r.key] == nil { rows[r.key] = r.value } }
+        let name = NameSense.suggest(name: h.name, modified: h.modified, kind: h.kind, rows: rows)
+        return name == h.name ? nil : name
+    }
+
+    /// Rename a file in its folder (Edit ▸ Undo puts the old name back); in
+    /// the sweep, it then leaves the list and the next one shows.
+    func rename(_ h: Hit, to newName: String, undo: UndoManager?) {
+        let from = URL(fileURLWithPath: h.path)
+        var to = from.deletingLastPathComponent().appendingPathComponent(newName)
+        var n = 2
+        let stem = (newName as NSString).deletingPathExtension, ext = (newName as NSString).pathExtension
+        while FileManager.default.fileExists(atPath: to.path) {
+            to = from.deletingLastPathComponent().appendingPathComponent(ext.isEmpty ? "\(stem) \(n)" : "\(stem) \(n).\(ext)")
+            n += 1
+        }
+        do {
+            try FileManager.default.moveItem(at: from, to: to)
+        } catch {
+            notice = error.localizedDescription
+            return
+        }
+        undo?.registerUndo(withTarget: self) { m in
+            try? FileManager.default.moveItem(at: to, to: from)
+            m.tellEngine([from, to])
+            m.schedule(now: true, keepSelection: true)
+        }
+        undo?.setActionName(L("sweep.rename"))
+        notice = String(format: L("notice.renamed"), to.lastPathComponent)
+        tellEngine([from, to])
+        if var s = sweep, let i = reviewIndex {
+            s.removeAll { $0.path == h.path }
+            sweep = s
+            if s.isEmpty { reviewIndex = nil } else { reviewIndex = min(i, s.count - 1); selection = [s[reviewIndex!].path] }
+        }
+        schedule(now: true, keepSelection: true)
     }
 
     /// K, T, M in review mode: keep (takes it out of the tray), or mark for
     /// the Trash or a folder; then the next file.
     func reviewDecide(_ action: TrayAction?) {
-        guard let i = reviewIndex, results.indices.contains(i) else { return }
-        let h = results[i]
+        let items = reviewItems
+        guard let i = reviewIndex, items.indices.contains(i) else { return }
+        let h = items[i]
         if let action { mark([h], action) } else { unmark([h.path]) }
         reviewStep(1)
     }
