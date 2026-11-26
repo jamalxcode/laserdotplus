@@ -377,7 +377,11 @@ final class LibraryModel: ObservableObject {
                     self.results = r.hits
                     self.total = r.total
                     self.problem = r.notes.first
-                    if keepSelection {
+                    if let i = self.reviewIndex, i < self.reviewItems.count {
+                        // Reviewing (or What Is This?): the file on screen stays
+                        // selected, so its details and suggested name still come.
+                        self.selectOne(self.reviewItems[i].path)
+                    } else if keepSelection {
                         let paths = Set(r.hits.map(\.path))
                         self.selection = self.selection.filter { paths.contains($0) }
                     } else {

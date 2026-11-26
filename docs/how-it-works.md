@@ -95,14 +95,17 @@
   Move Copies to Trash runs `cleanupPreview` (dry run, an alert with count and bytes), runs it again after the
   answer (each copy still unchanged, not the kept one), then `trashInBackground` moves exactly those with macOS's own
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
-  ⌘Z brings them back (0.1.16; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
+  ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
 - **Colours (0.1.17, `Palette.swift`):** colour-blind-safe Okabe–Ito, always with an icon beside them. Places
   (Everything, This Mac, drives) are blue: the chosen one filled, the others' icons and fullness bars blue. Kind and
   Type chips wear their kind's colour and icon (`TintedChipStyle`: light fill, border, normal text) — videos
   vermillion, pictures bluish green, sound reddish purple, documents sky blue, folders orange, archives yellow, the
   rest grey; a file type's kind comes from macOS (`UTType`, "mp4" → video). Pills in the search box take the same
-  colours. The self-test checks the six colours differ and the types' kinds.
+  colours. The self-test checks the six colours differ and the types' kinds. The search box has a 2 pt dark frame
+  (`primary` at 55%), 2.5 pt places-blue while focused.
+- **Review keeps its file selected:** a search landing while Review or What Is This? is open re-selects the file on
+  screen (`runSearch`), so its details and suggested name still come.
 - **The window (0.1.10):** `TopArea` = search row, `PlacesBar` (a plain strip), and `ChoiceBands` in a scroll view
   whose height follows the bands' measured height (max 260); then the files and `DetailsView` side by side, with
   Review/Duplicates overlaid on both. Nothing selected → `PlaceSummary` (engine counts only). `friendlyPath` /

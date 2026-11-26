@@ -8,13 +8,13 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
   and the kinds and file types under them each wear their own colour with an icon: videos vermillion, pictures green,
   sound purple, documents sky blue, folders orange, archives yellow. A file type (MP4, TXT…) takes its kind's colour,
   and the chosen ones keep their colour as pills in the search box.
-
-## 0.1.16
-
+- **The search box stands out:** a darker, bolder frame, blue while you type in it.
 - **Duplicates moved to the Trash now show in the Trash.** They go through macOS's own Trash, as Finder does, so they
   appear in the Dock's Trash (a drive's under its name), Put Back works, and Edit ▸ Undo (⌘Z) brings them back.
   Copies moved by 0.1.15 or earlier are in the drive's hidden `.Trashes` folder: in Finder, Go ▸ Go to Folder… (⇧⌘G)
   and type `/Volumes/<drive name>/.Trashes`, then drag them to the Trash (or back).
+- What Is This? started right after changing the choices no longer loses the first file's suggested name (the new
+  search coming in cleared the selection).
 
 ## 0.1.15
 

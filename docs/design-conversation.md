@@ -254,7 +254,7 @@ showed only a spinner although the engine reported each step. Decided: the engin
 (`dupes_found`): likely copies right after the sample step, confirmed groups after each pass; the panel shows them
 live with the step, files done of total, the file being read, and Stop. Trash waits for confirmation.
 
-## 33. Duplicates moved to the Trash didn't show in the Trash (0.1.16)
+## 33. Duplicates moved to the Trash didn't show in the Trash (0.1.17)
 
 The owner: "i moved the duplicates to trash but nothing showed up in the macbook pro trash". Every other Trash action
 already used macOS's own call (`FileManager.trashItem`); duplicates went through the engine, which renamed each copy
@@ -270,3 +270,9 @@ color, and have the next level of tab for document type also colored for a color
 the Okabe–Ito palette (already the bands' stripes), never colour alone — every coloured chip keeps an icon. Places
 are one colour (blue) since they are one family; each kind its own colour, and a file type (TXT, MP4) its kind's, so
 the two rows read together. Labels stay in the normal text colour on a light tint, readable in light and dark.
+
+## 35. A bolder search box (0.1.17)
+
+The owner: "have the top search bar have a darker bolder border to it, to draw attention to it and frame it nicely".
+Decided: a 2 pt frame in the text colour at 55% (dark in light mode, light in dark mode), a touch more padding and
+corner, a faint shadow; while typing, 2.5 pt in the places' blue — the window's one focus colour.

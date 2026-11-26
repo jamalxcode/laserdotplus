@@ -140,6 +140,7 @@ struct TopArea: View {
 struct SearchBox: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
+    @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: 4) {
@@ -147,6 +148,7 @@ struct SearchBox: View {
             FilterPills(model: model, drives: drives)
             TextField(model.pills.isEmpty ? L("search.prompt") : "", text: $model.text)
                 .textFieldStyle(.plain)
+                .focused($focused)
             if !model.text.isEmpty || model.hasFilters {
                 Button {
                     model.text = ""
@@ -156,10 +158,14 @@ struct SearchBox: View {
                     .help(L("filters.clear"))
             }
         }
-        .padding(.horizontal, 7)
-        .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)))
-        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.secondary.opacity(0.3)))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor)))
+        // A darker, bolder frame draws the eye to it (the owner); the places'
+        // blue while typing in it.
+        .overlay(RoundedRectangle(cornerRadius: 8)
+            .strokeBorder(focused ? Palette.place : Color.primary.opacity(0.55), lineWidth: focused ? 2.5 : 2))
+        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
     }
 }
 
