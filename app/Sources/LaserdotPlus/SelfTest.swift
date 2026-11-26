@@ -99,6 +99,32 @@ final class SelfTestRunner {
                         let box = CGRect(x: first.minX - 4, y: first.minY - 4, width: first.width * 2.2, height: first.height * 0.5)
                         self.model.selection = Set(MarqueeSelect.touched(frames, by: box))
                     }
+                    // Clicks, as the mouse makes them: a click selects one,
+                    // ⌘-click adds another, ⌘-click again takes it out; a drag
+                    // from empty space draws a box.
+                    let tiles = frames.sorted { ($0.value.minY, $0.value.minX) < ($1.value.minY, $1.value.minX) }
+                    if let v = MouseCatcherView.current, tiles.count >= 2 {
+                        let a = tiles[0], b = tiles[1]
+                        let ca = CGPoint(x: a.value.midX, y: a.value.midY), cb = CGPoint(x: b.value.midX, y: b.value.midY)
+                        v.simulate(.leftMouseDown, at: ca); v.simulate(.leftMouseUp, at: ca)
+                        let one = self.model.selection == [a.key]
+                        v.simulate(.leftMouseDown, at: cb, flags: .command); v.simulate(.leftMouseUp, at: cb, flags: .command)
+                        let two = self.model.selection == [a.key, b.key]
+                        v.simulate(.leftMouseDown, at: ca, flags: .command); v.simulate(.leftMouseUp, at: ca, flags: .command)
+                        let back = self.model.selection == [b.key]
+                        self.report["clicks"] = [one, two, back]
+                        let from = CGPoint(x: a.value.minX - 3, y: a.value.minY - 3)
+                        let to = CGPoint(x: b.value.midX, y: b.value.midY)
+                        v.simulate(.leftMouseDown, at: from)
+                        v.simulate(.leftMouseDragged, at: CGPoint(x: (from.x + to.x) / 2, y: (from.y + to.y) / 2))
+                        v.simulate(.leftMouseDragged, at: to)
+                        self.report["drag_box"] = self.model.selection.count
+                        v.simulate(.leftMouseUp, at: to)
+                    }
+                    self.model.selection = Set(MarqueeSelect.touched(frames, by: {
+                        guard let first = frames.values.min(by: { ($0.minY, $0.minX) < ($1.minY, $1.minX) }) else { return .zero }
+                        return CGRect(x: first.minX - 4, y: first.minY - 4, width: first.width * 2.2, height: first.height * 0.5)
+                    }()))
                     self.after(0.5) {
                     self.report["marquee_count"] = self.model.selection.count
                     self.shot("marquee")

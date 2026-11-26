@@ -276,3 +276,12 @@ the two rows read together. Labels stay in the normal text colour on a light tin
 The owner: "have the top search bar have a darker bolder border to it, to draw attention to it and frame it nicely".
 Decided: a 2 pt frame in the text colour at 55% (dark in light mode, light in dark mode), a touch more padding and
 corner, a faint shadow; while typing, 2.5 pt in the places' blue — the window's one focus colour.
+
+## 36. Clicking and drag-select like Finder (0.1.18)
+
+The owner: "command click does not work for individual selections, drag select with mouse also doesnt work properly,
+i want to use those to open and delete files i found". Found: SwiftUI tap gestures on each tile (single and double)
+plus a drag gesture over them; a tile changed its view type when selected (it gained a file drag), which reset its
+gestures mid-click, and the modifier keys were read from the global state late. Decided: Finder's rules on AppKit
+mouse events, one view over the tiles; the keys that act on what was found (⌫ trash, Return open, Space look) work
+once a file is clicked; refreshes wait while the mouse is down. The list view is AppKit's table and already had them.

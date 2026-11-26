@@ -2,6 +2,16 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.18
+
+- **Clicking and drag-selecting work like Finder** in the thumbnails, contact sheet and timeline: a click selects a
+  file, ⌘-click adds or removes one, ⇧-click selects a range, a double click opens. Drag from empty space (or from a
+  file that isn't selected) to draw a box that selects what it touches; hold ⌘ to add to what is selected. Drag a
+  selected file to take all the selected ones to Finder or Mail.
+- After clicking a file: **⌫** (or ⌘⌫) moves the selection to the Trash (⌘Z puts it back), **Return** opens it,
+  **Space** shows it in Quick Look.
+- The files no longer shift under the mouse while you click or drag (a refresh waits until you let go).
+
 ## 0.1.17
 
 - **Colours a colour-blind eye can tell apart.** The places (Everything plugged in, This Mac, each drive) are blue,

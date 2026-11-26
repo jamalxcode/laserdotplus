@@ -8,7 +8,6 @@ import SwiftUI
 struct ResultsGrid: View {
     @ObservedObject var model: LibraryModel
     @Environment(\.undoManager) private var undo
-    @State private var anchor: Int?
 
     var body: some View {
         ScrollView {
@@ -60,11 +59,8 @@ struct ResultsGrid: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.accentColor.opacity(0.15) : Color.clear))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(selected ? Color.accentColor : Color.clear, lineWidth: 2))
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.open([h]) }
-        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
-        .fileDrag(h.path, when: selected)
     }
 }
 

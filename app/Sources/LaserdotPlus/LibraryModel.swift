@@ -370,6 +370,12 @@ final class LibraryModel: ObservableObject {
             let outcome = Result { try engine.search(query: q, limit: Self.page, sort: sort, reverse: reverse) }
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
+                if keepSelection, NSEvent.pressedMouseButtons & 1 != 0 {
+                    // A click or a selection box is under way: new results
+                    // would move the files under the mouse. Shortly after.
+                    self.schedule(now: false, keepSelection: true)
+                    return
+                }
                 self.searching = false
                 switch outcome {
                 case let .success(r):

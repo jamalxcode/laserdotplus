@@ -8,7 +8,6 @@ import SwiftUI
 struct ContactSheet: View {
     @ObservedObject var model: LibraryModel
     @Environment(\.undoManager) private var undo
-    @State private var anchor: Int?
 
     var body: some View {
         ScrollView {
@@ -48,11 +47,8 @@ struct ContactSheet: View {
         .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 6).fill(selected ? Color.accentColor.opacity(0.22) : Color.clear))
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.open([h]) }
-        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
-        .fileDrag(h.path, when: selected)
     }
 
     private func sheetRow(_ i: Int, _ h: Hit) -> some View {
@@ -73,11 +69,8 @@ struct ContactSheet: View {
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.accentColor.opacity(0.22) : Color.secondary.opacity(0.06)))
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.open([h]) }
-        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
-        .fileDrag(h.path, when: selected)
     }
 }
 
@@ -129,7 +122,6 @@ struct FrameStrip: View {
 struct TimelineView: View {
     @ObservedObject var model: LibraryModel
     @Environment(\.undoManager) private var undo
-    @State private var anchor: Int?
 
     var body: some View {
         let months = model.months
@@ -176,11 +168,8 @@ struct TimelineView: View {
         .frame(width: size + 12)
         .background(RoundedRectangle(cornerRadius: 6).fill(selected ? Color.accentColor : Color.clear))
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.open([h]) }
-        .onTapGesture { anchor = model.click(i, h, anchor: anchor) }
         .contextMenu { FileMenu(model: model, hits: model.targets(h.path), undo: undo) }
         .tileFrame(h.path)
-        .fileDrag(h.path, when: selected)
     }
 }
 

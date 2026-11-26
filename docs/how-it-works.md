@@ -97,6 +97,14 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Clicking and the selection box (0.1.18, `Marquee.swift`):** one AppKit view (`MouseCatcherView`) laid over a
+  picture view's tiles takes the left button's events (its `hitTest` lets right-clicks, control-clicks, hovering and
+  "Load more" through): click, ⌘-click, ⇧-click from an anchor file, double click opens, a drag from empty space or
+  an unselected tile draws the box (live, autoscrolling), a drag from a selected tile starts a file drag of the whole
+  selection (copy, outside the app). Once clicked it is first responder: ⌫/⌦ trash, Return opens, Space Quick Look.
+  It replaced SwiftUI tap gestures, which read the modifier keys late and lost clicks because a tile's view changed
+  type when selected (`onDrag` added). `runSearch` waits while the mouse button is down. The self-test sends real
+  mouse events to it (click, ⌘-click twice, a drag).
 - **Colours (0.1.17, `Palette.swift`):** colour-blind-safe Okabe–Ito, always with an icon beside them. Places
   (Everything, This Mac, drives) are blue: the chosen one filled, the others' icons and fullness bars blue. Kind and
   Type chips wear their kind's colour and icon (`TintedChipStyle`: light fill, border, normal text) — videos
