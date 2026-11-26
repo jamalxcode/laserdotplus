@@ -15,7 +15,7 @@ struct MainView: View {
     /// The inspector shows unless Review or Clean Up takes the window.
     private var inspector: Binding<Bool> {
         Binding(get: { model.showInspector && model.reviewIndex == nil && !model.showDupes },
-                set: { model.showInspector = $0 })
+                set: { v in if model.reviewIndex == nil && !model.showDupes { model.showInspector = v } })
     }
 
     var body: some View {
@@ -168,10 +168,10 @@ struct SearchBox: View {
         .padding(.horizontal, 9)
         .padding(.vertical, 6)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor)))
-        // A darker, bolder frame draws the eye to it (the owner); the places'
-        // blue while typing in it.
+        // A darker, bolder frame draws the eye to it (the owner); the system's
+        // accent colour while typing in it, as macOS's own fields.
         .overlay(RoundedRectangle(cornerRadius: 8)
-            .strokeBorder(focused ? Palette.place : Color.primary.opacity(0.55), lineWidth: focused ? 2.5 : 2))
+            .strokeBorder(focused ? Color.accentColor : Color.primary.opacity(0.55), lineWidth: focused ? 2.5 : 2))
         .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
     }
 }
@@ -213,7 +213,7 @@ struct FilesArea: View {
             model.quickLook()
             return .handled
         }
-        .onDeleteCommand { model.trash(model.selectedHits, undo: undo) }
+        .onDeleteCommand { if model.reviewIndex == nil && !model.showDupes { model.trash(model.selectedHits, undo: undo) } }
         // A folder dropped on the window (from Finder) is indexed.
         .dropDestination(for: URL.self) { urls, _ in
             let folders = urls.filter { u in

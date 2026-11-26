@@ -245,13 +245,15 @@ final class MouseCatcherView: NSView, NSDraggingSource {
     }
 
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        context == .outsideApplication ? .copy : []
+        context == .outsideApplication ? .copy : .move // inside: onto a drive in the sidebar
     }
 
     // MARK: keys, once a file was clicked
 
     override func keyDown(with e: NSEvent) {
-        guard let model else { return super.keyDown(with: e) }
+        // Review and Clean Up cover the files: their keys are theirs (⌫ must
+        // never trash a file that is not on screen).
+        guard let model, model.reviewIndex == nil, !model.showDupes else { return super.keyDown(with: e) }
         switch e.keyCode {
         case 51, 117: // ⌫, ⌦ (with or without ⌘)
             model.trash(model.selectedHits, undo: undoManager)

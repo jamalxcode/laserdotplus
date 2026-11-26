@@ -18,9 +18,11 @@ final class SavedViews: ObservableObject {
     private(set) var file: URL?
     private let io = DispatchQueue(label: "laserdotplus.views", qos: .utility)
 
-    static func file(for place: Place, dbPath: String) -> URL {
+    /// `mount`: the drive's own mount (a second drive of the same name is at
+    /// "/Volumes/<name> 1"); "/Volumes/<name>" when not known.
+    static func file(for place: Place, mount: String? = nil, dbPath: String) -> URL {
         if case let .drive(name) = place {
-            return URL(fileURLWithPath: "/Volumes").appendingPathComponent(name)
+            return URL(fileURLWithPath: mount ?? Place.mount(of: name))
                 .appendingPathComponent(".laserdot").appendingPathComponent("views.json")
         }
         return URL(fileURLWithPath: dbPath).deletingLastPathComponent().appendingPathComponent("views.json")

@@ -69,3 +69,16 @@ struct DriveTrashLine: View {
         .onAppear { trash.refresh(mount: mount) }
     }
 }
+
+extension Place {
+    /// Where the drive of this name is mounted (its volume name can differ
+    /// from the folder in /Volumes when two drives share a name).
+    static func mount(of name: String) -> String {
+        let keys: [URLResourceKey] = [.volumeNameKey]
+        for url in FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) ?? []
+        where url.path.hasPrefix("/Volumes/") {
+            if (try? url.resourceValues(forKeys: Set(keys)))?.volumeName == name || url.lastPathComponent == name { return url.path }
+        }
+        return "/Volumes/" + name
+    }
+}

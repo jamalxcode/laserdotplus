@@ -413,3 +413,13 @@
 "drive.moveHere" = "Move %@ to “%@”?";
 "drive.moveHere.help" = "They are moved to the top of the drive. Edit ▸ Undo puts them back.";
 "drive.moveHere.button" = "Move";
+"notice.moving" = "Moving %d…";
+"action.getInfo" = "Get Info";
+"action.rename" = "Rename…";
+"action.openWith" = "Open With";
+"action.openWith.default" = "(default)";
+"rename.title" = "Rename";
+"settings.general" = "General";
+"settings.oldBy" = "Old means";
+"inspector.show" = "Show the inspector (preview and details)";
+"inspector.toggle" = "Show or Hide Inspector";

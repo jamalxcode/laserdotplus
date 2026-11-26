@@ -1,3 +1,4 @@
+import AppKit
 import LaserdotKit
 import SwiftUI
 
@@ -72,19 +73,50 @@ struct FileMenu: View {
     let hits: [Hit]
     let undo: UndoManager?
 
+    /// In Finder's order: open, Trash, info and name, look, copy and show.
     var body: some View {
         let n = hits.count
         Button(n > 1 ? String(format: L("action.openMany"), n) : L("action.open")) { model.open(hits) }
+        if let first = hits.first {
+            OpenWithMenu(model: model, hits: hits, url: URL(fileURLWithPath: first.path))
+        }
+        Divider()
+        Button(n > 1 ? String(format: L("action.trashMany"), n) : L("action.trash")) { model.trash(hits, undo: undo) }
+        Divider()
+        Button(L("action.getInfo")) { model.getInfo(hits) }
+        if n == 1, let h = hits.first {
+            Button(L("action.rename")) { model.renamePrompt(h, undo: undo) }
+        }
         Button(L("action.quickLook")) { model.quickLook(hits) }
-        Button(n > 1 ? String(format: L("action.revealMany"), n) : L("action.reveal")) { model.reveal(hits) }
+        Divider()
         Button(n > 1 ? String(format: L("action.copyMany"), n) : L("action.copy")) { model.copyPaths(hits) }
+        Button(n > 1 ? String(format: L("action.revealMany"), n) : L("action.reveal")) { model.reveal(hits) }
         Divider()
         Button(L("tray.markTrash")) { model.mark(hits, .trash) }
         Button(L("tray.markMove")) { model.mark(hits, .move) }
         if hits.contains(where: { model.tray[$0.path] != nil }) {
             Button(L("tray.unmark")) { model.unmark(hits.map(\.path)) }
         }
-        Divider()
-        Button(n > 1 ? String(format: L("action.trashMany"), n) : L("action.trash")) { model.trash(hits, undo: undo) }
     }
+}
+
+/// Open With ▸ the apps that can open the file (the default first), as in
+/// Finder. Files open without being added to Recent Items.
+struct OpenWithMenu: View {
+    @ObservedObject var model: LibraryModel
+    let hits: [Hit]
+    let url: URL
+
+    var body: some View {
+        Menu(L("action.openWith")) {
+            let apps = NSWorkspace.shared.urlsForApplications(toOpen: url)
+            let main = NSWorkspace.shared.urlForApplication(toOpen: url)
+            ForEach(Array(apps.prefix(20)), id: \.self) { app in
+                Button {
+                    model.open(hits, with: app)
+                } label: {
+                    Text(FileManager.default.displayName(atPath: app.path) + (app == main ? " " + L("action.openWith.default") : ""))
+                }
+            }
+        }
 }

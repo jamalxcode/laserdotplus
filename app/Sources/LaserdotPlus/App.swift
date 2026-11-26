@@ -20,19 +20,13 @@ struct LaserdotPlusApp: App {
         .commands {
             CommandGroup(after: .appInfo) {
                 Button(L("updates.check")) { Updates.shared.check() }
-                Toggle(L("updates.daily"), isOn: $updates.daily)
             }
+            FileCommands(model: delegate.model)
             CommandGroup(after: .pasteboard) {
                 Button(L("menu.find")) { delegate.model.focusSearch += 1 }
                     .keyboardShortcut("f")
                 Button(L("menu.selectAll")) { delegate.model.selectAll() }
                     .keyboardShortcut("a", modifiers: [.command, .option])
-            }
-            CommandGroup(after: .newItem) {
-                Button(L("menu.indexFolder")) { delegate.model.chooseFolderToIndex() }
-                    .keyboardShortcut("i", modifiers: [.command, .shift])
-                Button(L("dupes.menu")) { delegate.model.openCleanup(.duplicates) }
-                    .keyboardShortcut("d", modifiers: [.command, .shift])
             }
             // Into macOS's own View menu (a second one was added beside it).
             CommandGroup(before: .toolbar) {
@@ -41,17 +35,79 @@ struct LaserdotPlusApp: App {
                 Button(L("view.sheet")) { delegate.model.viewMode = .sheet }.keyboardShortcut("3")
                 Button(L("view.timeline")) { delegate.model.viewMode = .timeline }.keyboardShortcut("4")
                 Divider()
-                Button(L("review.start")) { delegate.model.startReview() }.keyboardShortcut("r")
-                Button(L("sweep.menu")) { delegate.model.startSweep() }.keyboardShortcut("e")
-                Divider()
-                Button(L("action.quickLook")) { delegate.model.quickLook() }.keyboardShortcut("y")
+                Button(L("inspector.toggle")) { delegate.model.showInspector.toggle() }
+                    .keyboardShortcut("i", modifiers: [.command, .option])
                 Button(L("filters.clear")) { delegate.model.clearFilters() }.keyboardShortcut(.delete, modifiers: [.command, .option])
                 Divider()
+            }
+            CommandMenu(L("tools.title")) {
+                Button(L("sweep.menu")) { delegate.model.startSweep() }.keyboardShortcut("e")
+                Button(L("review.start")) { delegate.model.startReview() }.keyboardShortcut("r")
+                Divider()
+                Button(L("dupes.menu")) { delegate.model.openCleanup(.duplicates) }.keyboardShortcut("d", modifiers: [.command, .shift])
+                Button(L("cleanup.junk.menu")) { delegate.model.openCleanup(.junk) }.keyboardShortcut("j", modifiers: [.command, .shift])
+                Button(L("cleanup.bigOld.menu")) { delegate.model.openCleanup(.bigOld) }.keyboardShortcut("b", modifiers: [.command, .shift])
+                Button(L("space.menu")) { delegate.model.openCleanup(.space) }.keyboardShortcut("s", modifiers: [.command, .shift])
             }
             CommandGroup(replacing: .help) {
                 Button(L("shortcuts.title")) { WhatsNew.showShortcuts() }.keyboardShortcut("/", modifiers: .command)
                 Button(L("whatsNew.menu")) { WhatsNew.show(after: nil) }
             }
+        }
+        // Settings… (⌘,), as every Mac app has.
+        Settings {
+            SettingsView(model: delegate.model)
+        }
+    }
+}
+
+/// The File menu, as in Finder: open, open with, info, rename, look, show,
+/// copy, Trash — for the selected files.
+struct FileCommands: Commands {
+    @ObservedObject var model: LibraryModel
+
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            let hits = model.selectedHits
+            let undo = NSApp.keyWindow?.undoManager
+            Button(L("action.open")) { model.open(hits) }
+                .keyboardShortcut("o")
+                .disabled(hits.isEmpty)
+            if let first = hits.first {
+                OpenWithMenu(model: model, hits: hits, url: URL(fileURLWithPath: first.path))
+            } else {
+                Menu(L("action.openWith")) {}.disabled(true)
+            }
+            Divider()
+            Button(L("action.getInfo")) { model.getInfo(hits) }
+                .keyboardShortcut("i")
+                .disabled(hits.isEmpty)
+            Button(L("action.rename")) { if let h = hits.first { model.renamePrompt(h, undo: undo) } }
+                .disabled(hits.count != 1)
+            Button(L("action.quickLook")) { model.quickLook(hits) }
+                .keyboardShortcut("y")
+                .disabled(hits.isEmpty)
+            Divider()
+            Button(L("action.reveal")) { model.reveal(hits) }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(hits.isEmpty)
+            Button(L("action.copy")) { model.copyPaths(hits) }
+                .keyboardShortcut("c", modifiers: [.command, .option])
+                .disabled(hits.isEmpty)
+            Divider()
+            Button(L("action.trash")) {
+                // In a text field, ⌘⌫ deletes to the start of the line, as everywhere.
+                if NSApp.keyWindow?.firstResponder is NSText {
+                    NSApp.sendAction(#selector(NSResponder.deleteToBeginningOfLine(_:)), to: nil, from: nil)
+                } else if model.reviewIndex == nil && !model.showDupes {
+                    model.trash(hits, undo: undo)
+                }
+            }
+            .keyboardShortcut(.delete)
+            .disabled(hits.isEmpty)
+            Divider()
+            Button(L("menu.indexFolder")) { model.chooseFolderToIndex() }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
         }
     }
 }

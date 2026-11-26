@@ -203,7 +203,7 @@ struct PlaceSummary: View {
                 Button(L("summary.findDupes")) { model.openCleanup(.duplicates) }
                     .controlSize(.small)
                 if case let .drive(name) = model.place {
-                    DriveTrashLine(mount: "/Volumes/" + name).id(name)
+                    DriveTrashLine(mount: Place.mount(of: name)).id(name)
                 }
             }
             .padding(14)

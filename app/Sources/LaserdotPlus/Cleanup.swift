@@ -91,11 +91,17 @@ final class BigOldModel: ObservableObject {
     @Published var phase = Phase.idle
     @Published var items: [Hit] = []
     @Published var chosen: Set<String> = []
-    @Published var minMB = 500
-    @Published var years = 2
+    @Published var minMB = (UserDefaults.standard.object(forKey: "bigOld.minMB") as? Int) ?? 500 {
+        didSet { UserDefaults.standard.set(minMB, forKey: "bigOld.minMB") }
+    }
+    @Published var years = (UserDefaults.standard.object(forKey: "bigOld.years") as? Int) ?? 2 {
+        didSet { UserDefaults.standard.set(years, forKey: "bigOld.years") }
+    }
     /// Old by: not changed (modified), or not opened (as macOS records it on
     /// the file; a file with no record counts as never opened).
-    @Published var byOpened = false
+    @Published var byOpened = UserDefaults.standard.bool(forKey: "bigOld.byOpened") {
+        didSet { UserDefaults.standard.set(byOpened, forKey: "bigOld.byOpened") }
+    }
     /// Last opened, read from the files found (0: never recorded).
     @Published var opened: [String: Int64] = [:]
     static let sizes = [100, 500, 1000, 5000]
@@ -315,12 +321,13 @@ struct CleanupView: View {
         .padding(10)
     }
 
+    /// macOS's own empty-state look (symbol, then the words).
     private func message(_ symbol: String, _ text: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: symbol).font(.largeTitle).foregroundStyle(.secondary)
-            Text(text).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 440)
+        ContentUnavailableView {
+            Image(systemName: symbol)
+        } description: {
+            Text(text)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func busy(_ text: String) -> some View {

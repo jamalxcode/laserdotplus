@@ -14,7 +14,9 @@ final class DupesModel: ObservableObject {
 
     @Published var phase = Phase.idle
     @Published var groups: [DuplicateGroup] = []
-    @Published var similar = true
+    @Published var similar = (UserDefaults.standard.object(forKey: "dupes.similar") as? Bool) ?? true {
+        didSet { UserDefaults.standard.set(similar, forKey: "dupes.similar") }
+    }
     /// Only files larger than this many MB are compared (the owner: "why wait
     /// for every file to be checked when the objective is just to save
     /// storage"): smaller files are never read. 0: every file.
@@ -367,12 +369,13 @@ struct DuplicatesView: View {
         .background(Color.accentColor.opacity(0.07))
     }
 
+    /// macOS's own empty-state look (symbol, then the words).
     private func message(_ symbol: String, _ text: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: symbol).font(.largeTitle).foregroundStyle(.secondary)
-            Text(text).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 420)
+        ContentUnavailableView {
+            Image(systemName: symbol)
+        } description: {
+            Text(text)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func group(_ g: DuplicateGroup) -> some View {

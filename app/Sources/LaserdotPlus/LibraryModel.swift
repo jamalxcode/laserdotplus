@@ -68,6 +68,8 @@ final class LibraryModel: ObservableObject {
         }
     }
     /// The inspector (the file's preview and details) is shown; remembered.
+    /// Last opened, by path, as read (kept for the session; never written).
+    var openedCache: [String: Int64] = [:]
     @Published var showInspector = (UserDefaults.standard.object(forKey: "showInspector") as? Bool) ?? true {
         didSet { UserDefaults.standard.set(showInspector, forKey: "showInspector") }
     }
@@ -473,17 +475,28 @@ final class LibraryModel: ObservableObject {
     /// loaded: read off the main thread, by the page, for the Last Opened
     /// column and the details.
     func fillOpened(_ paths: [String], gen: Int) {
+        // Known ones from the cache (a refresh every few seconds while a drive
+        // indexes must not read every file again); only new ones are read.
+        let wanted = paths.filter { openedCache[$0] == nil }
+        apply(openedCache, gen: gen)
+        guard !wanted.isEmpty else { return }
         let engine = self.engine
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let times = engine.fileTimes(paths)
-            guard !times.isEmpty else { return }
-            let opened = Dictionary(times.map { ($0.path, $0.opened) }) { a, _ in a }
+            let times = engine.fileTimes(wanted)
             DispatchQueue.main.async {
-                guard let self, gen == self.generation else { return }
-                for i in self.results.indices {
-                    if let o = opened[self.results[i].path], o != self.results[i].opened { self.results[i].opened = o }
-                }
+                guard let self else { return }
+                if self.openedCache.count > 50_000 { self.openedCache = [:] }
+                for t in times { self.openedCache[t.path] = t.opened }
+                guard gen == self.generation else { return }
+                self.apply(self.openedCache, gen: gen)
             }
+        }
+    }
+
+    private func apply(_ opened: [String: Int64], gen: Int) {
+        guard !opened.isEmpty else { return }
+        for i in results.indices {
+            if let o = opened[results[i].path], o != results[i].opened { results[i].opened = o }
         }
     }
 
@@ -562,6 +575,28 @@ final class LibraryModel: ObservableObject {
 
     /// The self-test sees what would open instead of opening it.
     static var openHook: (([Hit]) -> Void)?
+
+    /// Open with a chosen app (File ▸ Open With), not added to Recent Items.
+    func open(_ hits: [Hit], with app: URL) {
+        if let hook = Self.openHook { return hook(hits) }
+        let config = NSWorkspace.OpenConfiguration()
+        config.addsToRecentItems = false
+        NSWorkspace.shared.open(hits.map { URL(fileURLWithPath: $0.path) }, withApplicationAt: app, configuration: config)
+    }
+
+    /// Get Info (⌘I): the inspector shows the file's preview and details.
+    func getInfo(_ hits: [Hit]) {
+        if let h = hits.first, !selection.contains(h.path) { selectOne(h.path) }
+        showInspector = true
+    }
+
+    /// Rename… (File menu, right-click): asks the new name, then renames
+    /// (undoable).
+    func renamePrompt(_ h: Hit, undo: UndoManager?) {
+        guard let name = SavedViews.askName(L("rename.title"), current: h.name)?.trimmingCharacters(in: .whitespaces),
+              !name.isEmpty, name != h.name, !name.contains("/") else { return }
+        rename(h, to: name, undo: undo)
+    }
 
     func open(_ hits: [Hit]) {
         if let hook = Self.openHook { return hook(hits) }
@@ -722,6 +757,47 @@ final class LibraryModel: ObservableObject {
         undo?.endUndoGrouping()
         undo?.setActionName(L("tray.apply"))
         clearTray()
+    }
+
+    /// Move files into a folder off the main thread (a move to another drive
+    /// copies the whole file), undoable, then tell the engine.
+    func moveInBackground(_ paths: [String], to folder: URL, undo: UndoManager?) {
+        notice = String(format: L("notice.moving"), paths.count)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var moved: [(from: URL, to: URL)] = []
+            for path in paths {
+                let from = URL(fileURLWithPath: path)
+                var to = folder.appendingPathComponent(from.lastPathComponent)
+                var n = 2
+                while FileManager.default.fileExists(atPath: to.path) {
+                    let base = from.deletingPathExtension().lastPathComponent, ext = from.pathExtension
+                    to = folder.appendingPathComponent(ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)")
+                    n += 1
+                }
+                if (try? FileManager.default.moveItem(at: from, to: to)) != nil { moved.append((from, to)) }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                let gone = Set(moved.map(\.from.path))
+                self.results.removeAll { gone.contains($0.path) }
+                self.selection.subtract(gone)
+                self.notice = String(format: L("notice.moved"), moved.count)
+                if moved.count < paths.count {
+                    self.trouble = String(format: L("notice.movedSome"), moved.count, paths.count - moved.count)
+                }
+                if !moved.isEmpty {
+                    undo?.registerUndo(withTarget: self) { m in
+                        let back = moved
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            for b in back { try? FileManager.default.moveItem(at: b.to, to: b.from) }
+                            DispatchQueue.main.async { m.tellEngine(back.flatMap { [$0.from, $0.to] }); m.schedule(now: true, keepSelection: true) }
+                        }
+                    }
+                    undo?.setActionName(L("drive.moveHere.button"))
+                }
+                self.tellEngine(moved.flatMap { [$0.from, $0.to] })
+            }
+        }
     }
 
     /// Move files into a folder (a new name when one is taken), undoable.

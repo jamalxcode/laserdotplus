@@ -79,7 +79,11 @@ struct Sidebar: View {
         .onChange(of: model.place) { _, _ in reloadViews() }
     }
 
-    private func reloadViews() { views.load(SavedViews.file(for: model.place, dbPath: model.engine.dbPath)) }
+    private func reloadViews() {
+        var mount: String?
+        if case let .drive(name) = model.place { mount = drives.drives.first { $0.name == name }?.mount }
+        views.load(SavedViews.file(for: model.place, mount: mount, dbPath: model.engine.dbPath))
+    }
 
     /// A drive that can't be searched yet does what it needs (unlock, open,
     /// index); a ready one is chosen.
@@ -140,7 +144,7 @@ struct Sidebar: View {
             a.addButton(withTitle: L("drive.moveHere.button"))
             a.addButton(withTitle: L("action.cancel"))
             guard a.runFront() == .alertFirstButtonReturn else { return false }
-            model.movePaths(paths, to: URL(fileURLWithPath: d.mount), undo: undo)
+            model.moveInBackground(paths, to: URL(fileURLWithPath: d.mount), undo: undo)
             return true
         }
     }

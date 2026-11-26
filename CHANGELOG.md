@@ -2,6 +2,26 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.23
+
+- **A Mac window, laid out like Finder.** Places, drives and saved views are in a **sidebar** (each drive with its
+  state, how full it is and an ⏏ eject button; the clean-up tools below); the file's preview and details are in an
+  **inspector** on the right (toolbar button, ⌥⌘I); the view, sort and tools are in the window's **toolbar**; the
+  window's subtitle says where you are and how many files.
+- **A File menu like Finder's:** Open (⌘O), **Open With ▸**, Get Info (⌘I), **Rename…**, Quick Look (⌘Y), Show in
+  Finder (⇧⌘R), Copy Path (⌥⌘C), Move to Trash (⌘⌫), Index a Folder (⇧⌘I); a **Tools** menu with What Is This?,
+  Review, Find Duplicates, Junk, Big & Old and Where Is My Space?. The right-click menu follows Finder's order, with
+  Open With and Rename.
+- **Settings… (⌘,):** automatic update checks, the inspector, and the default sizes and choices for Find Duplicates
+  and Big & Old (remembered).
+- **Drag and drop:** drop a folder on the window to index it; drag files onto a drive in the sidebar to move them there
+  (after asking; Edit ▸ Undo puts them back; the window stays free while big files are copied).
+- Empty screens in macOS's own style; selection and the search box's focus follow your accent colour (System
+  Settings ▸ Appearance). The window remembers its view, sort, inspector and Everything / This Mac.
+- Fixes: ⌫, Space and Return no longer act on the files hidden behind Review or Clean Up; last-opened dates are read
+  once per file, not on every refresh while a drive indexes; a drive's Trash and saved views are found even when two
+  drives share a name.
+
 ## 0.1.22
 
 - **Results while it works.** Clean Up Junk lists what it finds as it walks the drive, with how many folders it has
