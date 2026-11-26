@@ -7,7 +7,7 @@ import SwiftUI
 /// place — Duplicates, Junk (system files, unfinished downloads, empty files
 /// and folders) and Big & old (large files untouched for years) — each with
 /// the space it frees and one Move to Trash (never deletes; Edit ▸ Undo).
-enum CleanupTab: String, CaseIterable { case duplicates, junk, bigOld, space }
+enum CleanupTab: String, CaseIterable { case duplicates, junk, bigOld, space, broken, unwanted }
 
 /// Junk: found by the engine walking the place's folders (junk is never
 /// indexed, so no search finds it).
@@ -150,16 +150,24 @@ struct CleanupView: View {
                 Text(L("cleanup.junk")).tag(CleanupTab.junk)
                 Text(L("cleanup.bigOld")).tag(CleanupTab.bigOld)
                 Text(L("space.title")).tag(CleanupTab.space)
+                Text(L("broken.short")).tag(CleanupTab.broken)
+                Text(L("unwanted.short")).tag(CleanupTab.unwanted)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 520)
+            .frame(maxWidth: 680)
             .padding(.top, 10)
             switch model.cleanupTab {
             case .duplicates: DuplicatesView(model: model, dupes: model.dupes)
             case .junk: junkView
             case .bigOld: bigView
             case .space: SpaceView(model: model, space: model.space, root: spaceRoot)
+            case .broken:
+                BrokenView(model: model, broken: model.broken, row: { p, s, n, c, t in AnyView(row(path: p, size: s, note: n, chosen: c, isDir: false, toggle: t)) },
+                           footer: { c, b, t in AnyView(footer(count: c, bytes: b, trash: t)) })
+            case .unwanted:
+                UnwantedView(model: model, unwanted: model.unwanted, row: { p, s, n, c, t in AnyView(row(path: p, size: s, note: n, chosen: c, isDir: false, toggle: t)) },
+                             footer: { c, b, t in AnyView(footer(count: c, bytes: b, trash: t)) })
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))

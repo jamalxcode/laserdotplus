@@ -2,6 +2,18 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.25
+
+- **Broken Files** (Tools, Clean Up ▸ Broken): pictures, videos and songs that can't be what they say — empty,
+  unreadable, a video with no picture, or no length (often a copy that stopped). Found from the index in a moment.
+- **Probably Unwanted** (Clean Up ▸ Unwanted): clips under 3 seconds, tiny or very low-quality videos, tiny pictures
+  and screenshots, to look through. Nothing is ticked and nothing moves by itself.
+- **Protection against damage (bit rot)** in About This Drive: **Save Fingerprints** reads every file once and keeps a
+  fingerprint of each on the drive; **Check for Damage** reads them again and lists any file whose contents changed
+  while its size and date stayed the same. It can be stopped and continued; edited and missing files are counted apart.
+- **The drive's history** in About This Drive (now a window): a chart of how full it has been, "full in about N
+  months" at this rate, and what clean-ups freed — kept on the drive itself, noted once a day while it is plugged in.
+
 ## 0.1.24
 
 - The sidebar and the inspector start a little narrower, so the sidebar, the files and the inspector all fit even in

@@ -47,6 +47,7 @@ final class DrivesModel: ObservableObject {
                 if self.notAnswering { self.notAnswering = false }
                 let changed = list.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" } != self.drives.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" }
                 self.drives = list
+                list.forEach(DriveHistory.noteSnapshot) // once a day, on the drive
                 if changed { self.onChange() }
                 self.indexNewDrives()
             }
@@ -130,25 +131,10 @@ final class DrivesModel: ObservableObject {
     }
 
     /// Everything about a drive, for its card (About This Drive).
-    func showInfo(_ d: Drive) {
-        var lines: [String] = []
-        let used = d.totalBytes - min(d.freeBytes, d.totalBytes)
-        lines.append(String(format: L("drive.info.space"), bytesText(used), bytesText(d.totalBytes), bytesText(d.freeBytes)))
-        if !d.fsType.isEmpty { lines.append(String(format: L("drive.info.format"), d.fsType.uppercased())) }
-        lines.append(String(format: L("drive.info.state"), stateText(d)))
-        if d.entries > 0 { lines.append(String(format: L("drive.info.files"), countText(Int(d.entries), "file"))) }
-        if d.indexBytes > 0 {
-            lines.append(String(format: d.onDrive ? L("drive.info.indexOn") : L("drive.info.indexMac"), bytesText(d.indexBytes)))
-        }
-        if let t = d.lastScan { lines.append(String(format: L("drive.info.checked"), dateText(t))) }
-        if d.readOnly { lines.append(L("drive.info.readOnly")) }
-        if d.encrypted { lines.append(L("drive.info.encrypted")) }
-        if let why = d.detail, !why.isEmpty { lines.append(why) }
-        let a = NSAlert()
-        a.messageText = d.name
-        a.informativeText = lines.joined(separator: "\n")
-        a.runFront()
-    }
+    /// About This Drive: a window with its facts, its history and its
+    /// protection against bit rot.
+    @Published var info: DriveSheet?
+    func showInfo(_ d: Drive) { info = DriveSheet(id: d.mount, drive: d) }
 
     /// One line under the drive's name.
     /// When each drive started opening (not published: it only changes the

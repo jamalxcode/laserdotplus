@@ -72,6 +72,8 @@ struct Sidebar: View {
                 Label(L("cleanup.junk.menu"), systemImage: "trash.slash").tag(SidebarItem.tool(.junk))
                 Label(L("cleanup.bigOld.menu"), systemImage: "externaldrive.badge.timemachine").tag(SidebarItem.tool(.bigOld))
                 Label(L("space.menu"), systemImage: "chart.bar.xaxis").tag(SidebarItem.tool(.space))
+                Label(L("broken.title"), systemImage: "bandage").tag(SidebarItem.tool(.broken))
+                Label(L("unwanted.title"), systemImage: "hand.thumbsdown").tag(SidebarItem.tool(.unwanted))
             }
         }
         .listStyle(.sidebar)

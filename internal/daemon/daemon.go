@@ -448,6 +448,19 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		return result(s.ld.Details(req.Path))
 	case ipc.OpFileTimes:
 		return ok(s.ld.FileTimes(req.Paths))
+	case ipc.OpBroken:
+		return result(s.ld.Broken(req.Query))
+	case ipc.OpChecksumStatus:
+		return result(s.ld.ChecksumStatus(req.Mount))
+	case ipc.OpChecksumSave:
+		return result(s.ld.SaveChecksums(req.Mount))
+	case ipc.OpChecksumCheck:
+		return result(s.ld.CheckChecksums(req.Mount))
+	case ipc.OpChecksumProgress:
+		return ok(s.ld.ChecksumProgress())
+	case ipc.OpChecksumStop:
+		s.ld.StopChecksums()
+		return ok(true)
 	case ipc.OpJunkFound:
 		return ok(s.ld.JunkFound())
 	case ipc.OpJunkStop:

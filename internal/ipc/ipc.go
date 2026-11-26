@@ -106,6 +106,14 @@ const (
 	OpJunkFound = "junk_found"
 	// OpJunkStop (Laserdot+): end the running junk walk early.
 	OpJunkStop = "junk_stop"
+	// OpBroken (Laserdot+): broken media in Query's scope, from the index.
+	OpBroken = "broken"
+	// Checksums (Laserdot+, bit rot): a drive's (Mount) list on the drive.
+	OpChecksumStatus   = "checksum_status"
+	OpChecksumSave     = "checksum_save"
+	OpChecksumCheck    = "checksum_check"
+	OpChecksumProgress = "checksum_progress"
+	OpChecksumStop     = "checksum_stop"
 	// OpFileTimes (Laserdot+): the dates of each of Paths (created, modified,
 	// last opened, added), read from the files for the rows on screen.
 	OpFileTimes = "file_times"

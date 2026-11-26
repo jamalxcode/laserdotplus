@@ -344,3 +344,12 @@ size, section titles as headlines.
   would copy big files on the main thread; hiding the inspector for an overlay could switch it off for good;
   last-opened dates were re-read on every refresh; a drive's Trash and views assumed `/Volumes/<name>`; drags inside
   the app had no operation, so dropping on a sidebar drive did nothing.
+
+## 42. Broken, unwanted, bit rot, a drive's history (0.1.25)
+
+The owner chose four of ten feature ideas: broken files, probably-unwanted files, protection against bit rot and a
+drive's history ("do 3 4 6 8"). Decided: broken and unwanted come from the index (no disk reads), as lists to look
+through with nothing ticked. Bit rot: a checksum list kept on the drive (it carries its own hash, so a damaged list is
+noticed); damage = same size and date, different contents; drives whose index lives on this Mac (read-only,
+encrypted) get none, so no names are written in clear. History: on the drive, once a day while plugged in, plus each
+clean-up's freed bytes; "full in about N months" from the last six months.

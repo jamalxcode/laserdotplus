@@ -34,6 +34,8 @@ final class LibraryModel: ObservableObject {
     lazy var junk = JunkModel(engine: engine)
     lazy var bigOld = BigOldModel(engine: engine)
     lazy var space = SpaceModel(engine: engine)
+    lazy var broken = BrokenModel(engine: engine)
+    lazy var unwanted = UnwantedModel(engine: engine)
     let views = SavedViews()
     /// Which clean-up the Clean Up screen shows.
     @Published var cleanupTab = CleanupTab.duplicates
@@ -663,6 +665,7 @@ final class LibraryModel: ObservableObject {
         undo?.registerUndo(withTarget: self) { model in model.restore(moved, undo: undo) }
         undo?.setActionName(L("action.trash"))
         tellEngine(moved.map(\.from))
+        DriveHistory.noteCleanup(trashed: moved.map(\.to))
     }
 
     /// Many files to the Trash (duplicates) off the main thread — a drive
@@ -693,6 +696,7 @@ final class LibraryModel: ObservableObject {
                     undo?.setActionName(L("action.trash"))
                 }
                 self.tellEngine(moved.map(\.from))
+                DriveHistory.noteCleanup(trashed: moved.map(\.to))
                 // The drives' Trash sizes change.
                 Set(moved.compactMap { m -> String? in
                     let parts = m.from.path.split(separator: "/")

@@ -55,6 +55,7 @@ struct MainView: View {
         }
         .navigationTitle("Laserdot+")
         .navigationSubtitle(subtitle)
+        .sheet(item: $drives.info) { s in DriveInfoView(drive: s.drive, drives: drives, model: model) }
     }
 
     /// Where you are and how much is there, under the title (as in Finder).

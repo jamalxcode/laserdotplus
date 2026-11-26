@@ -341,6 +341,26 @@ final class SelfTestRunner {
                 self.waitFor(5, { FileManager.default.fileExists(atPath: onDrive.path) }) { saved in
                     let macText = (try? String(contentsOf: onMac, encoding: .utf8)) ?? ""
                     self.report["view_on_drive"] = saved && !macText.contains("Drive videos")
+                    self.integrity()
+                }
+            }
+        }
+    }
+
+    /// Broken Files runs over everything; on the test drive, fingerprints are
+    /// saved (on the drive) and checked: no damage.
+    private func integrity() {
+        model.broken.scan(place: "")
+        let engine = model.engine
+        DispatchQueue.global(qos: .userInitiated).async {
+            let saved = try? engine.saveChecksums(mount: "/Volumes/LDPlus")
+            let checked = try? engine.checkChecksums(mount: "/Volumes/LDPlus")
+            DispatchQueue.main.async {
+                self.report["checksums_saved"] = Int(saved?.files ?? 0)
+                self.report["checksums_damage"] = checked.map { $0.damaged.count } ?? -1
+                self.report["checksums_on_drive"] = FileManager.default.fileExists(atPath: "/Volumes/LDPlus/.laserdot/checksums.bin")
+                self.waitFor(20, { self.model.broken.phase == .done }) { _ in
+                    self.report["broken_ran"] = self.model.broken.phase == .done && self.model.broken.problem == nil
                     self.finish("")
                 }
             }

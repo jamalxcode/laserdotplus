@@ -19,6 +19,12 @@ public enum DaemonRequest: Encodable, Sendable {
     case fileTimes(paths: [String])
     case junkFound
     case junkStop
+    case broken(query: String)
+    case checksumStatus(mount: String)
+    case checksumSave(mount: String)
+    case checksumCheck(mount: String)
+    case checksumProgress
+    case checksumStop
     case forget(path: String)
     case refresh
     case roots
@@ -102,6 +108,12 @@ public enum DaemonRequest: Encodable, Sendable {
         case .fileTimes: return "file_times"
         case .junkFound: return "junk_found"
         case .junkStop: return "junk_stop"
+        case .broken: return "broken"
+        case .checksumStatus: return "checksum_status"
+        case .checksumSave: return "checksum_save"
+        case .checksumCheck: return "checksum_check"
+        case .checksumProgress: return "checksum_progress"
+        case .checksumStop: return "checksum_stop"
         case .forget: return "forget"
         case .opened: return "opened"
         case .recentOpens: return "recent_opens"
@@ -192,6 +204,10 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(lang, forKey: .lang)
         case let .recentOpens(limit):
             try c.encode(limit, forKey: .limit)
+        case let .broken(query):
+            try c.encode(query, forKey: .query)
+        case let .checksumStatus(mount), let .checksumSave(mount), let .checksumCheck(mount):
+            try c.encode(mount, forKey: .mount)
         case let .fileTimes(paths):
             try c.encode(paths, forKey: .paths)
         case let .storage(path, limit):
@@ -203,7 +219,7 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(path, forKey: .path)
             try c.encode(query, forKey: .query)
         case .ping, .status, .refresh, .roots, .stats, .shutdown, .drives, .contentStatus, .updateContent, .valueCounts,
-             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound, .junkFound, .junkStop:
+             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound, .junkFound, .junkStop, .checksumProgress, .checksumStop:
             break
         }
     }

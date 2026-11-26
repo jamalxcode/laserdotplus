@@ -153,6 +153,8 @@ type Laserdot struct {
 	// dupeFound: the groups the running scan has found so far (shown as they
 	// come, the owner: "a detection as soon as it happens").
 	dupeFound atomic.Pointer[[]DupeGroup]
+	// ck: the running checksum save or check (bit rot).
+	ck checksumState
 	// junk: the running junk walk (what it found so far); junkStop ends it.
 	junkMu   sync.Mutex
 	junk     JunkProgress

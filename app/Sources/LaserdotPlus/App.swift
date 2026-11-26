@@ -48,6 +48,8 @@ struct LaserdotPlusApp: App {
                 Button(L("cleanup.junk.menu")) { delegate.model.openCleanup(.junk) }.keyboardShortcut("j", modifiers: [.command, .shift])
                 Button(L("cleanup.bigOld.menu")) { delegate.model.openCleanup(.bigOld) }.keyboardShortcut("b", modifiers: [.command, .shift])
                 Button(L("space.menu")) { delegate.model.openCleanup(.space) }.keyboardShortcut("s", modifiers: [.command, .shift])
+                Button(L("broken.title")) { delegate.model.openCleanup(.broken) }
+                Button(L("unwanted.title")) { delegate.model.openCleanup(.unwanted) }
             }
             CommandGroup(replacing: .help) {
                 Button(L("shortcuts.title")) { WhatsNew.showShortcuts() }.keyboardShortcut("/", modifiers: .command)

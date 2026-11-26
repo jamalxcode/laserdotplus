@@ -97,6 +97,15 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Integrity (0.1.25):** `Broken` (engine, from the index: media that is empty, has no record, a video with no
+  video track, or no duration); `UnwantedModel` (searches: clips <3 s, height <240, bitrate <300 kbps, screenshots,
+  pictures under 160×160 — `internal/query/unwanted_test.go` keeps them valid). Checksums (`checksums.go`):
+  `<drive>/.laserdot/checksums.bin` = magic, saved-at, entries (path on the drive, size, mtime, full hash), then a
+  SHA-256 of all that; `checksum_save` reads only new or changed files (resumable, saved every minute),
+  `checksum_check` re-reads: same size+mtime and a different hash (or unreadable) = damaged; progress and stop like
+  junk. About This Drive (`DriveInfo.swift`, a sheet) shows facts, `DriveHistory` (`<drive>/.laserdot/history.json`:
+  a snapshot a day, freed bytes per clean-up; Swift Charts; months until full from the last 183 days) and the
+  checksum controls.
 - **The window (0.1.23):** `NavigationSplitView`: `Sidebar` (places, drives with state/fullness/eject and drops that
   move files there via `moveInBackground`, the place's saved views, the tools) | the detail (`TopArea` = search box +
   choice bands, `FilesArea` with Review/Clean Up as overlays, tray, bottom bar), with `.inspector` = `DetailsView`
