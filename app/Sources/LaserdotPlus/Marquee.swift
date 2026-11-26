@@ -202,7 +202,7 @@ final class MouseCatcherView: NSView, NSDraggingSource {
         setBox(nil)
     }
 
-    /// A click sent through the window, as macOS delivers a real one: it is
+    /// A click sent through the app and its window, as macOS delivers a real one: it is
     /// routed by hit-testing (the self-test checks that clicks reach this
     /// view through SwiftUI's layers).
     func clickThroughWindow(at p: CGPoint) {
@@ -211,7 +211,7 @@ final class MouseCatcherView: NSView, NSDraggingSource {
         for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
             if let e = NSEvent.mouseEvent(with: type, location: loc, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                                           windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
-                w.sendEvent(e)
+                NSApp.sendEvent(e) // as macOS delivers a real click (it sets NSApp.currentEvent)
             }
         }
     }
