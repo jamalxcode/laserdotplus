@@ -365,3 +365,11 @@ drive list, and a visible spinner. Lesson: anything on a timer must stay cheap a
 Then: "now its back again after viewing 1 video" and "and making new attribute choices". Same cause: every new search
 (a choice, or a file whose last-opened date changed) filled each row's date with its own assignment to the published
 list — hundreds of list copies and redraws on the main thread. The single update in 0.1.26 fixes it.
+
+## 44. A 20-second hang in Clean Up Junk (0.1.27)
+
+The owner sent macOS's hang report (0.1.23, force quit): the main thread was in `JunkModel.take`, inserting each new
+find into the published `chosen` set — a copy of the whole set per insert, tens of thousands of times a second on an
+8 TB drive. Fixed there and in every similar loop (Keep, the tray), the engine now sends only new finds, removals use a
+set, and the lists' Move to Trash runs in the background. Lesson (in how-it-works): never mutate a published
+collection per item in a loop.

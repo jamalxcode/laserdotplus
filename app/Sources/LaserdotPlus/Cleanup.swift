@@ -27,6 +27,8 @@ final class JunkModel: ObservableObject {
     private var poll: Timer?
     private var earlier: [JunkItem] = [] // finished roots' finds (several roots)
     private var stopped = false
+    /// The running root's finds so far, fetched a piece at a time.
+    private var live: [JunkItem] = []
 
     func scan(roots: [String]) {
         guard phase != .scanning else { return }
@@ -34,6 +36,7 @@ final class JunkModel: ObservableObject {
         items = []
         chosen = []
         earlier = []
+        live = []
         stopped = false
         folders = 0
         current = ""
@@ -43,11 +46,14 @@ final class JunkModel: ObservableObject {
         poll?.invalidate()
         poll = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self, self.phase == .scanning else { return }
+            let from = self.live.count
             DispatchQueue.global(qos: .utility).async {
-                guard let p = engine.junkFound(), p.running else { return }
+                guard let p = engine.junkFound(from: from), p.running else { return }
                 DispatchQueue.main.async {
                     guard self.phase == .scanning else { return }
-                    self.take(self.earlier + p.items)
+                    if p.from == self.live.count { self.live += p.items } // only what is new
+                    if p.total < self.live.count { self.live = [] } // the next root's walk began
+                    if !p.items.isEmpty { self.take(self.earlier + self.live) }
                     self.folders = p.folders
                     self.current = p.current
                 }
@@ -59,7 +65,7 @@ final class JunkModel: ObservableObject {
                 if DispatchQueue.main.sync(execute: { self?.stopped ?? true }) { break }
                 found += (try? engine.junk(path: r)) ?? []
                 let sofar = found
-                DispatchQueue.main.async { self?.earlier = sofar }
+                DispatchQueue.main.async { self?.earlier = sofar; self?.live = [] }
             }
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -72,10 +78,15 @@ final class JunkModel: ObservableObject {
 
     /// Show these, ticking new ones (junk: all ticked) and keeping the
     /// user's untickings.
+    /// Built aside and set once (the owner's 8 TB drive: ticking tens of
+    /// thousands of finds one at a time copied the whole set each time and
+    /// froze the window for 20 seconds).
     private func take(_ found: [JunkItem]) {
         let shown = Set(items.map(\.path))
+        var next = chosen
+        for j in found where !shown.contains(j.path) { next.insert(j.path) }
         items = found
-        for j in found where !shown.contains(j.path) { chosen.insert(j.path) }
+        chosen = next
     }
 
     func stop() {
@@ -228,10 +239,12 @@ struct CleanupView: View {
                         }
                     }
                     footer(count: junk.chosen.count, bytes: junk.chosenBytes, enabled: junk.phase == .done) {
+                        // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(junk.chosen)
-                        model.trashPaths(paths, undo: undo)
-                        junk.items.removeAll { paths.contains($0.path) }
-                        junk.chosen = []
+                        model.trashInBackground(paths, undo: undo) { gone, _ in
+                            junk.items.removeAll { gone.contains($0.path) }
+                            junk.chosen.subtract(gone)
+                        }
                     }
                 }
             }
@@ -278,10 +291,12 @@ struct CleanupView: View {
                         }
                     }
                     footer(count: big.chosen.count, bytes: big.chosenBytes) {
+                        // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(big.chosen)
-                        model.trashPaths(paths, undo: undo)
-                        big.items.removeAll { paths.contains($0.path) }
-                        big.chosen = []
+                        model.trashInBackground(paths, undo: undo) { gone, _ in
+                            big.items.removeAll { gone.contains($0.path) }
+                            big.chosen.subtract(gone)
+                        }
                     }
                 }
             }

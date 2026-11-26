@@ -97,6 +97,10 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **Big lists (0.1.27):** published sets, dictionaries and arrays (`chosen`, `keep`, `tray`, `results`) are built
+  aside and assigned once — never mutated per item in a loop (each mutation copies the whole collection and
+  redraws). `junk_found` takes an offset and returns only new finds (`from`, `total`); removals use a `Set`; clean-up
+  lists trash with `trashInBackground`.
 - **Calm while indexing (0.1.26):** `refreshStatus` re-runs the search for index changes at most every 15 s and only
   after 4 s without input (`LibraryModel.lastInput`, a local event monitor); `apply` sets `results` once; `Place.mount`
   reads `Place.mounts` (filled from the drive list) instead of the file system. The sidebar shows a spinner beside a

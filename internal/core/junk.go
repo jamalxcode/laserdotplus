@@ -169,15 +169,21 @@ type JunkProgress struct {
 	Running bool       `json:"running"`
 	Folders uint64     `json:"folders"`
 	Current string     `json:"current"`
-	Items   []JunkItem `json:"items"`
+	Items   []JunkItem `json:"items"` // the finds from From on
+	From    int        `json:"from"`
+	Total   int        `json:"total"` // finds so far
 }
 
-// JunkFound: the running walk's progress and finds (Running false: none).
-func (ld *Laserdot) JunkFound() JunkProgress {
+// JunkFound: the running walk's progress and its finds from the from'th on
+// (the app asks only for what is new: a big drive has tens of thousands).
+func (ld *Laserdot) JunkFound(from int) JunkProgress {
 	ld.junkMu.Lock()
 	defer ld.junkMu.Unlock()
 	p := ld.junk
-	p.Items = append([]JunkItem{}, p.Items...)
+	p.Total = len(p.Items)
+	from = min(max(from, 0), p.Total)
+	p.From = from
+	p.Items = append([]JunkItem{}, p.Items[from:]...)
 	return p
 }
 

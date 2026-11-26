@@ -116,10 +116,12 @@ struct BrokenView: View {
                         }
                     }
                     footer(broken.chosen.count, broken.chosenBytes) {
+                        // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(broken.chosen)
-                        model.trashPaths(paths, undo: undo)
-                        broken.items.removeAll { paths.contains($0.path) }
-                        broken.chosen = []
+                        model.trashInBackground(paths, undo: undo) { gone, _ in
+                            broken.items.removeAll { gone.contains($0.path) }
+                            broken.chosen.subtract(gone)
+                        }
                     }
                 }
             }
@@ -158,10 +160,12 @@ struct UnwantedView: View {
                         }
                     }
                     footer(unwanted.chosen.count, unwanted.chosenBytes) {
+                        // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(unwanted.chosen)
-                        model.trashPaths(paths, undo: undo)
-                        unwanted.items.removeAll { paths.contains($0.hit.path) }
-                        unwanted.chosen = []
+                        model.trashInBackground(paths, undo: undo) { gone, _ in
+                            unwanted.items.removeAll { gone.contains($0.hit.path) }
+                            unwanted.chosen.subtract(gone)
+                        }
                     }
                 }
             }

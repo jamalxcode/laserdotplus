@@ -73,11 +73,14 @@ final class DupesModel: ObservableObject {
     /// shown and the engine's recommendation for new ones.
     private func take(_ found: [DuplicateGroup]) {
         let shown = Set(groups.flatMap { $0.files.map(\.path) })
-        groups = found
+        // Built aside and set once: one update, not one per file.
+        var next = keep
         for g in found {
-            for f in g.files where !shown.contains(f.path) && f.keep { keep.insert(f.path) }
-            if !g.files.contains(where: { keep.contains($0.path) }), let first = g.files.first { keep.insert(first.path) }
+            for f in g.files where !shown.contains(f.path) && f.keep { next.insert(f.path) }
+            if !g.files.contains(where: { next.contains($0.path) }), let first = g.files.first { next.insert(first.path) }
         }
+        groups = found
+        keep = next
     }
 
     // MARK: which copy to keep, for every group at once
@@ -114,7 +117,7 @@ final class DupesModel: ObservableObject {
 
     func protect(_ dir: String?) {
         protected = dir
-        if let dir { groups.flatMap(\.files).filter { Self.inside($0.path, dir) }.forEach { keep.insert($0.path) } }
+        if let dir { keep.formUnion(groups.flatMap(\.files).filter { Self.inside($0.path, dir) }.map(\.path)) }
     }
 
     static func inside(_ path: String, _ dir: String) -> Bool {

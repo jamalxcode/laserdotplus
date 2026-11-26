@@ -462,7 +462,7 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		s.ld.StopChecksums()
 		return ok(true)
 	case ipc.OpJunkFound:
-		return ok(s.ld.JunkFound())
+		return ok(s.ld.JunkFound(req.Offset))
 	case ipc.OpJunkStop:
 		s.ld.StopJunk()
 		return ok(true)

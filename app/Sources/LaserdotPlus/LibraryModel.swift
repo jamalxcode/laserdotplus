@@ -718,6 +718,11 @@ final class LibraryModel: ObservableObject {
                     undo?.registerUndo(withTarget: self) { model in model.restore(moved, undo: undo) }
                     undo?.setActionName(L("action.trash"))
                 }
+                if failed == 0 {
+                    self.notice = String(format: L("notice.trashed"), moved.count)
+                } else {
+                    self.trouble = String(format: L("notice.trashedSome"), moved.count, failed)
+                }
                 self.tellEngine(moved.map(\.from))
                 DriveHistory.noteCleanup(trashed: moved.map(\.to))
                 // The drives' Trash sizes change.
@@ -744,11 +749,15 @@ final class LibraryModel: ObservableObject {
     // MARK: the clean-up tray
 
     func mark(_ hits: [Hit], _ action: TrayAction) {
-        for h in hits { tray[h.path] = TrayItem(hit: h, action: action) }
+        var next = tray // set once: one update, however many files
+        for h in hits { next[h.path] = TrayItem(hit: h, action: action) }
+        tray = next
     }
 
     func unmark(_ paths: [String]) {
-        paths.forEach { tray[$0] = nil }
+        var next = tray
+        paths.forEach { next[$0] = nil }
+        tray = next
     }
 
     func clearTray() { tray = [:] }

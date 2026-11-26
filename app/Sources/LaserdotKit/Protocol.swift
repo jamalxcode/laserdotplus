@@ -17,7 +17,7 @@ public enum DaemonRequest: Encodable, Sendable {
     /// Laserdot+: the junk under a folder ("" every place); walks the disk.
     case junk(path: String)
     case fileTimes(paths: [String])
-    case junkFound
+    case junkFound(from: Int)
     case junkStop
     case broken(query: String)
     case checksumStatus(mount: String)
@@ -208,6 +208,8 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(query, forKey: .query)
         case let .checksumStatus(mount), let .checksumSave(mount), let .checksumCheck(mount):
             try c.encode(mount, forKey: .mount)
+        case let .junkFound(from):
+            try c.encode(from, forKey: .offset)
         case let .fileTimes(paths):
             try c.encode(paths, forKey: .paths)
         case let .storage(path, limit):
@@ -219,7 +221,7 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(path, forKey: .path)
             try c.encode(query, forKey: .query)
         case .ping, .status, .refresh, .roots, .stats, .shutdown, .drives, .contentStatus, .updateContent, .valueCounts,
-             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound, .junkFound, .junkStop, .checksumProgress, .checksumStop:
+             .clearOpens, .exclusions, .unreadable, .dupesStop, .dupesFound, .junkStop, .checksumProgress, .checksumStop:
             break
         }
     }

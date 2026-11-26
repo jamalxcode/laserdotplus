@@ -2,6 +2,15 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.27
+
+- **Clean Up Junk no longer freezes on a big drive.** Ticking tens of thousands of finds one at a time froze the window
+  (20 seconds and more on an 8 TB drive, until it had to be force quit). Finds are now ticked in one go, the engine
+  sends only what is new each second instead of the whole list, and Move to Trash runs in the background — the
+  window stays free however many files there are.
+- The same fixes for Find Duplicates' Keep choices, the clean-up tray's Mark / Unmark, and removing trashed files from
+  Junk, Big & Old, Broken and Unwanted.
+
 ## 0.1.26
 
 - **No more beachball while a new drive is indexed.** The list was rebuilt every 3 seconds while files kept arriving,

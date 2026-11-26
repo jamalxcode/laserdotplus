@@ -82,8 +82,9 @@ extension Engine {
 
     /// The running junk walk: found so far, folders gone through, the one it
     /// is in (nil: an older engine, or no answer). On a connection of its own.
-    public func junkFound() -> JunkProgress? {
-        try? longCall(longJobConnection(), .junkFound, as: JunkProgress.self)
+    /// Only the finds from the from'th on (a big drive has tens of thousands).
+    public func junkFound(from: Int) -> JunkProgress? {
+        try? longCall(longJobConnection(), .junkFound(from: from), as: JunkProgress.self)
     }
 
     /// End the running junk walk early (it returns what it found).
@@ -98,8 +99,11 @@ public struct JunkProgress: Decodable, Sendable {
     public var folders: UInt64
     public var current: String
     public var items: [JunkItem]
+    /// `items` start at this find; `total` finds so far.
+    public var from: Int
+    public var total: Int
 
-    enum CodingKeys: String, CodingKey { case running, folders, current, items }
+    enum CodingKeys: String, CodingKey { case running, folders, current, items, from, total }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -107,6 +111,8 @@ public struct JunkProgress: Decodable, Sendable {
         folders = (try? c.decode(UInt64.self, forKey: .folders)) ?? 0
         current = (try? c.decode(String.self, forKey: .current)) ?? ""
         items = (try? c.decode([JunkItem].self, forKey: .items)) ?? []
+        from = (try? c.decode(Int.self, forKey: .from)) ?? 0
+        total = (try? c.decode(Int.self, forKey: .total)) ?? 0
     }
 }
 

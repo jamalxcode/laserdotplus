@@ -71,7 +71,22 @@ func TestJunkShowsAsItIsFound(t *testing.T) {
 	base, _ := filepath.EvalSymlinks(t.TempDir())
 	ld, _ := Open(filepath.Join(base, "i.db"))
 	defer ld.Close()
-	if items, _ := ld.Junk(root); len(items) != 6 || ld.JunkFound().Running {
-		t.Errorf("%d items, running %v", len(items), ld.JunkFound().Running)
+	if items, _ := ld.Junk(root); len(items) != 6 || ld.JunkFound(0).Running {
+		t.Errorf("%d items, running %v", len(items), ld.JunkFound(0).Running)
+	}
+}
+
+// The app asks only for the finds it has not seen yet.
+func TestJunkFoundSendsOnlyWhatIsNew(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	ld, _ := Open(filepath.Join(base, "i.db"))
+	defer ld.Close()
+	ld.junk = JunkProgress{Running: true, Items: []JunkItem{{"/a", 1, "system"}, {"/b", 1, "system"}, {"/c", 1, "system"}}}
+	p := ld.JunkFound(2)
+	if p.Total != 3 || p.From != 2 || len(p.Items) != 1 || p.Items[0].Path != "/c" {
+		t.Errorf("%+v", p)
+	}
+	if p := ld.JunkFound(9); len(p.Items) != 0 || p.From != 3 {
+		t.Errorf("%+v", p)
 	}
 }
