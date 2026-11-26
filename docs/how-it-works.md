@@ -98,3 +98,5 @@
   whose height follows the bands' measured height (max 260); then the files and `DetailsView` side by side, with
   Review/Duplicates overlaid on both. Nothing selected → `PlaceSummary` (engine counts only). `friendlyPath` /
   `placeParts` turn paths into "Drive › …" / "Home › …"; `FolderCover` asks the engine for four pictures in a folder.
+- **Calm choices** (`RefineLogic.compact`): the technical groups (`software`, `column`, `rows`, `codec`, `hdr`,
+  `chapters`) show only under More choices.

@@ -80,6 +80,16 @@ final class RefineLogicTests: XCTestCase {
 
     /// What can be chosen leads: live values first in a group, live groups
     /// first in a family, families with nothing to choose last.
+    func testTechnicalGroupsWaitUnderMoreChoices() {
+        func o(_ t: String) -> RefineOption { RefineOption(token: t, label: t, key: nil, count: 2) }
+        let groups = [RefineGroup(id: "kind", family: "what", options: [o("kind:video")]),
+                      RefineGroup(id: "software", family: "doc", options: [o("software:x"), o("software:y")])]
+        let calm = RefineLogic.compact(groups, expanded: false)
+        XCTAssertEqual(calm.shown.map(\.id), ["kind"])
+        XCTAssertEqual(calm.hidden, 2)
+        XCTAssertEqual(RefineLogic.compact(groups, expanded: true).shown.count, 2)
+    }
+
     func testArrangedPutsWhatCanBeChosenFirst() {
         func o(_ t: String, _ n: UInt64) -> RefineOption { RefineOption(token: t, label: t, key: nil, count: n) }
         let groups = [

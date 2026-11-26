@@ -144,6 +144,10 @@ public enum RefineLogic {
     /// its `perGroup` values with the most results (in their usual order),
     /// and only the first `bandLimit` families show. `hidden` counts what was
     /// left out, for the "More choices (N)" button; expanded shows everything.
+    /// Groups that rarely help a review (how a file was made, a data file's
+    /// columns): only under More choices (the owner's UI critique).
+    public static let technical: Set<String> = ["software", "column", "rows", "codec", "hdr", "chapters"]
+
     public static func compact(_ groups: [RefineGroup], expanded: Bool,
                                perGroup: Int = 4, bandLimit: Int = 4) -> (shown: [RefineGroup], hidden: Int) {
         if expanded { return (groups, 0) }
@@ -151,6 +155,10 @@ public enum RefineLogic {
         var hidden = 0
         var families: [String] = []
         for g in groups {
+            if technical.contains(g.id) {
+                hidden += g.options.count
+                continue
+            }
             let family = g.family ?? g.id
             if !families.contains(family) { families.append(family) }
             guard families.count <= bandLimit else {

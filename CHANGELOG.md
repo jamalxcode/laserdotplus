@@ -2,6 +2,11 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.11
+
+- **Calmer choices.** Technical choices — what a file was made with, a data file's columns and rows, codec, HDR,
+  chapters — wait under More choices instead of showing by default.
+
 ## 0.1.10
 
 A tidier window:
