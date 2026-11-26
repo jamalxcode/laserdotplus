@@ -331,3 +331,16 @@ size, section titles as headlines.
   nothing is trashed on a half-read list.
 - The owner then asked for a review of what could be more Mac-like, "without losing any functionality" (answered as
   a list, not built yet).
+
+## 41. A Mac window; a review for bugs (0.1.23)
+
+- The owner chose, from the Mac-like review: the toolbar, a Finder-style sidebar, the inspector, a window subtitle,
+  standard empty screens, a File menu, Finder's right-click order with Open With, a Settings window, the accent
+  colour, a remembered window, and drag and drop (1 2 3 5 6 10 11 12 15 18 19). Left as they were: the search field
+  and choice bands (7, 8), Return still opens (9 not chosen), alerts stay centred (13), no Dock progress (14), tile
+  style (16), column chooser (17), keyboard focus order (20), no Share menu.
+- The owner: "review code for any overlooked bugs and interface issues". Found and fixed: ⌫/Space/Return acted on
+  files hidden behind Review or Clean Up (⌫ could trash an unseen file — undoable, but wrong); a move onto a drive
+  would copy big files on the main thread; hiding the inspector for an overlay could switch it off for good;
+  last-opened dates were re-read on every refresh; a drive's Trash and views assumed `/Volumes/<name>`; drags inside
+  the app had no operation, so dropping on a sidebar drive did nothing.

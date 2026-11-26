@@ -97,6 +97,18 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **The window (0.1.23):** `NavigationSplitView`: `Sidebar` (places, drives with state/fullness/eject and drops that
+  move files there via `moveInBackground`, the place's saved views, the tools) | the detail (`TopArea` = search box +
+  choice bands, `FilesArea` with Review/Clean Up as overlays, tray, bottom bar), with `.inspector` = `DetailsView`
+  (hidden while an overlay shows; `showInspector` remembered) and `MainToolbar` (view, size, sort, tools, inspector).
+  `.navigationSubtitle` = place — count. Empty screens use `ContentUnavailableView`. A folder dropped on the files
+  is indexed. Menus: `FileCommands` (Open ⌘O, Open With ▸, Get Info ⌘I, Rename…, Quick Look ⌘Y, Show in Finder ⇧⌘R,
+  Copy Path ⌥⌘C, Move to Trash ⌘⌫ — in a text field it deletes to the line's start —, Index a Folder ⇧⌘I), Tools
+  (⌘E, ⌘R, ⇧⌘D/J/B/S), View (⌘1–4, ⌥⌘I); `SettingsView` (⌘,) holds update checks, the inspector, and Duplicates' and
+  Big & Old's defaults (UserDefaults). The right-click menu (`FileMenu`) follows Finder's order with `OpenWithMenu`.
+  The place is remembered only as Everything / This Mac (never a drive's name). `Place.mount(of:)` finds a drive's
+  real mount (a namesake is at `/Volumes/<name> 1`). Keys in `MouseCatcherView` and the delete command do nothing
+  while Review or Clean Up covers the files.
 - **Live results (0.1.22):** junk: `findJunk` reports each find and folder to `ld.junk` (`JunkProgress`); the app
   polls `junk_found` every second on its own connection and stops with `junk_stop`; Move to Trash waits for the end
   or Stop. Duplicates: `compute` calls `run.tick` about once a second from the loop that records reads; during the
