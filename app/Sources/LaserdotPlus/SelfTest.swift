@@ -291,6 +291,7 @@ final class SelfTestRunner {
 
     private func thisMac() {
         model.allChoices = true // the "place" screenshot shows all the choices
+        report["inspector_shown"] = model.showInspector
         model.place = .thisMac
         let gone = folder + "/Trips/2023/rome trip.txt"
         // Matched by its end: the engine may spell the folder differently
@@ -363,11 +364,19 @@ final class SelfTestRunner {
     }
 
     private func shot(_ name: String) {
-        guard let w = NSApp.windows.filter({ $0.isVisible }).max(by: { $0.frame.width < $1.frame.width }),
-              let view = w.contentView?.superview ?? w.contentView,
-              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
-        view.cacheDisplay(in: view.bounds, to: rep)
-        guard let png = rep.representation(using: .png, properties: [:]) else { return }
+        guard let w = NSApp.windows.filter({ $0.isVisible }).max(by: { $0.frame.width < $1.frame.width }) else { return }
+        // As the window server draws it (the sidebar's and the inspector's
+        // translucent materials too); an app may capture its own windows.
+        var png: Data?
+        if let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+            png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+        }
+        if png == nil, let view = w.contentView?.superview ?? w.contentView,
+           let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: rep)
+            png = rep.representation(using: .png, properties: [:])
+        }
+        guard let png else { return }
         try? png.write(to: out.appendingPathComponent(name + ".png"))
         shots.append(name)
     }
