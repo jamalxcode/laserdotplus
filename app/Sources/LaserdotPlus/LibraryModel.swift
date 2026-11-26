@@ -185,6 +185,11 @@ final class LibraryModel: ObservableObject {
             DispatchQueue.main.async {
                 self.statusInFlight = false
                 let wasIndexing = self.status?.indexing != nil
+                if let p = st.indexing {
+                    if self.indexStart?.root != p.root { self.indexStart = (p.root, Date(), p.done) }
+                } else {
+                    self.indexStart = nil
+                }
                 let changed = st.changes != (self.status?.changes ?? st.changes)
                 self.status = st
                 // Results follow the index: a file deleted or moved away in
@@ -193,6 +198,24 @@ final class LibraryModel: ObservableObject {
                 if changed || wasIndexing || st.indexing != nil { self.schedule(now: true, keepSelection: true) }
             }
         }
+    }
+
+    /// Where an indexing run started (root, time, files done), for its time left.
+    private var indexStart: (root: String, at: Date, done: UInt64)?
+
+    /// "Indexing Home · 40% · about 3 min left" (the owner: waiting was opaque).
+    var indexingText: String? {
+        guard let p = status?.indexing else { return nil }
+        let name = (p.root as NSString).lastPathComponent
+        guard p.total > 0, p.done <= p.total else { return String(format: L("status.indexing"), name) }
+        let pct = Int(Double(p.done) * 100 / Double(p.total))
+        var text = String(format: L("status.indexingPct"), name, pct)
+        if let s = indexStart, s.root == p.root, p.done > s.done {
+            let rate = Double(p.done - s.done) / max(1, Date().timeIntervalSince(s.at))
+            let left = Double(p.total - p.done) / max(rate, 0.001)
+            if left.isFinite, left > 5 { text += " · " + String(format: L("status.left"), durationText(left)) }
+        }
+        return text
     }
 
     func drivesChanged() { schedule(now: true, keepSelection: true) }

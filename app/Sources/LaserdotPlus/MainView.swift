@@ -258,10 +258,14 @@ struct BottomBar: View {
             if let n = model.notice {
                 Text(n).foregroundStyle(.secondary).lineLimit(1)
             }
-            if let p = model.status?.indexing {
+            if let text = model.indexingText {
                 ProgressView().controlSize(.small)
-                Text(String(format: L("status.indexing"), (p.root as NSString).lastPathComponent))
-                    .foregroundStyle(.secondary).lineLimit(1)
+                Text(text).foregroundStyle(.secondary).lineLimit(1)
+            }
+            if drives.notAnswering {
+                Label(L("drive.notAnswering"), systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange).lineLimit(1)
+                    .help(L("drive.notAnswering.help"))
             }
         }
         .font(.callout)

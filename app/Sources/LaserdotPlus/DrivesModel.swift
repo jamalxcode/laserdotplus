@@ -26,15 +26,25 @@ final class DrivesModel: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in self?.refresh() }
     }
 
+    /// The drive list has not come back for a while: a drive is not
+    /// answering (asleep, a bad cable…). Said in the bottom bar.
+    @Published private(set) var notAnswering = false
+    private var listingSince = Date()
+
     func refresh() {
-        guard !listing else { return }
+        if listing {
+            if Date().timeIntervalSince(listingSince) > 12, !notAnswering { notAnswering = true }
+            return
+        }
         listing = true
+        listingSince = Date()
         let engine = self.engine
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let list = (try? engine.drives()) ?? []
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.listing = false
+                if self.notAnswering { self.notAnswering = false }
                 let changed = list.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" } != self.drives.map { "\($0.mount)|\($0.state)|\($0.entries / 1000)" }
                 self.drives = list
                 if changed { self.onChange() }
@@ -117,6 +127,27 @@ final class DrivesModel: ObservableObject {
     func waiting(named name: String) -> String? {
         guard let d = drives.first(where: { $0.name == name }), isWaiting(d) else { return nil }
         return stateText(d)
+    }
+
+    /// Everything about a drive, for its card (About This Drive).
+    func showInfo(_ d: Drive) {
+        var lines: [String] = []
+        let used = d.totalBytes - min(d.freeBytes, d.totalBytes)
+        lines.append(String(format: L("drive.info.space"), bytesText(used), bytesText(d.totalBytes), bytesText(d.freeBytes)))
+        if !d.fsType.isEmpty { lines.append(String(format: L("drive.info.format"), d.fsType.uppercased())) }
+        lines.append(String(format: L("drive.info.state"), stateText(d)))
+        if d.entries > 0 { lines.append(String(format: L("drive.info.files"), countText(Int(d.entries), "file"))) }
+        if d.indexBytes > 0 {
+            lines.append(String(format: d.onDrive ? L("drive.info.indexOn") : L("drive.info.indexMac"), bytesText(d.indexBytes)))
+        }
+        if let t = d.lastScan { lines.append(String(format: L("drive.info.checked"), dateText(t))) }
+        if d.readOnly { lines.append(L("drive.info.readOnly")) }
+        if d.encrypted { lines.append(L("drive.info.encrypted")) }
+        if let why = d.detail, !why.isEmpty { lines.append(why) }
+        let a = NSAlert()
+        a.messageText = d.name
+        a.informativeText = lines.joined(separator: "\n")
+        a.runFront()
     }
 
     /// One line under the drive's name.

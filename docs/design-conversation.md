@@ -235,3 +235,11 @@ Junk is never indexed (system files, partial downloads), so the engine walks the
 `FindJunk`): system bookkeeping files (not a folder's custom icon or localized name), downloads untouched for a day,
 empty files, empty folders (deepest first); system and Laserdot folders are skipped. Big & old is a search
 (`fsize:>N before:Ny`), so it is instant. Everything goes to the Trash after a preview, with Undo.
+
+## 31. Progress and drive health (0.1.14)
+
+From the critique ("waiting is opaque"; "a health line per drive"). Decided: indexing shows a percentage and a time
+left (from the rate since it started); right-click a drive ▸ About This Drive shows space, format, state, files
+indexed, index size and place, and when it was last checked; when the drive list has not come back for 12 seconds
+the bottom bar says a drive isn't answering. (Duplicate and junk scans still show a spinner: the engine does not
+report their progress yet.)

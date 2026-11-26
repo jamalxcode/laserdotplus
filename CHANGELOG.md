@@ -2,6 +2,15 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.14
+
+- **Progress you can read.** Indexing shows how far along it is and roughly how long is left
+  ("Indexing Home · 40% · about 3 min left").
+- **About This Drive** (right-click a drive): how full it is, its format, its state, how many files are indexed, the
+  size of its index and where it is kept, and when its files were last checked.
+- **A drive that stops answering is named.** If the drives don't answer for a while (asleep, a bad cable), the bottom
+  bar says so in orange, and the window keeps working.
+
 ## 0.1.13
 
 - **Clean Up.** Tools ▸ Find Duplicates (⇧⌘D), **Clean Up Junk** (⇧⌘J) and **Big & Old Files** (⇧⌘B) open one screen

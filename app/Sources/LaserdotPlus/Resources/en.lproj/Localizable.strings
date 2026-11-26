@@ -317,3 +317,17 @@
 "cleanup.chosen" = "%@ chosen · %@";
 "cleanup.trash" = "Move %@ to Trash (%@)";
 "cleanup.confirm" = "Move %@ to the Trash, freeing %@?";
+"status.indexingPct" = "Indexing %@ · %d%%";
+"status.left" = "about %@ left";
+"drive.notAnswering" = "A drive isn't answering";
+"drive.notAnswering.help" = "Laserdot+ asked for the plugged-in drives and is still waiting. A drive may be asleep, busy or badly connected; the window keeps working. If it lasts, eject it and plug it in again.";
+"drive.about" = "About This Drive…";
+"drive.info.space" = "%@ used of %@ · %@ free";
+"drive.info.format" = "Format: %@";
+"drive.info.state" = "Now: %@";
+"drive.info.files" = "%@ indexed";
+"drive.info.indexOn" = "Its index: %@, kept on the drive itself";
+"drive.info.indexMac" = "Its index: %@, kept on this Mac until the drive leaves (the drive is read-only)";
+"drive.info.checked" = "Files last checked: %@";
+"drive.info.readOnly" = "Read-only: Laserdot+ can't change files on it.";
+"drive.info.encrypted" = "Its index is encrypted.";

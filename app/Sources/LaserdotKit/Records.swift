@@ -217,6 +217,10 @@ public struct Drive: Hashable, Sendable {
     public var indexBytes: UInt64
     /// A first index is running now (it can be stopped and continued).
     public var indexing: Bool = false
+    /// "apfs", "exfat", "msdos"…
+    public var fsType: String = ""
+    /// When its files were last checked against the index (Unix seconds).
+    public var lastScan: Int64? = nil
 }
 
 /// What indexing a drive will take, for the prompt (spec §9.3).

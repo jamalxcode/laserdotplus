@@ -10,7 +10,8 @@ extension Engine {
             Drive(
                 id: d.id, name: d.name, mount: d.mount, state: d.state.state, detail: d.state.detail, readOnly: d.readOnly,
                 encrypted: d.encrypted, onDrive: d.onDrive, complete: d.complete, entries: d.entries,
-                totalBytes: d.totalBytes, freeBytes: d.freeBytes, indexBytes: d.indexBytes, indexing: d.indexing)
+                totalBytes: d.totalBytes, freeBytes: d.freeBytes, indexBytes: d.indexBytes, indexing: d.indexing,
+                fsType: d.fsType, lastScan: d.lastScan)
         }
     }
 

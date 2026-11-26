@@ -89,3 +89,11 @@ func kindText(_ kind: String) -> String {
 extension Hit: Identifiable {
     public var id: String { path }
 }
+
+/// "3 min", "1 h 20 min", "40 s".
+func durationText(_ seconds: Double) -> String {
+    let s = Int(seconds.rounded())
+    if s < 60 { return "\(s) s" }
+    if s < 3600 { return "\(s / 60) min" }
+    return "\(s / 3600) h \(s % 3600 / 60) min"
+}

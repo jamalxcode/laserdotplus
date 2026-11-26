@@ -114,3 +114,6 @@
 - **Clean Up** (`Cleanup.swift`): tabs Duplicates (`DupesModel`), Junk (`JunkModel` → engine `junk` op →
   `core.FindJunk`, a walk of the drive's mount / this Mac's roots / every place) and Big & old (`BigOldModel`, a search
   `fsize:>… before:…y -kind:folder`). Chosen files go through `trashPaths` (Trash, undoable) after an alert.
+- **Progress and drive health:** `LibraryModel.indexingText` (percent from the engine's done/total, time left from
+  the rate since the run began); `DrivesModel.showInfo` (About This Drive); `DrivesModel.notAnswering` when a drives
+  request has been out for 12 s.
