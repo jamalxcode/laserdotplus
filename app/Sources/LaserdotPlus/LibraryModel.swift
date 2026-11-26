@@ -430,6 +430,17 @@ final class LibraryModel: ObservableObject {
 
     var selectedHits: [Hit] { results.filter { selection.contains($0.path) } }
 
+    /// Select one file and make sure its details are (being) read — even
+    /// when it was already the selection but its details are another file's
+    /// (What Is This? then showed no suggested name).
+    func selectOne(_ path: String) {
+        if selection == [path] {
+            if details?.path != path { selectionChanged() }
+        } else {
+            selection = [path]
+        }
+    }
+
     private func selectionChanged() {
         guard selection.count == 1, let path = selection.first else {
             details = nil
@@ -596,7 +607,7 @@ final class LibraryModel: ObservableObject {
         sweep = nil
         let first = results.firstIndex { selection.contains($0.path) } ?? 0
         reviewIndex = first
-        selection = [results[first].path]
+        selectOne(results[first].path)
     }
 
     /// "What is this?": review mode over the listed files whose names say
@@ -609,7 +620,7 @@ final class LibraryModel: ObservableObject {
         }
         sweep = unclear
         reviewIndex = 0
-        selection = [first.path]
+        selectOne(first.path)
     }
 
     func reviewStep(_ delta: Int) {
@@ -619,7 +630,7 @@ final class LibraryModel: ObservableObject {
         if sweep == nil, next >= items.count, canLoadMore { loadMore() }
         guard !items.isEmpty else { reviewIndex = nil; return }
         reviewIndex = max(0, min(items.count - 1, next))
-        if let r = reviewIndex { selection = [items[r].path] }
+        if let r = reviewIndex { selectOne(items[r].path) }
     }
 
     /// The name suggested for a file, from its details (once they are read).
@@ -659,7 +670,7 @@ final class LibraryModel: ObservableObject {
         if var s = sweep, let i = reviewIndex {
             s.removeAll { $0.path == h.path }
             sweep = s
-            if s.isEmpty { reviewIndex = nil } else { reviewIndex = min(i, s.count - 1); selection = [s[reviewIndex!].path] }
+            if s.isEmpty { reviewIndex = nil } else { reviewIndex = min(i, s.count - 1); selectOne(s[reviewIndex!].path) }
         }
         schedule(now: true, keepSelection: true)
     }
