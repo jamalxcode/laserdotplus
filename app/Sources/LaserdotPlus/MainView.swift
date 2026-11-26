@@ -24,7 +24,7 @@ struct MainView: View {
         // the controls in the window's toolbar.
         NavigationSplitView {
             Sidebar(model: model, drives: drives, views: model.views)
-                .navigationSplitViewColumnWidth(min: 170, ideal: 220, max: 320)
+                .navigationSplitViewColumnWidth(min: 150, ideal: 190, max: 320)
         } detail: {
             VStack(spacing: 0) {
                 // The top hugs what it shows (no empty band above the files).
@@ -49,7 +49,7 @@ struct MainView: View {
             }
             .inspector(isPresented: inspector) {
                 DetailsView(model: model)
-                    .inspectorColumnWidth(min: 200, ideal: 260, max: 460)
+                    .inspectorColumnWidth(min: 200, ideal: 240, max: 460)
             }
             .toolbar { MainToolbar(model: model) }
         }
