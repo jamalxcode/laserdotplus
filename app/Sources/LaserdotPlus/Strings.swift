@@ -16,8 +16,14 @@ let appResources: Bundle = {
 
 /// The app's words in the user's language (English or Arabic).
 func L(_ key: String) -> String {
-    appResources.localizedString(forKey: key, value: key, table: nil)
+    let s = appResources.localizedString(forKey: key, value: key, table: nil)
+    // English first (the owner): a string not yet in another language shows
+    // in English, never as its key.
+    if s == key, let en = englishResources { return en.localizedString(forKey: key, value: key, table: nil) }
+    return s
 }
+
+private let englishResources: Bundle? = appResources.path(forResource: "en", ofType: "lproj").flatMap(Bundle.init(path:))
 
 /// The language the app's strings use ("en" or "ar").
 let appLang: String = appResources.preferredLocalizations.first ?? "en"

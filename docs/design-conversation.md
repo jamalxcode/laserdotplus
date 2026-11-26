@@ -215,3 +215,9 @@ light selection outline; drives with a fullness bar and state icons; bands with 
 summary bars; the bottom bar with listed size and free space; Duplicates rows that switch as a whole. The self-test
 now also takes a dark-mode screenshot and a second, short run in Arabic (right to left). Found while testing: the
 engine sent `"sections": null` for files with no details, which lost the whole answer in the app — both sides fixed.
+
+## 28. English first (0.1.11)
+
+"Ignore Arabic, focus on English; multi-languages will be done at a later stage." Decided: new strings in English
+only, the Arabic self-test run removed; the existing Arabic strings stay for later (a missing key falls back to
+English).

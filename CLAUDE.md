@@ -71,5 +71,7 @@ and prints screenshots base64 in the job log (`=== SCREENSHOT name.png`); extend
 
 - Work on a branch; fast-forward `main` to a commit whose CI passed (a commit is tested once).
 - Commit as the owner: `git -c user.name="jamal xcode" -c user.email="j.mutawa@gmail.com" commit`.
-- User-facing strings in English and Arabic (`app/Sources/LaserdotPlus/Resources/*.lproj`).
+- User-facing strings in English (`app/Sources/LaserdotPlus/Resources/en.lproj`). The owner: "focus on English,
+  multi languages will be done at a later stage" — new strings need no Arabic for now (the existing `ar.lproj` stays;
+  a missing key there falls back to English).
 - Keep `docs/design.md` and `docs/how-it-works.md` in sync with behaviour.

@@ -184,15 +184,6 @@ jobs:
           for f in "$out"/*.png; do echo "=== SCREENSHOT $(basename "$f")"; base64 -i "$f" | tr -d '\n'; echo; done
           mkdir -p selftest && cp -R "$out"/* selftest/
           python3 app/scripts/check-selftest.py "$out/report.json" /Volumes/LDPlus "$(dirname "$LASERDOT_DB")"
-          # The window in Arabic (right to left): a short second run.
-          ar="$(mktemp -d)/ar"
-          LASERDOT_SELFTEST="$ar" LASERDOT_SELFTEST_FOLDER="$fx" LASERDOT_SELFTEST_QUICK=1 \
-            "app/build/Laserdot+.app/Contents/MacOS/LaserdotPlus" -AppleLanguages '(ar)' > ar.log 2>&1 &
-          arpid=$!
-          for i in $(seq 1 120); do kill -0 "$arpid" 2>/dev/null || break; sleep 1; done
-          kill -9 "$arpid" 2>/dev/null || true
-          test -f "$ar/arabic.png" || { echo "::error::no Arabic screenshot"; cat ar.log; exit 1; }
-          echo "=== SCREENSHOT arabic.png"; base64 -i "$ar/arabic.png" | tr -d '\n'; echo
           hdiutil detach /Volumes/LDPlus -force || true
       - name: Keep the disk image and the screenshots
         if: always()
