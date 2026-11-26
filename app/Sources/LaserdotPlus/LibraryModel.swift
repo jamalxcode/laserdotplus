@@ -75,6 +75,36 @@ final class LibraryModel: ObservableObject {
     private let refineQueue = DispatchQueue(label: "laserdotplus.refine", qos: .userInitiated)
     private let detailsQueue = DispatchQueue(label: "laserdotplus.details", qos: .userInitiated)
     private var statusTimer: Timer?
+    private var goneTimer: Timer?
+    private var checkingGone = false
+
+    /// Files deleted or moved away in Finder leave the list even when the
+    /// drive's file events never arrive (exFAT drives, like the owner's T5
+    /// EVO, can lose them): every few seconds the top of the list is checked
+    /// off the main thread; what is gone is dropped at once, and the engine
+    /// is asked to list those folders again.
+    func dropGone() {
+        guard !checkingGone, !results.isEmpty else { return }
+        checkingGone = true
+        let paths = results.prefix(1500).map(\.path)
+        let engine = self.engine
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let gone = Set(paths.filter { !FileManager.default.fileExists(atPath: $0) })
+            if !gone.isEmpty {
+                Set(gone.map { ($0 as NSString).deletingLastPathComponent }).forEach { engine.touched(folder: $0) }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.checkingGone = false
+                guard !gone.isEmpty else { return }
+                let before = self.results.count
+                self.results.removeAll { gone.contains($0.path) }
+                self.total -= UInt64(min(Int(self.total), before - self.results.count))
+                self.selection.subtract(gone)
+                self.schedule(now: true, keepSelection: true)
+            }
+        }
+    }
 
     init(engine: Engine) {
         self.engine = engine
@@ -93,6 +123,7 @@ final class LibraryModel: ObservableObject {
             }
         }
         statusTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in self?.refreshStatus() }
+        goneTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in self?.dropGone() }
     }
 
     /// This Mac's home folder is indexed on first use (its index stays on

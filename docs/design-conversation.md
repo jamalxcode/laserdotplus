@@ -162,3 +162,10 @@ behind (21 minutes old, after a force quit / update) and the current one, which 
 for ever. Decided: an engine takes an exclusive lock beside the index (`laserdotd.lock`, with its pid) before opening
 anything; an older engine still holding it (one that no longer answers on the socket — a live one is simply used) is
 asked to stop, then stopped.
+
+## 22. Deleted in Finder, still listed (0.1.7)
+
+"I deleted some media files from the Finder that were bad, but Laserdot+ did not refresh to show they are deleted."
+The list follows the engine, which follows macOS file events — and on exFAT drives (the T5 EVO) those can go missing.
+Decided: a safety net in the app — every 4 seconds, off the main thread, the top of the list (1,500 files) is checked;
+files that are gone leave the list at once and the engine is told to list their folders again (`touched`).

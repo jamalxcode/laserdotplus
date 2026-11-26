@@ -83,3 +83,6 @@
   an update, not answering on the socket — gets SIGTERM, then SIGKILL; otherwise it would keep drives' indexes open.
 - **Stopping the engine** (quit, SIGTERM, the shutdown request) finishes what it is writing; if that hangs it leaves
   after 10 seconds anyway (SQLite WAL keeps everything committed), and a second signal leaves at once.
+- **Gone files** (`LibraryModel.dropGone`): every 4 s, off the main thread, the first 1,500 results are checked
+  for existence; missing ones leave the list and their folders are sent to the engine (`touched`), which re-lists
+  them — a safety net for drives whose file events go missing (exFAT).
