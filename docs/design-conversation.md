@@ -141,3 +141,9 @@ groups with something to choose lead each band, and bands with nothing to choose
 (`RefineLogic.arranged`). A drive whose index could not be opened now says so ("Couldn't open its index · click to try
 again", the engine's reason in the tooltip) instead of showing the hourglass for ever; "opening" is shown only while
 the engine is really opening it.
+
+## 19. An update not found by a copy left open (0.1.7)
+
+"I have Laserdot+ 0.1.5 running on another machine, no update detected." The daily check ran only at launch, so a copy
+left open never looked again. Decided: it also looks once a day while it runs (an hourly timer checks whether a day
+has passed); still once a day at most, still only GitHub, still nothing sent about the user.

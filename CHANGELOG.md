@@ -2,6 +2,11 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.7
+
+- **Updates are found even if Laserdot+ stays open.** The daily look for a new version used to happen only when
+  Laserdot+ started; a copy left open for days never saw one. It now looks once a day while it runs, too.
+
 ## 0.1.6
 
 - **Choices you can't pick shrink.** With More choices open, a choice that gives no files right now is small grey

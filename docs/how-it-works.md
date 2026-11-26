@@ -48,7 +48,7 @@
 - **Quitting:** `applicationShouldTerminate` hides the window, asks the engine to stop on a background thread
   (`Engine.shutdown(waitForExit: false)`: the stop request, 2 s at most; no wait for the engine to exit — it saves
   on its own; one that does not answer gets SIGTERM) and then quits. Nothing waits on the main thread.
-- **Updates:** Laserdot+ ▸ Check for Updates… (and once a day at launch, on by default) runs the bundled
+- **Updates:** Laserdot+ ▸ Check for Updates… (and once a day — at launch or while it stays open, on by default) runs the bundled
   `laserdotplus-update-check`, the only networked code: a HEAD request to github.com's latest-release address, whose
   redirect names the version. A newer version offers **Install and Relaunch**: the helper (`--install v --app path
   --pid n`) downloads `LaserdotPlus-v.dmg` from the release (redirects followed to `*.githubusercontent.com` only),

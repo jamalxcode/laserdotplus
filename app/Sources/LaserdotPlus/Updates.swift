@@ -20,7 +20,14 @@ final class Updates: ObservableObject {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
     }
 
-    /// At launch: once a day at most, only if turned on.
+    /// At launch, then every hour while Laserdot+ stays open (the owner: a
+    /// copy left running saw no update): once a day at most, only if on.
+    private var timer: Timer?
+    func startChecking() {
+        checkIfDue()
+        timer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in self?.checkIfDue() }
+    }
+
     func checkIfDue() {
         guard daily, !SelfTest.active else { return }
         let last = UserDefaults.standard.double(forKey: "updates.last")

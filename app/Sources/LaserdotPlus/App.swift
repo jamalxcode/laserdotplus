@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(forName: .updateProgress, object: nil, queue: .main) { [weak self] n in
             self?.model.notice = n.object as? String
         }
-        Updates.shared.checkIfDue()
+        Updates.shared.startChecking()
         if let out = SelfTest.outDir {
             selfTest = SelfTestRunner(model: model, drives: drives, out: out)
             selfTest?.run()
