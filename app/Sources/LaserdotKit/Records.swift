@@ -185,6 +185,8 @@ public struct CleanupPreview: Sendable {
     public var files: Int
     public var bytes: UInt64
     public var skipped: [String]
+    /// The files that would move (each checked unchanged and not the kept copy).
+    public var paths: [String] = []
 }
 
 public struct CleanupOutcome: Sendable {

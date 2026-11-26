@@ -92,8 +92,11 @@
   owner's Mac.
 - **Find Duplicates** (`Duplicates.swift`): `engine.findDuplicates(scope: place token, exactOnly: !similar)` on a
   connection of its own; groups show best first with the engine's keep recommendation (at least one copy always kept);
-  Move Copies to Trash runs `cleanupPreview` (dry run, an alert with count and bytes) then `cleanup` (to the Trash);
-  moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+  Move Copies to Trash runs `cleanupPreview` (dry run, an alert with count and bytes), runs it again after the
+  answer (each copy still unchanged, not the kept one), then `trashInBackground` moves exactly those with macOS's own
+  Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
+  ⌘Z brings them back (0.1.16; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
+  did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
 - **The window (0.1.10):** `TopArea` = search row, `PlacesBar` (a plain strip), and `ChoiceBands` in a scroll view
   whose height follows the bands' measured height (max 260); then the files and `DetailsView` side by side, with
   Review/Duplicates overlaid on both. Nothing selected → `PlaceSummary` (engine counts only). `friendlyPath` /

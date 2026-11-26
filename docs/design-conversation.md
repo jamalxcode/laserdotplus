@@ -253,3 +253,12 @@ are decoded for frames when "similar" is on, a drive's fingerprints are never ke
 showed only a spinner although the engine reported each step. Decided: the engine publishes the groups found so far
 (`dupes_found`): likely copies right after the sample step, confirmed groups after each pass; the panel shows them
 live with the step, files done of total, the file being read, and Stop. Trash waits for confirmation.
+
+## 33. Duplicates moved to the Trash didn't show in the Trash (0.1.16)
+
+The owner: "i moved the duplicates to trash but nothing showed up in the macbook pro trash". Every other Trash action
+already used macOS's own call (`FileManager.trashItem`); duplicates went through the engine, which renamed each copy
+into the drive's `.Trashes/<uid>` itself — the right place, but the Finder does not always notice such a rename, and
+Put Back can't work. Decided: the engine still checks each copy (unchanged, not the kept one) right before; the app
+then moves exactly those with macOS's call, off the main thread, undoable with ⌘Z. Copies already moved by 0.1.15 are
+in `/Volumes/<drive>/.Trashes/<uid>`.

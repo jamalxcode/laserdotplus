@@ -2,6 +2,13 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.16
+
+- **Duplicates moved to the Trash now show in the Trash.** They go through macOS's own Trash, as Finder does, so they
+  appear in the Dock's Trash (a drive's under its name), Put Back works, and Edit ▸ Undo (⌘Z) brings them back.
+  Copies moved by 0.1.15 or earlier are in the drive's hidden `.Trashes` folder: in Finder, Go ▸ Go to Folder… (⇧⌘G)
+  and type `/Volumes/<drive name>/.Trashes`, then drag them to the Trash (or back).
+
 ## 0.1.15
 
 - **Duplicates show as they are found.** Files of the same size whose start, middle and end match appear within

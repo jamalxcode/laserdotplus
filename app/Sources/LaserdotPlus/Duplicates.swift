@@ -120,8 +120,11 @@ final class DupesModel: ObservableObject {
         }
     }
 
-    /// The copies not kept go to the Trash, after a preview.
-    func moveToTrash(then done: @escaping () -> Void) {
+    /// The copies not kept go to the Trash, after a preview. The engine
+    /// checks each one (unchanged, not the kept copy) again right before;
+    /// macOS's own Trash call then moves them, as Finder does, so they show
+    /// in the Trash, Put Back works and ⌘Z brings them back.
+    func moveToTrash(model: LibraryModel, undo: UndoManager?, then done: @escaping () -> Void) {
         let sets = groups.map { g in
             CleanupSet(keep: g.files.filter { keep.contains($0.path) }, remove: g.files.filter { !keep.contains($0.path) })
         }.filter { !$0.remove.isEmpty }
@@ -145,21 +148,26 @@ final class DupesModel: ObservableObject {
                 alert.addButton(withTitle: L("action.cancel"))
                 guard alert.runFront() == .alertFirstButtonReturn else { self.phase = .done; return }
                 DispatchQueue.global(qos: .userInitiated).async {
-                    let outcome = Result { try engine.cleanup(sets: sets, folder: nil) }
+                    // Checked again now: a file may have changed while the question was up.
+                    let fresh = Result { try engine.cleanupPreview(sets: sets, folder: nil) }
                     DispatchQueue.main.async {
-                        switch outcome {
-                        case let .success(o):
-                            let gone = Set(o.movedPaths)
+                        guard case let .success(f) = fresh else {
+                            if case let .failure(e) = fresh { self.problem = (e as? LaserdotError)?.message ?? e.localizedDescription }
+                            self.phase = .done
+                            return
+                        }
+                        let sizes = Dictionary(sets.flatMap(\.remove).map { ($0.path, $0.size) }) { a, _ in a }
+                        model.trashInBackground(f.paths, undo: undo) { gone, failed in
                             self.groups = self.groups.map { g in
                                 DuplicateGroup(kind: g.kind, files: g.files.filter { !gone.contains($0.path) }, reclaimable: 0)
                             }.filter { $0.files.count > 1 }
-                            self.summary = String(format: L("dupes.done"), o.moved, bytesText(o.bytes))
-                                + (o.skipped.isEmpty ? "" : " " + String(format: L("dupes.confirm.skipped"), o.skipped.count))
-                        case let .failure(e):
-                            self.problem = (e as? LaserdotError)?.message ?? e.localizedDescription
+                            let bytes = gone.reduce(UInt64(0)) { $0 + (sizes[$1] ?? 0) }
+                            self.summary = String(format: L("dupes.done"), gone.count, bytesText(bytes))
+                                + (f.skipped.isEmpty ? "" : " " + String(format: L("dupes.confirm.skipped"), f.skipped.count))
+                                + (failed == 0 ? "" : " " + String(format: L("dupes.failed"), failed))
+                            self.phase = .done
+                            done()
                         }
-                        self.phase = .done
-                        done()
                     }
                 }
             }
@@ -171,6 +179,7 @@ final class DupesModel: ObservableObject {
 struct DuplicatesView: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var dupes: DupesModel
+    @Environment(\.undoManager) private var undo
 
     var body: some View {
         VStack(spacing: 0) {
@@ -197,7 +206,7 @@ struct DuplicatesView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button(String(format: L("dupes.trashN"), countText(dupes.toRemove.count, "copy"), bytesText(dupes.bytesToFree))) {
-                        dupes.moveToTrash { model.schedule(now: true, keepSelection: true) }
+                        dupes.moveToTrash(model: model, undo: undo) { model.schedule(now: true, keepSelection: true) }
                     }
                     .keyboardShortcut(.defaultAction)
                     .disabled(dupes.toRemove.isEmpty || dupes.phase != .done)

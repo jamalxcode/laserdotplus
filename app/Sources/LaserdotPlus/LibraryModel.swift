@@ -557,6 +557,39 @@ final class LibraryModel: ObservableObject {
         tellEngine(moved.map(\.from))
     }
 
+    /// Many files to the Trash (duplicates) off the main thread — a drive
+    /// may be slow — with macOS's own Trash call, undoable like `trashPaths`.
+    /// `done` gets the paths that went and how many could not.
+    func trashInBackground(_ paths: [String], undo: UndoManager?, done: @escaping (Set<String>, Int) -> Void) {
+        guard !paths.isEmpty else { return done([], 0) }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var moved: [(from: URL, to: URL)] = []
+            var failed = 0
+            for path in paths {
+                let url = URL(fileURLWithPath: path)
+                var out: NSURL?
+                if (try? FileManager.default.trashItem(at: url, resultingItemURL: &out)) != nil, let to = out as URL? {
+                    moved.append((url, to))
+                } else {
+                    failed += 1
+                }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                let gone = Set(moved.map(\.from.path))
+                self.results.removeAll { gone.contains($0.path) }
+                self.selection.subtract(gone)
+                self.total -= UInt64(min(UInt64(gone.count), self.total))
+                if !moved.isEmpty {
+                    undo?.registerUndo(withTarget: self) { model in model.restore(moved, undo: undo) }
+                    undo?.setActionName(L("action.trash"))
+                }
+                self.tellEngine(moved.map(\.from))
+                done(gone, failed)
+            }
+        }
+    }
+
     private func restore(_ moved: [(from: URL, to: URL)], undo: UndoManager?) {
         var back: [(from: URL, to: URL)] = []
         for m in moved where (try? FileManager.default.moveItem(at: m.to, to: m.from)) != nil {

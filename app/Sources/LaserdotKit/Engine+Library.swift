@@ -256,6 +256,7 @@ extension Engine {
             out.files += p.moves.count
             out.bytes += p.bytes
             out.skipped += p.skipped
+            out.paths += p.moves.map(\.from)
             done += batch.reduce(0) { $0 + $1.remove.count }
             progress?(done, total)
         }

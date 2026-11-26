@@ -341,3 +341,4 @@
 "dupes.soFar" = "%@ found so far";
 "dupes.stop" = "Stop";
 "dupes.stop.help" = "Stop now: what has been found so far stays, and you can act on it.";
+"dupes.failed" = "%d could not be moved.";
