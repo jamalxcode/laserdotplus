@@ -405,3 +405,11 @@
 "views.moveRight" = "Move Right";
 "cleanup.junk.progress" = "%llu folders looked through";
 "cleanup.junk.stop.help" = "Stop now: what has been found so far stays, and you can put it in the Trash.";
+"sidebar.places" = "Places";
+"sidebar.drives" = "Drives";
+"sidebar.saved" = "Saved";
+"views.moveUp" = "Move Up";
+"views.moveDown" = "Move Down";
+"drive.moveHere" = "Move %@ to “%@”?";
+"drive.moveHere.help" = "They are moved to the top of the drive. Edit ▸ Undo puts them back.";
+"drive.moveHere.button" = "Move";

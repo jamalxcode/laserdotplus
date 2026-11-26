@@ -56,7 +56,21 @@ final class LibraryModel: ObservableObject {
     /// Where duplicates are looked for: the current place.
     var dupesScope: String { place.token ?? "" }
 
-    @Published var place: Place = .everywhere { didSet { if place != oldValue { filters = [:]; schedule(now: true) } } }
+    /// Remembered between launches only when it is Everything or This Mac: a
+    /// drive's name is not kept on this Mac (privacy).
+    @Published var place: Place = UserDefaults.standard.string(forKey: "place") == "thisMac" ? .thisMac : .everywhere {
+        didSet {
+            if place != oldValue { filters = [:]; schedule(now: true) }
+            switch place {
+            case .thisMac: UserDefaults.standard.set("thisMac", forKey: "place")
+            default: UserDefaults.standard.set("everywhere", forKey: "place")
+            }
+        }
+    }
+    /// The inspector (the file's preview and details) is shown; remembered.
+    @Published var showInspector = (UserDefaults.standard.object(forKey: "showInspector") as? Bool) ?? true {
+        didSet { UserDefaults.standard.set(showInspector, forKey: "showInspector") }
+    }
     /// Chosen filter values, by group (several in a group: any of them).
     @Published private(set) var filters: [String: [String]] = [:]
     /// Values left out (⌥-click): each is a "-" word.

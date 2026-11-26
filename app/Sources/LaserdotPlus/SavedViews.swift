@@ -66,6 +66,19 @@ final class SavedViews: ObservableObject {
         write()
     }
 
+    static func askName(_ title: String, current: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.stringValue = current
+        alert.accessoryView = field
+        alert.addButton(withTitle: L("views.rename"))
+        alert.addButton(withTitle: L("action.cancel"))
+        alert.window.initialFirstResponder = field
+        guard alert.runFront() == .alertFirstButtonReturn else { return nil }
+        return field.stringValue
+    }
+
     private func write() {
         guard let url = file else { return }
         let data = try? JSONEncoder().encode(views)
@@ -108,51 +121,4 @@ extension LibraryModel {
         guard !name.isEmpty else { return }
         views.save(currentView(named: name))
     }
-}
-
-/// The place's saved views, as chips after the places.
-struct SavedViewsStrip: View {
-    @ObservedObject var model: LibraryModel
-    @ObservedObject var views: SavedViews
-
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(views.views, id: \.name) { v in
-                Button { model.apply(v) } label: { Label(v.name, systemImage: "bookmark") .font(.callout) }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .fixedSize()
-                    .contextMenu {
-                        Button(L("views.rename")) {
-                            if let n = Self.askName(L("views.rename.title"), current: v.name) { views.rename(v.name, to: n) }
-                        }
-                        Button(L("views.moveLeft")) { views.move(v.name, by: -1) }.disabled(views.views.first == v)
-                        Button(L("views.moveRight")) { views.move(v.name, by: 1) }.disabled(views.views.last == v)
-                        Divider()
-                        Button(L("views.remove")) { views.remove(v.name) }
-                    }
-            }
-            Button { model.saveViewPrompt() } label: { Image(systemName: "bookmark.badge.plus") }
-                .buttonStyle(.borderless)
-                .help(L("views.save.help"))
-                .disabled(model.text.isEmpty && model.pills.allSatisfy(\.isPlace))
-        }
-        .onAppear { reload() }
-        .onChange(of: model.place) { _, _ in reload() }
-    }
-
-    static func askName(_ title: String, current: String) -> String? {
-        let alert = NSAlert()
-        alert.messageText = title
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
-        field.stringValue = current
-        alert.accessoryView = field
-        alert.addButton(withTitle: L("views.rename"))
-        alert.addButton(withTitle: L("action.cancel"))
-        alert.window.initialFirstResponder = field
-        guard alert.runFront() == .alertFirstButtonReturn else { return nil }
-        return field.stringValue
-    }
-
-    private func reload() { views.load(SavedViews.file(for: model.place, dbPath: model.engine.dbPath)) }
 }

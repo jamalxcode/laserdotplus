@@ -12,50 +12,110 @@ struct MainView: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
 
-    var body: some View {
-        VStack(spacing: 0) {
-            // The top hugs what it shows (no empty band above the files); the
-            // files and the right pane fill the rest. HSplitView: a plain
-            // AppKit split view (resizable, visible to the self-test's captures).
-            TopArea(model: model, drives: drives)
-            Divider()
-            HSplitView {
-                FilesArea(model: model, drives: drives)
-                    .frame(minWidth: 420, idealWidth: 900, maxWidth: .infinity)
-                DetailsView(model: model)
-                    .frame(minWidth: 200, idealWidth: 250, maxWidth: 460)
-            }
-            .frame(minHeight: 240)
-            // Review and Duplicates take the whole width (they were squeezed
-            // into the files' half, beside an empty pane).
-            .overlay {
-                if model.reviewIndex != nil {
-                    ReviewView(model: model)
-                } else if model.showDupes {
-                    CleanupView(model: model, drives: drives, junk: model.junk, big: model.bigOld)
-                }
-            }
-            if !model.tray.isEmpty {
-                Divider()
-                TrayBar(model: model)
-            }
-            Divider()
-            BottomBar(model: model, drives: drives)
-        }
-        .navigationTitle(title)
+    /// The inspector shows unless Review or Clean Up takes the window.
+    private var inspector: Binding<Bool> {
+        Binding(get: { model.showInspector && model.reviewIndex == nil && !model.showDupes },
+                set: { model.showInspector = $0 })
     }
 
-    private var title: String {
-        switch model.place {
-        case .everywhere: return "Laserdot+"
-        case .thisMac: return "Laserdot+ — " + L("place.thisMac")
-        case let .drive(name): return "Laserdot+ — " + name
+    var body: some View {
+        // Finder's layout (the owner chose it): the places in a sidebar, the
+        // files in the middle, the file's preview and details in an inspector,
+        // the controls in the window's toolbar.
+        NavigationSplitView {
+            Sidebar(model: model, drives: drives, views: model.views)
+                .navigationSplitViewColumnWidth(min: 170, ideal: 220, max: 320)
+        } detail: {
+            VStack(spacing: 0) {
+                // The top hugs what it shows (no empty band above the files).
+                TopArea(model: model, drives: drives)
+                Divider()
+                FilesArea(model: model, drives: drives)
+                    .frame(minWidth: 420, minHeight: 240)
+                    // Review and Clean Up take the whole middle.
+                    .overlay {
+                        if model.reviewIndex != nil {
+                            ReviewView(model: model)
+                        } else if model.showDupes {
+                            CleanupView(model: model, drives: drives, junk: model.junk, big: model.bigOld)
+                        }
+                    }
+                if !model.tray.isEmpty {
+                    Divider()
+                    TrayBar(model: model)
+                }
+                Divider()
+                BottomBar(model: model, drives: drives)
+            }
+            .inspector(isPresented: inspector) {
+                DetailsView(model: model)
+                    .inspectorColumnWidth(min: 200, ideal: 260, max: 460)
+            }
+            .toolbar { MainToolbar(model: model) }
+        }
+        .navigationTitle("Laserdot+")
+        .navigationSubtitle(subtitle)
+    }
+
+    /// Where you are and how much is there, under the title (as in Finder).
+    private var subtitle: String {
+        "\(model.placeTitle) — \(countText(Int(model.total), "file"))"
+    }
+}
+
+/// The window's toolbar: how the files are shown, their order, the tools, and
+/// the inspector.
+struct MainToolbar: ToolbarContent {
+    @ObservedObject var model: LibraryModel
+
+    var body: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            Picker(L("menu.view"), selection: $model.viewMode) {
+                Label(L("view.list"), systemImage: "list.bullet").tag(ViewMode.list)
+                Label(L("view.grid"), systemImage: "square.grid.2x2").tag(ViewMode.grid)
+                Label(L("view.sheet"), systemImage: "film.stack").tag(ViewMode.sheet)
+                Label(L("view.timeline"), systemImage: "calendar").tag(ViewMode.timeline)
+            }
+            .pickerStyle(.segmented)
+            .help(L("menu.view"))
+            if model.viewMode != .list {
+                Slider(value: $model.tileSize, in: 96...320)
+                    .frame(width: 80)
+                    .help(L("view.size"))
+            }
+            Menu {
+                Picker(L("sort.by"), selection: $model.sort) {
+                    ForEach([SortKey.modified, .created, .name, .size, .kind, .relevance], id: \.self) { k in
+                        Text(L("sort." + k.rawValue)).tag(k)
+                    }
+                }
+                Toggle(L("sort.reverse"), isOn: $model.reverse)
+            } label: {
+                Label(L("sort.by"), systemImage: "arrow.up.arrow.down")
+            }
+            .help(L("sort.by"))
+            Menu {
+                Button { model.startSweep() } label: { Label(L("sweep.menu"), systemImage: "questionmark.square.dashed") }
+                    .disabled(model.results.isEmpty)
+                Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
+                    .disabled(model.results.isEmpty)
+                Divider()
+                Button { model.openCleanup(.duplicates) } label: { Label(L("dupes.menu"), systemImage: "square.on.square") }
+                Button { model.openCleanup(.junk) } label: { Label(L("cleanup.junk.menu"), systemImage: "trash.slash") }
+                Button { model.openCleanup(.bigOld) } label: { Label(L("cleanup.bigOld.menu"), systemImage: "externaldrive.badge.timemachine") }
+                Button { model.openCleanup(.space) } label: { Label(L("space.menu"), systemImage: "chart.bar.xaxis") }
+            } label: {
+                Label(L("tools.title"), systemImage: "wand.and.stars")
+            }
+            .help(L("tools.help"))
+            Button { model.showInspector.toggle() } label: { Label(L("inspector.toggle"), systemImage: "sidebar.right") }
+                .help(L("inspector.toggle"))
         }
     }
 }
 
-/// The top: the search box and the view controls on one line, then the
-/// places and the choice bands (scrolling when the area is made small).
+/// The top: the search box, then the choice bands (scrolling when the area is
+/// made small). The places are in the sidebar, the controls in the toolbar.
 struct TopArea: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
@@ -65,66 +125,10 @@ struct TopArea: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                SearchBox(model: model, drives: drives)
-                    .frame(maxWidth: .infinity)
-                Picker(L("menu.view"), selection: $model.viewMode) {
-                    Image(systemName: "list.bullet").help(L("view.list")).tag(ViewMode.list)
-                    Image(systemName: "square.grid.2x2").help(L("view.grid")).tag(ViewMode.grid)
-                    Image(systemName: "film.stack").help(L("view.sheet")).tag(ViewMode.sheet)
-                    Image(systemName: "calendar").help(L("view.timeline")).tag(ViewMode.timeline)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-                if model.viewMode != .list {
-                    Slider(value: $model.tileSize, in: 96...320)
-                        .frame(width: 80)
-                        .help(L("view.size"))
-                }
-                Menu {
-                    Picker(L("sort.by"), selection: $model.sort) {
-                        ForEach([SortKey.modified, .created, .name, .size, .kind, .relevance], id: \.self) { k in
-                            Text(L("sort." + k.rawValue)).tag(k)
-                        }
-                    }
-                    Toggle(L("sort.reverse"), isOn: $model.reverse)
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                .help(L("sort.by"))
-                // The modes, apart from the view controls.
-                Divider().frame(height: 18).padding(.horizontal, 2)
-                // The tools, in one menu (the row was crowded and the search
-                // box shrank): each with its shortcut.
-                Menu {
-                    Button { model.startSweep() } label: { Label(L("sweep.menu"), systemImage: "questionmark.square.dashed") }
-                        .keyboardShortcut("e")
-                        .disabled(model.results.isEmpty)
-                    Button { model.startReview() } label: { Label(L("review.start"), systemImage: "rectangle.stack.badge.play") }
-                        .keyboardShortcut("r")
-                        .disabled(model.results.isEmpty)
-                    Divider()
-                    Button { model.openCleanup(.duplicates) } label: { Label(L("dupes.menu"), systemImage: "square.on.square") }
-                        .keyboardShortcut("d", modifiers: [.command, .shift])
-                    Button { model.openCleanup(.junk) } label: { Label(L("cleanup.junk.menu"), systemImage: "trash.slash") }
-                        .keyboardShortcut("j", modifiers: [.command, .shift])
-                    Button { model.openCleanup(.bigOld) } label: { Label(L("cleanup.bigOld.menu"), systemImage: "externaldrive.badge.timemachine") }
-                        .keyboardShortcut("b", modifiers: [.command, .shift])
-                    Button { model.openCleanup(.space) } label: { Label(L("space.menu"), systemImage: "chart.bar.xaxis") }
-                        .keyboardShortcut("s", modifiers: [.command, .shift])
-                } label: {
-                    Label(L("tools.title"), systemImage: "wand.and.stars")
-                }
-                .fixedSize()
-                .help(L("tools.help"))
-            }
+            SearchBox(model: model, drives: drives)
+                .frame(maxWidth: .infinity)
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            // Where to look: navigation, not a filter — a strip of its own.
-            PlacesBar(model: model, drives: drives)
             ScrollView(.vertical) {
                 ChoiceBands(model: model)
                     .background(GeometryReader { g in
@@ -182,16 +186,15 @@ struct FilesArea: View {
         Group {
             if model.results.isEmpty, case let .drive(name) = model.place, let wait = drives.waiting(named: name) {
                 // A chosen drive that is not ready yet: say what it waits for.
-                VStack(spacing: 8) {
-                    Image(systemName: "hourglass").font(.largeTitle).foregroundStyle(.secondary)
-                    Text(name).font(.headline)
-                    Text(wait).foregroundStyle(.secondary)
-                    Text(L("drive.waiting.help")).font(.caption).foregroundStyle(.secondary)
+                ContentUnavailableView {
+                    Label(name, systemImage: "hourglass")
+                } description: {
+                    Text(wait + "\n" + L("drive.waiting.help"))
                 }
             } else if model.results.isEmpty && !model.searching {
-                VStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass").font(.largeTitle).foregroundStyle(.secondary)
-                    Text(model.problem ?? L("results.none")).foregroundStyle(.secondary)
+                ContentUnavailableView {
+                    Label(model.problem ?? L("results.none"), systemImage: "magnifyingglass")
+                } actions: {
                     if model.hasFilters {
                         Button(L("filters.clear")) { model.clearFilters() }
                     }
@@ -211,6 +214,15 @@ struct FilesArea: View {
             return .handled
         }
         .onDeleteCommand { model.trash(model.selectedHits, undo: undo) }
+        // A folder dropped on the window (from Finder) is indexed.
+        .dropDestination(for: URL.self) { urls, _ in
+            let folders = urls.filter { u in
+                var dir: ObjCBool = false
+                return u.isFileURL && FileManager.default.fileExists(atPath: u.path, isDirectory: &dir) && dir.boolValue
+            }
+            folders.forEach { model.index(folder: $0.path) }
+            return !folders.isEmpty
+        }
     }
 }
 
