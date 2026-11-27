@@ -43,8 +43,12 @@ struct ChoiceBands: View {
                                         .fixedSize()
                                     // What can be chosen, then the rest folded into
                                     // a small "+N" (click to see them).
-                                    let live = g.options.filter(Self.isLive)
-                                    let quiet = g.options.filter { !Self.isLive($0) }
+                                    // At most 40 chips a group (a drive with thousands
+                                    // of folders drew them all and stalled the window);
+                                    // the rest fold into "+N" with the quiet ones.
+                                    let allLive = g.options.filter(Self.isLive)
+                                    let live = Array(allLive.prefix(40))
+                                    let quiet = Array(allLive.dropFirst(40)) + g.options.filter { !Self.isLive($0) }
                                     ForEach(live, id: \.token) { o in
                                         chip(o, in: g).fixedSize()
                                     }
