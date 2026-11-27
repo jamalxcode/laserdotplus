@@ -395,7 +395,7 @@ final class SelfTestRunner {
                     self.model.text = "clip"
                     self.waitFor(30, { self.model.total >= 40_000 && !self.model.searching }) { _ in
                         self.model.selectAll()
-                        self.after(5) {
+                        self.waitFor(30, { self.model.selection.count >= 40_000 }) { _ in
                             self.report["scale_selected"] = self.model.selection.count
                             self.model.junk.scan(roots: [dir.path])
                             self.waitFor(120, { self.model.junk.phase == .done }) { _ in

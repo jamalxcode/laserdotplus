@@ -434,8 +434,12 @@ final class LibraryModel: ObservableObject {
                 offset += r.hits.count
             }
             DispatchQueue.main.async {
-                guard let self, gen == self.generation else { return }
-                self.results += more
+                // Still the same search (a refresh in between must not undo
+                // Select All — the 40,000-file self-test caught it).
+                guard let self, q == self.effectiveQuery else { return }
+                _ = gen
+                let have = Set(self.results.map(\.path))
+                self.results += more.filter { !have.contains($0.path) }
                 self.selection = Set(self.results.map(\.path))
                 self.notice = nil
             }
@@ -483,8 +487,12 @@ final class LibraryModel: ObservableObject {
                         // selected, so its details and suggested name still come.
                         self.selectOne(self.reviewItems[i].path)
                     } else if keepSelection {
-                        let paths = Set(r.hits.map(\.path))
-                        self.selection = self.selection.filter { paths.contains($0) }
+                        // Only files known to be gone leave the selection: with
+                        // more results than this page, the rest are kept.
+                        if UInt64(r.hits.count) >= r.total {
+                            let paths = Set(r.hits.map(\.path))
+                            self.selection = self.selection.filter { paths.contains($0) }
+                        }
                     } else {
                         self.selection = []
                     }

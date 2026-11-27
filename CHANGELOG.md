@@ -14,6 +14,8 @@ What's new in each version, in plain words. A new `## x.y.z` section is released
 - **Clean Up sits in the files' place**, like another place, with the inspector beside it: click a file's name in a
   list to see it there (the box still ticks it).
 - **Calmer with busy drives:** the engine now says when the index changed, instead of being asked every 3 seconds.
+- **Select All works on big lists:** a refresh in between no longer cancels it, and no longer shrinks a large selection
+  to the files loaded so far (found by the new large-folder test).
 - Tested at scale: every build now indexes 40,000 files, searches, selects all and runs Junk, and fails if the window
   ever stalls for 2 seconds or memory passes 1.5 GB.
 
