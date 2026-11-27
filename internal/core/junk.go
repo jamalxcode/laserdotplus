@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RoaringBitmap/roaring/v2"
+	"github.com/jamalxcode/laserdotplus/internal/index"
 	"github.com/jamalxcode/laserdotplus/internal/scan"
 )
 
@@ -189,3 +191,52 @@ func (ld *Laserdot) JunkFound(from int) JunkProgress {
 
 // StopJunk ends the running walk early; it returns what it found.
 func (ld *Laserdot) StopJunk() { ld.junkStop.Store(true) }
+
+// JunkIndexed: the junk the index already knows — empty files, downloads left
+// unfinished for a day, empty folders (a folder holding only system files
+// counts: those are never indexed) — under root ("" every place). Instant: no
+// disk is read. The walk (Junk) adds the system files (.DS_Store, ._…).
+func (ld *Laserdot) JunkIndexed(root string) []JunkItem {
+	ld.mu.RLock()
+	defer ld.mu.RUnlock()
+	out := []JunkItem{}
+	dayAgo := time.Now().Add(-24 * time.Hour).Unix()
+	stores := []*index.Store{ld.store}
+	for _, d := range ld.drives {
+		stores = append(stores, d.store)
+	}
+	for _, s := range stores {
+		var ids *roaring.Bitmap
+		if root == "" {
+			ids = s.Live()
+		} else if dir, ok := s.Resolve(root); ok && s.IsDir(dir) {
+			ids = s.Within(dir)
+		} else {
+			continue
+		}
+		it := ids.Iterator()
+		for it.HasNext() {
+			id := it.Next()
+			if s.IsRoot(id) || s.IsSymlink(id) || s.IsDataless(id) {
+				continue
+			}
+			p := s.Path(id)
+			if within(p, homeLibrary) || strings.Contains(p, "/.laserdot/") {
+				continue
+			}
+			name := s.Name(id)
+			switch {
+			case s.IsDir(id):
+				if len(s.Children(id)) == 0 && !scan.IsHiddenPackage(name, scan.DefaultOptions()) && !junkSkipDirs[strings.ToLower(name)] {
+					out = append(out, JunkItem{p, 0, "empty_folder"})
+				}
+			case keepJunk[strings.ToLower(name)]:
+			case scan.IsPartialDownload(name) && s.Modified(id) < dayAgo:
+				out = append(out, JunkItem{p, int64(s.Size(id)), "partial"})
+			case s.Size(id) == 0 && !strings.HasPrefix(name, "."):
+				out = append(out, JunkItem{p, 0, "empty_file"})
+			}
+		}
+	}
+	return out
+}

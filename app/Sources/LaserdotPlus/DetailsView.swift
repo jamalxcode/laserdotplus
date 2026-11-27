@@ -100,7 +100,7 @@ struct DetailsView: View {
             row(L("details.where"), whereText(h.path))
             Divider().gridCellColumns(2)
             row(L("details.key.dates.created"), date("dates.created") ?? (h.created > 0 ? dateText(h.created) : L("details.notRecorded")))
-            row(L("details.key.dates.modified"), date("dates.modified") ?? dateText(h.modified))
+            row(L("details.key.dates.modified"), date("dates.modified") ?? (h.modified > 0 ? dateText(h.modified) : "…"))
             if loaded != nil {
                 row(L("details.key.dates.opened"), date("dates.opened") ?? L("details.notRecorded"))
                 row(L("details.key.dates.added"), date("dates.added") ?? L("details.notRecorded"))

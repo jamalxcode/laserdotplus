@@ -89,7 +89,7 @@ final class LibraryModel: ObservableObject {
         didSet { UserDefaults.standard.set(allChoices, forKey: "allChoices") }
     }
     @Published var sort: SortKey = SortKey(rawValue: UserDefaults.standard.string(forKey: "sort") ?? "") ?? .modified {
-        didSet { UserDefaults.standard.set(sort.rawValue, forKey: "sort"); if sort != oldValue { schedule(now: true) } }
+        didSet { UserDefaults.standard.set(sort.rawValue, forKey: "sort"); if sort != oldValue { openedOrder = nil; schedule(now: true) } }
     }
     @Published var reverse = UserDefaults.standard.object(forKey: "reverse") as? Bool ?? true {
         didSet { UserDefaults.standard.set(reverse, forKey: "reverse"); if reverse != oldValue { schedule(now: true) } }
@@ -191,6 +191,7 @@ final class LibraryModel: ObservableObject {
             }
         }
         statusTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in self?.refreshStatus() }
+        watchChanges()
         inputMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .leftMouseDown, .rightMouseDown, .keyDown]) { e in
             LibraryModel.lastInput = Date()
             return e
@@ -210,6 +211,39 @@ final class LibraryModel: ObservableObject {
     /// the window froze).
     private var statusInFlight = false
     private var lastAutoRefresh = Date.distantPast
+    /// The index changed and the list has not been refreshed for it yet.
+    private var pendingChange = false
+
+    /// The engine says when the index changes (the critique: asking every 3 s
+    /// kept a busy drive busier); one request waits for it.
+    private func watchChanges() {
+        let engine = self.engine
+        Thread.detachNewThread { [weak self] in
+            var since = engine.waitChange(since: UInt64.max) ?? 0
+            while self != nil {
+                guard let n = engine.waitChange(since: since) else { Thread.sleep(forTimeInterval: 3); continue }
+                if n != since {
+                    since = n
+                    DispatchQueue.main.async { self?.pendingChange = true; self?.refreshIfDue() }
+                }
+            }
+        }
+    }
+
+    /// Refresh the list for index changes — at most every 15 s while indexing
+    /// (2 s otherwise), and never while you scroll or click (the owner: a
+    /// beachball every 5 s on a new 8 TB drive, and the list would not scroll).
+    /// Also tried on each status tick, so a deferred change is not lost.
+    private func refreshIfDue() {
+        guard pendingChange else { return }
+        let busy = status?.indexing != nil
+        let quiet = Date().timeIntervalSince(Self.lastInput) > 4
+        let due = Date().timeIntervalSince(lastAutoRefresh) > (busy ? 15 : 2)
+        guard quiet, due else { return }
+        pendingChange = false
+        lastAutoRefresh = Date()
+        schedule(now: true, keepSelection: true)
+    }
     /// When you last scrolled, clicked or typed (a refresh waits for a pause).
     static var lastInput = Date.distantPast
     private var inputMonitor: Any?
@@ -232,18 +266,9 @@ final class LibraryModel: ObservableObject {
                 // Results follow the index: a file deleted or moved away in
                 // Finder leaves the list within a few seconds, one added
                 // appears (the selection is kept where it still exists).
-                // While a drive is being indexed the changes never stop: the
-                // list is refreshed at most every 15 s, and never while you
-                // scroll or click (the owner: a beachball every 5 s on a new
-                // 8 TB drive, and the list would not scroll).
-                if changed || wasIndexing || st.indexing != nil {
-                    let quiet = Date().timeIntervalSince(Self.lastInput) > 4
-                    let due = Date().timeIntervalSince(self.lastAutoRefresh) > 15
-                    if quiet && (due || (!changed && wasIndexing && st.indexing == nil)) {
-                        self.lastAutoRefresh = Date()
-                        self.schedule(now: true, keepSelection: true)
-                    }
-                }
+                _ = changed // index changes come from watchChanges now
+                if wasIndexing && st.indexing == nil { self.pendingChange = true }
+                self.refreshIfDue()
             }
         }
     }
@@ -429,10 +454,13 @@ final class LibraryModel: ObservableObject {
         generation += 1
         let gen = generation
         let q = effectiveQuery
-        let (sort, reverse, engine) = (self.sort, self.reverse, self.engine)
+        let (sort, reverse, engine, opened) = (self.sort, self.reverse, self.engine, self.openedOrder)
         searching = true
         searchQueue.async { [weak self] in
-            let outcome = Result { try engine.search(query: q, limit: Self.page, sort: sort, reverse: reverse) }
+            let outcome = Result {
+                if let o = opened { return try engine.byOpened(query: q, limit: Self.page, reverse: o) }
+                return try engine.search(query: q, limit: Self.page, sort: sort, reverse: reverse)
+            }
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
                 FreezeWatch.mark("search results")
@@ -501,9 +529,11 @@ final class LibraryModel: ObservableObject {
         loadingMore = true
         let gen = generation
         let q = effectiveQuery
-        let (sort, reverse, engine, offset) = (self.sort, self.reverse, self.engine, results.count)
+        let (sort, reverse, engine, offset, opened) = (self.sort, self.reverse, self.engine, results.count, self.openedOrder)
         searchQueue.async { [weak self] in
-            let r = try? engine.search(query: q, limit: Self.page, offset: offset, sort: sort, reverse: reverse)
+            let r = opened != nil
+                ? try? engine.byOpened(query: q, offset: offset, limit: Self.page, reverse: opened ?? false)
+                : try? engine.search(query: q, limit: Self.page, offset: offset, sort: sort, reverse: reverse)
             DispatchQueue.main.async {
                 self?.loadingMore = false
                 guard let self, let r, gen == self.generation else { return }
@@ -551,8 +581,13 @@ final class LibraryModel: ObservableObject {
     /// The Last Opened column sorts the rows loaded (the engine does not
     /// keep these dates).
     func sortByOpened(reverse: Bool) {
-        results.sort { reverse ? $0.opened < $1.opened : $0.opened > $1.opened }
+        openedOrder = reverse
+        schedule(now: true)
     }
+
+    /// The list is in last-opened order over the whole search (nil: the
+    /// usual sort). The engine reads each match's date.
+    @Published var openedOrder: Bool?
 
     // MARK: selection
 
@@ -577,7 +612,22 @@ final class LibraryModel: ObservableObject {
         }
     }
 
-    var selectedHits: [Hit] { results.filter { selection.contains($0.path) } }
+    var selectedHits: [Hit] {
+        let hits = results.filter { selection.contains($0.path) }
+        if hits.isEmpty, let x = extraSelected, selection == [x.path] { return [x] }
+        return hits
+    }
+
+    /// A file from a Clean Up list shown in the inspector (it need not be in
+    /// the results).
+    var extraSelected: Hit?
+
+    /// Clean Up: show this file in the inspector.
+    func inspect(_ path: String, size: UInt64) {
+        if results.contains(where: { $0.path == path }) { return selectOne(path) }
+        extraSelected = Hit(path: path, kind: Palette.kind(ofExtension: (path as NSString).pathExtension), size: size)
+        selectOne(path)
+    }
 
     /// Select one file and make sure its details are (being) read — even
     /// when it was already the selection but its details are another file's
@@ -678,6 +728,14 @@ final class LibraryModel: ObservableObject {
         let urls = results.map { URL(fileURLWithPath: $0.path) }
         let i = results.firstIndex { $0.path == first.path } ?? 0
         QuickLook.shared.toggle(urls, at: i)
+    }
+
+    /// Several files at once (⌘-click, then ⌫ or the bottom bar's button):
+    /// in the background, so hundreds don't freeze the window; one ⌘Z each.
+    func trashSelected(_ hits: [Hit], undo: UndoManager?) {
+        guard !hits.isEmpty else { return }
+        if hits.count == 1 { return trash(hits, undo: undo) }
+        trashInBackground(hits.map(\.path), undo: undo) { _, _ in }
     }
 
     /// Move to the Trash, undoable (⌘Z) through the window's undo manager.

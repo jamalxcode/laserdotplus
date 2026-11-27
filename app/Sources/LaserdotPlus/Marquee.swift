@@ -256,7 +256,7 @@ final class MouseCatcherView: NSView, NSDraggingSource {
         guard let model, model.reviewIndex == nil, !model.showDupes else { return super.keyDown(with: e) }
         switch e.keyCode {
         case 51, 117: // ⌫, ⌦ (with or without ⌘)
-            model.trash(model.selectedHits, undo: undoManager)
+            model.trashSelected(model.selectedHits, undo: undoManager)
         case 36, 76: // Return, Enter
             model.open(model.selectedHits)
         case 49: // Space

@@ -1,6 +1,11 @@
 package core
 
-import "github.com/jamalxcode/laserdotplus/internal/scan"
+import (
+	"sort"
+
+	"github.com/jamalxcode/laserdotplus/internal/index"
+	"github.com/jamalxcode/laserdotplus/internal/scan"
+)
 
 // FileTime: one file's dates (Unix seconds; 0 when not recorded).
 type FileTime struct {
@@ -31,4 +36,39 @@ func (ld *Laserdot) FileTimes(paths []string) []FileTime {
 		out = append(out, FileTime{Path: p, Created: t.Created, Modified: t.Modified, Opened: t.Opened, Added: t.Added})
 	}
 	return out
+}
+
+// ByOpenedLimit: how many matches are looked at for a last-opened order (one
+// small read each).
+const ByOpenedLimit = 50_000
+
+// ByOpened: the matches of q in order of when macOS says each was last opened
+// (newest first; reverse: oldest — never opened — first), over the whole
+// search, not just a page (the critique: the Last Opened column sorted only
+// the rows loaded). One attribute read per match, up to ByOpenedLimit.
+func (ld *Laserdot) ByOpened(q string, offset, limit int, reverse bool) (*SearchResults, error) {
+	r, err := ld.search(q, SearchOptions{Page: index.Page{Limit: ByOpenedLimit}})
+	if err != nil || r == nil {
+		return r, err
+	}
+	for i := range r.Hits {
+		if t, err := scan.FileTimes(r.Hits[i].Path); err == nil {
+			r.Hits[i].Opened = t.Opened
+		}
+	}
+	sort.SliceStable(r.Hits, func(i, j int) bool {
+		if reverse {
+			return r.Hits[i].Opened < r.Hits[j].Opened
+		}
+		return r.Hits[i].Opened > r.Hits[j].Opened
+	})
+	if offset > len(r.Hits) {
+		offset = len(r.Hits)
+	}
+	end := min(len(r.Hits), offset+max(limit, 1))
+	r.Hits = r.Hits[offset:end]
+	if r.Total > ByOpenedLimit {
+		r.Total = ByOpenedLimit
+	}
+	return r, nil
 }

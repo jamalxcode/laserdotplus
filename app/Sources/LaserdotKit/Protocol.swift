@@ -18,6 +18,9 @@ public enum DaemonRequest: Encodable, Sendable {
     case junk(path: String)
     case fileTimes(paths: [String])
     case junkFound(from: Int)
+    case waitChange(since: UInt64)
+    case junkIndexed(path: String)
+    case byOpened(query: String, offset: Int, limit: Int, reverse: Bool)
     case junkStop
     case broken(query: String)
     case checksumStatus(mount: String)
@@ -108,6 +111,9 @@ public enum DaemonRequest: Encodable, Sendable {
         case .fileTimes: return "file_times"
         case .junkFound: return "junk_found"
         case .junkStop: return "junk_stop"
+        case .waitChange: return "wait_change"
+        case .junkIndexed: return "junk_indexed"
+        case .byOpened: return "by_opened"
         case .broken: return "broken"
         case .checksumStatus: return "checksum_status"
         case .checksumSave: return "checksum_save"
@@ -210,6 +216,15 @@ public enum DaemonRequest: Encodable, Sendable {
             try c.encode(mount, forKey: .mount)
         case let .junkFound(from):
             try c.encode(from, forKey: .offset)
+        case let .byOpened(query, offset, limit, reverse):
+            try c.encode(query, forKey: .query)
+            try c.encode(offset, forKey: .offset)
+            try c.encode(limit, forKey: .limit)
+            try c.encode(reverse, forKey: .reverse)
+        case let .junkIndexed(path):
+            try c.encode(path, forKey: .path)
+        case let .waitChange(since):
+            try c.encode(Int(clamping: since), forKey: .offset)
         case let .fileTimes(paths):
             try c.encode(paths, forKey: .paths)
         case let .storage(path, limit):

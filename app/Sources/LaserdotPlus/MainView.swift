@@ -14,8 +14,8 @@ struct MainView: View {
 
     /// The inspector shows unless Review or Clean Up takes the window.
     private var inspector: Binding<Bool> {
-        Binding(get: { model.showInspector && model.reviewIndex == nil && !model.showDupes },
-                set: { v in if model.reviewIndex == nil && !model.showDupes { model.showInspector = v } })
+        Binding(get: { model.showInspector && model.reviewIndex == nil },
+                set: { v in if model.reviewIndex == nil { model.showInspector = v } })
     }
 
     var body: some View {
@@ -30,16 +30,18 @@ struct MainView: View {
                 // The top hugs what it shows (no empty band above the files).
                 TopArea(model: model, drives: drives)
                 Divider()
-                FilesArea(model: model, drives: drives)
-                    .frame(minWidth: 360, minHeight: 240)
-                    // Review and Clean Up take the whole middle.
-                    .overlay {
-                        if model.reviewIndex != nil {
-                            ReviewView(model: model)
-                        } else if model.showDupes {
-                            CleanupView(model: model, drives: drives, junk: model.junk, big: model.bigOld)
-                        }
+                // Clean Up is shown in the files' place, like another place,
+                // with the inspector beside it (it covered the files before).
+                Group {
+                    if model.showDupes {
+                        CleanupView(model: model, drives: drives, junk: model.junk, big: model.bigOld)
+                    } else {
+                        FilesArea(model: model, drives: drives)
                     }
+                }
+                .frame(minWidth: 360, minHeight: 240)
+                // Review takes the whole middle.
+                .overlay { if model.reviewIndex != nil { ReviewView(model: model) } }
                 if !model.tray.isEmpty {
                     Divider()
                     TrayBar(model: model)
@@ -215,7 +217,7 @@ struct FilesArea: View {
             model.quickLook()
             return .handled
         }
-        .onDeleteCommand { if model.reviewIndex == nil && !model.showDupes { model.trash(model.selectedHits, undo: undo) } }
+        .onDeleteCommand { if model.reviewIndex == nil && !model.showDupes { model.trashSelected(model.selectedHits, undo: undo) } }
         // A folder dropped on the window (from Finder) is indexed.
         .dropDestination(for: URL.self) { urls, _ in
             let folders = urls.filter { u in
@@ -235,6 +237,7 @@ struct FilesArea: View {
 struct BottomBar: View {
     @ObservedObject var model: LibraryModel
     @ObservedObject var drives: DrivesModel
+    @Environment(\.undoManager) private var undo
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -267,6 +270,15 @@ struct BottomBar: View {
                 Text(String(format: L("results.selected"), hits.count, bytesText(hits.reduce(0) { $0 + $1.size })))
                     .fontWeight(.semibold)
                 Text(countText(Int(model.total), "item")).foregroundStyle(.secondary).monospacedDigit()
+                // Bulk removal in one click (the owner: "command click select
+                // media one by one and allow a delete"); ⌫ does the same.
+                Button(role: .destructive) {
+                    model.trashSelected(hits, undo: undo)
+                } label: {
+                    Label(String(format: L("bulk.trash"), hits.count), systemImage: "trash")
+                }
+                .help(L("bulk.trash.help"))
+                Button(L("bulk.deselect")) { model.selection = [] }.buttonStyle(.link)
             } else {
                 Text(countText(Int(model.total), "item")).monospacedDigit()
                 if !model.canLoadMore, !model.results.isEmpty {

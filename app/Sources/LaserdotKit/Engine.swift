@@ -146,6 +146,16 @@ public final class Engine: @unchecked Sendable {
             typoFallback: r.typoFallback, notes: r.warnings.map(\.message))
     }
 
+    /// The whole search in order of last opened (newest first; `reverse`:
+    /// oldest, then never opened). Slower than a search: each match's date is
+    /// read from its file. On a connection of its own.
+    public func byOpened(query: String, offset: Int = 0, limit: Int = 500, reverse: Bool = false) throws -> Results {
+        let r = try longCall(longJobConnection(), .byOpened(query: query, offset: offset, limit: limit, reverse: reverse),
+                             as: Wire.SearchResults.self)
+        return Results(total: r.total, hits: r.hits.map(Hit.init), elapsedMs: Double(r.elapsedUs) / 1000,
+                       typoFallback: r.typoFallback, notes: r.warnings.map(\.message))
+    }
+
     /// Folders never indexed.
     public func exclusions() -> [String] {
         (try? call(.exclusions, as: [String].self)) ?? []

@@ -82,6 +82,12 @@ extension Engine {
 
     /// The running junk walk: found so far, folders gone through, the one it
     /// is in (nil: an older engine, or no answer). On a connection of its own.
+    /// The junk the index already knows under a folder ("" every place): at
+    /// once, no disk read. The walk adds the system files.
+    public func junkIndexed(path: String) -> [JunkItem] {
+        ((try? longCall(longJobConnection(), .junkIndexed(path: path), as: [JunkItem]?.self)) ?? nil) ?? []
+    }
+
     /// Only the finds from the from'th on (a big drive has tens of thousands).
     public func junkFound(from: Int) -> JunkProgress? {
         try? longCall(longJobConnection(), .junkFound(from: from), as: JunkProgress.self)
@@ -137,5 +143,13 @@ extension Engine {
             out += (try? longCall(line, .fileTimes(paths: batch), as: [FileTime]?.self)) ?? []
         }
         return out
+    }
+}
+
+extension Engine {
+    /// Waits (up to 25 s) until the index's change count differs from
+    /// `since`, and returns it; nil when the engine does not answer.
+    public func waitChange(since: UInt64) -> UInt64? {
+        try? longCall(longJobConnection(), .waitChange(since: since), as: UInt64.self)
     }
 }

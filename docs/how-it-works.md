@@ -97,6 +97,16 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **0.1.29:** `trashSelected` (⌫ in the grids and list, ⌘⌫, the menu and the bottom bar's **Move N to Trash**) uses
+  `trashInBackground` for more than one file. `junk_indexed` (engine `JunkIndexed`: empty files, old partial
+  downloads, folders with no indexed child) shows at once; the walk adds system files. `by_opened` (engine
+  `ByOpened`: up to 50,000 matches, each one's last-opened read, then a page) backs the Last Opened column
+  (`openedOrder`) and Big & Old ▸ Not opened. `wait_change` (engine `WaitChange`, 25 s long poll on the change
+  counter) drives `watchChanges` → `refreshIfDue` (15 s while indexing, 2 s otherwise, never within 4 s of input).
+  Clean Up replaces `FilesArea` (Review stays an overlay); clicking a Clean Up row's name shows it in the inspector
+  (`extraSelected`, `inspect`). The self-test's `scale()` step: 40,000 files (half empty) + 5,000 `._` files; index,
+  search, Select All, Junk; checks the longest main-thread stall (< 2 s, `FreezeWatch.takeLongest`) and memory
+  (< 1.5 GB).
 - **0.1.28:** picture caches are limited by bytes (`pictureCache`, `cachePut` with pixel cost; 120 MB thumbnails,
   120 MB frames, 20 MB icons). Rows call `model.reached(h)` on appear; the last 40 rows load the next page (one at a
   time). `applyTray` uses `trashInBackground` then `moveInBackground`. `activeView` highlights a saved view until the

@@ -2,6 +2,21 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.29
+
+- **Delete in bulk, visibly:** ⌘-click files one by one (or drag a box, or ⇧-click a range), then press ⌫ — or use
+  the **Move N to Trash** button that now shows in the bottom bar whenever several files are selected. Many files go
+  to the Trash in the background (Edit ▸ Undo puts them back). ⌫ also works in the list view whatever has the keyboard.
+- **Clean Up Junk shows results at once:** empty files and folders and old partial downloads come straight from the
+  index; the walk of the drive goes on for the hidden system files (.DS_Store, ._…), with Stop.
+- **Last Opened, over the whole drive:** sorting by the Last Opened column orders every matching file, not just the
+  ones loaded; Big & Old ▸ Not opened looks through them all too.
+- **Clean Up sits in the files' place**, like another place, with the inspector beside it: click a file's name in a
+  list to see it there (the box still ticks it).
+- **Calmer with busy drives:** the engine now says when the index changed, instead of being asked every 3 seconds.
+- Tested at scale: every build now indexes 40,000 files, searches, selects all and runs Junk, and fails if the window
+  ever stalls for 2 seconds or memory passes 1.5 GB.
+
 ## 0.1.28
 
 - **Uses much less memory.** Pictures and video frames kept for quick redrawing are now held to about 260 MB in all

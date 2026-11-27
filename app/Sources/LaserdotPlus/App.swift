@@ -103,7 +103,7 @@ struct FileCommands: Commands {
                 if NSApp.keyWindow?.firstResponder is NSText {
                     NSApp.sendAction(#selector(NSResponder.deleteToBeginningOfLine(_:)), to: nil, from: nil)
                 } else if model.reviewIndex == nil && !model.showDupes {
-                    model.trash(hits, undo: undo)
+                    model.trashSelected(hits, undo: undo)
                 }
             }
             .keyboardShortcut(.delete)

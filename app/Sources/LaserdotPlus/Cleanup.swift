@@ -27,6 +27,8 @@ final class JunkModel: ObservableObject {
     private var poll: Timer?
     private var earlier: [JunkItem] = [] // finished roots' finds (several roots)
     private var stopped = false
+    /// What the index already knew (shown at once); the walk adds to it.
+    private var known: [JunkItem] = []
     /// The running root's finds so far, fetched a piece at a time.
     private var live: [JunkItem] = []
 
@@ -37,6 +39,7 @@ final class JunkModel: ObservableObject {
         chosen = []
         earlier = []
         live = []
+        known = []
         stopped = false
         folders = 0
         current = ""
@@ -60,6 +63,15 @@ final class JunkModel: ObservableObject {
             }
         }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            // First what the index knows — empty files and folders, old
+            // partial downloads — at once (the critique: the walk of an 8 TB
+            // drive takes long); the walk goes on for the system files.
+            let indexed = roots.flatMap { engine.junkIndexed(path: $0) }
+            DispatchQueue.main.async {
+                guard let self, self.phase == .scanning else { return }
+                self.known = indexed
+                self.take([])
+            }
             var found: [JunkItem] = []
             for r in roots {
                 if DispatchQueue.main.sync(execute: { self?.stopped ?? true }) { break }
@@ -70,7 +82,8 @@ final class JunkModel: ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.poll?.invalidate()
-                self.take(found.sorted { $0.size > $1.size })
+                self.take(found)
+                self.items.sort { $0.size > $1.size }
                 self.phase = .done
             }
         }
@@ -83,10 +96,13 @@ final class JunkModel: ObservableObject {
     /// froze the window for 20 seconds).
     private func take(_ found: [JunkItem]) {
         FreezeWatch.mark("junk finds")
+        // The index's finds and the walk's, once each.
+        var seen = Set<String>()
+        let all = (known + found).filter { seen.insert($0.path).inserted }
         let shown = Set(items.map(\.path))
         var next = chosen
-        for j in found where !shown.contains(j.path) { next.insert(j.path) }
-        items = found
+        for j in all where !shown.contains(j.path) { next.insert(j.path) }
+        items = all
         chosen = next
     }
 
@@ -131,12 +147,16 @@ final class BigOldModel: ObservableObject {
         let q = [place, size, age, "-kind:folder"].filter { !$0.isEmpty }.joined(separator: " ")
         let (engine, wantOpened, ageYears) = (self.engine, self.byOpened, self.years)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            var hits = (try? engine.search(query: q, limit: 5000, sort: .size, reverse: false))?.hits ?? []
+            var hits: [Hit]
             var opened: [String: Int64] = [:]
             if wantOpened {
+                // The whole search, oldest-opened first (the engine reads each
+                // file's date), kept while older than the cut-off.
                 let cutoff = Int64(Date().addingTimeInterval(-Double(ageYears) * 365.25 * 86400).timeIntervalSince1970)
-                for t in engine.fileTimes(hits.map(\.path)) { opened[t.path] = t.opened }
-                hits = hits.filter { (opened[$0.path] ?? 0) < cutoff }
+                hits = ((try? engine.byOpened(query: q, limit: 20_000, reverse: true))?.hits ?? []).filter { $0.opened < cutoff }
+                for h in hits { opened[h.path] = h.opened }
+            } else {
+                hits = (try? engine.search(query: q, limit: 5000, sort: .size, reverse: false))?.hits ?? []
             }
             DispatchQueue.main.async {
                 self?.items = hits.sorted { $0.size > $1.size }
@@ -310,6 +330,8 @@ struct CleanupView: View {
         HStack(spacing: 8) {
             Image(systemName: chosen ? "checkmark.square.fill" : "square")
                 .foregroundStyle(chosen ? Color.accentColor : Color.secondary)
+                .contentShape(Rectangle())
+                .onTapGesture(perform: toggle) // the box ticks; the row shows the file
             FileIcon(path: path, size: 24, thumbnail: !isDir)
             VStack(alignment: .leading, spacing: 1) {
                 Text((path as NSString).lastPathComponent).lineLimit(1).truncationMode(.middle)
@@ -320,7 +342,8 @@ struct CleanupView: View {
             Text(isDir ? "" : bytesText(size)).font(.caption).monospacedDigit().frame(width: 70, alignment: .trailing)
         }
         .contentShape(Rectangle())
-        .onTapGesture(perform: toggle)
+        .onTapGesture { model.inspect(path, size: size) }
+        .background(model.selection == [path] ? Color.accentColor.opacity(0.15) : Color.clear)
         .contextMenu {
             Button(L("action.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)]) }
         }

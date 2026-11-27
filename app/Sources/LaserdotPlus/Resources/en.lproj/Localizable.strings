@@ -477,3 +477,6 @@
 "report.freezes" = "Times the window stopped answering (newest first):";
 "report.help" = "Nothing about your files is included. Copy it and send it with a few words about what you were doing.";
 "report.copy" = "Copy";
+"bulk.trash" = "Move %d to Trash";
+"bulk.trash.help" = "Move the selected files to the Trash (⌫ does the same). Edit ▸ Undo puts them back.";
+"bulk.deselect" = "Deselect";

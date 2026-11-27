@@ -448,6 +448,10 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		return result(s.ld.Details(req.Path))
 	case ipc.OpFileTimes:
 		return ok(s.ld.FileTimes(req.Paths))
+	case ipc.OpByOpened:
+		return result(s.ld.ByOpened(req.Query, req.Offset, req.LimitOr(), req.Reverse))
+	case ipc.OpWaitChange:
+		return ok(s.ld.WaitChange(uint64(max(req.Offset, 0)), 25*time.Second))
 	case ipc.OpBroken:
 		return result(s.ld.Broken(req.Query))
 	case ipc.OpChecksumStatus:
@@ -463,6 +467,8 @@ func (s *Server) handle(req *ipc.Request) ipc.Response {
 		return ok(true)
 	case ipc.OpJunkFound:
 		return ok(s.ld.JunkFound(req.Offset))
+	case ipc.OpJunkIndexed:
+		return ok(s.ld.JunkIndexed(req.Path))
 	case ipc.OpJunkStop:
 		s.ld.StopJunk()
 		return ok(true)

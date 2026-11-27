@@ -3,6 +3,7 @@ package core
 import (
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // The details panel: a video's tracks and a data file's columns, read on request.
@@ -52,5 +53,41 @@ func TestFileTimesOfSeveralFiles(t *testing.T) {
 	got := ld.FileTimes([]string{filepath.Join(base, "a.txt"), filepath.Join(base, "gone.txt"), filepath.Join(base, "b.txt")})
 	if len(got) != 2 || got[0].Modified == 0 || got[1].Path != filepath.Join(base, "b.txt") {
 		t.Errorf("%+v", got)
+	}
+}
+
+// The app's change watch: answers at once when the count moved, else waits.
+func TestWaitChangeAnswersWhenTheIndexChanges(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	ld, _ := Open(filepath.Join(base, "i.db"))
+	defer ld.Close()
+	now := ld.Changes()
+	if got := ld.WaitChange(now+1, time.Second); got != now {
+		t.Errorf("a different count answers at once: %d", got)
+	}
+	go func() { time.Sleep(100 * time.Millisecond); ld.changes.Add(1) }()
+	if got := ld.WaitChange(now, 5*time.Second); got != now+1 {
+		t.Errorf("waited for a change, got %d", got)
+	}
+}
+
+// The whole search by last opened: every match counts, not a page.
+func TestByOpenedOrdersEveryMatch(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	root := filepath.Join(base, "r")
+	for _, n := range []string{"a.txt", "b.txt", "c.txt"} {
+		writeAged(t, filepath.Join(root, n), []byte(n))
+	}
+	ld, _ := Open(filepath.Join(base, "data", "i.db"))
+	defer ld.Close()
+	if _, err := ld.Index(root); err != nil {
+		t.Fatal(err)
+	}
+	r, err := ld.ByOpened("txt", 0, 2, false)
+	if err != nil || len(r.Hits) != 2 || r.Total != 3 {
+		t.Fatalf("%v %+v", err, r)
+	}
+	if more, _ := ld.ByOpened("txt", 2, 2, false); len(more.Hits) != 1 {
+		t.Errorf("second page: %+v", more)
 	}
 }

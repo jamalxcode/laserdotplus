@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/jamalxcode/laserdotplus/internal/index"
+	"time"
 )
 
 // currentEventID is the platform's change-journal position, set by the
@@ -287,3 +288,17 @@ func (ld *Laserdot) noteChanges(u UpdateStats) {
 // Changes counts the changes applied to any index since the engine started;
 // it moves whenever what a search would find may have changed.
 func (ld *Laserdot) Changes() uint64 { return ld.changes.Load() }
+
+// WaitChange returns as soon as the index has changed since `since` (the
+// count Changes gave), or after `max` with the same count: the app keeps one
+// such request open instead of asking every few seconds. Watching an
+// in-memory counter costs nothing.
+func (ld *Laserdot) WaitChange(since uint64, max time.Duration) uint64 {
+	deadline := time.Now().Add(max)
+	for {
+		if n := ld.changes.Load(); n != since || time.Now().After(deadline) {
+			return n
+		}
+		time.Sleep(150 * time.Millisecond)
+	}
+}

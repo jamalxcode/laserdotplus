@@ -28,6 +28,23 @@ public struct Hit: Hashable, Sendable {
     /// picked without asking the file first.
     public var durationMs: UInt64?
 
+    /// A file known only by its path (a Clean Up list's row, shown in the
+    /// inspector); its dates come with its details.
+    public init(path: String, kind: String, size: UInt64) {
+        self.path = path
+        name = (path as NSString).lastPathComponent
+        self.kind = kind
+        isDir = false
+        self.size = size
+        modified = 0
+        created = 0
+        opened = 0
+        badges = []
+        typo = false
+        volume = nil
+        content = false
+    }
+
     init(_ h: Wire.Hit) {
         var badges: [String] = []
         if let w = h.width, let hh = h.height { badges.append("\(w)×\(hh)") }

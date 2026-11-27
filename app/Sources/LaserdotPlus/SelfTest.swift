@@ -361,7 +361,54 @@ final class SelfTestRunner {
                 self.report["checksums_on_drive"] = FileManager.default.fileExists(atPath: "/Volumes/LDPlus/.laserdot/checksums.bin")
                 self.waitFor(20, { self.model.broken.phase == .done }) { _ in
                     self.report["broken_ran"] = self.model.broken.phase == .done && self.model.broken.problem == nil
-                    self.finish("")
+                    self.scale()
+                }
+            }
+        }
+    }
+
+    /// At a real drive's scale (the critique: every freeze the owner met passed
+    /// this test, which had a dozen files): 40,000 files, half of them empty
+    /// (Junk finds tens of thousands), plus hidden "._" files; indexed, then
+    /// searched, all selected, Junk run — the window must never stall.
+    private func scale() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("ldp-scale-\(UUID().uuidString.prefix(8))")
+        DispatchQueue.global(qos: .userInitiated).async {
+            let fm = FileManager.default
+            for d in 0..<200 {
+                let folder = dir.appendingPathComponent(String(format: "Folder %03d", d))
+                try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+                for f in 0..<200 {
+                    let data = f % 2 == 0 ? Data() : Data("x".utf8)
+                    fm.createFile(atPath: folder.appendingPathComponent(String(format: "clip %03d.txt", f)).path, contents: data)
+                    if f % 8 == 0 { fm.createFile(atPath: folder.appendingPathComponent(String(format: "._clip %03d.txt", f)).path, contents: Data("j".utf8)) }
+                }
+            }
+            DispatchQueue.main.async {
+                _ = FreezeWatch.takeLongest()
+                let started = Date()
+                self.model.clearFilters()
+                self.model.index(folder: dir.path)
+                self.waitFor(180, { self.model.status?.indexing == nil && self.model.total >= 40_000 && Date().timeIntervalSince(started) > 5 }) { indexed in
+                    self.report["scale_indexed"] = indexed
+                    self.report["scale_files"] = Int(self.model.total)
+                    self.model.text = "clip"
+                    self.waitFor(30, { self.model.total >= 40_000 && !self.model.searching }) { _ in
+                        self.model.selectAll()
+                        self.after(5) {
+                            self.report["scale_selected"] = self.model.selection.count
+                            self.model.junk.scan(roots: [dir.path])
+                            self.waitFor(120, { self.model.junk.phase == .done }) { _ in
+                                self.report["scale_junk"] = self.model.junk.items.count
+                                let l = FreezeWatch.takeLongest()
+                                self.report["scale_longest_stall"] = (l.seconds * 100).rounded() / 100
+                                self.report["scale_stall_step"] = l.step
+                                self.report["scale_memory_mb"] = Int(FreezeWatch.memoryBytes() >> 20)
+                                try? FileManager.default.removeItem(at: dir)
+                                self.finish("")
+                            }
+                        }
+                    }
                 }
             }
         }

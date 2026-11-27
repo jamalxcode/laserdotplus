@@ -379,3 +379,9 @@ collection per item in a loop.
 The owner: "do all". The update rhythm was not chosen, so it became a setting (default once a day) and releases are
 batched. Developer ID needs the owner's Apple account: the build signs and notarizes by itself once the secrets exist.
 Notarization runs on the build machine with Apple's tool; the app itself still has no network code.
+- The owner, meanwhile: "have command click select media one by one and allow a delete, to help remove unwanted media
+  in bulk". ⌘-click and ⌫ already worked in the pictures, but nothing showed it and the list view's ⌫ needed the
+  keyboard focus: now a **Move N to Trash** button shows for any multiple selection, ⌫ is on the list itself, and
+  many files go to the Trash in the background.
+- 0.1.29 also: Junk from the index at once, whole-drive Last Opened, Clean Up in the files' place, the engine's change
+  notice, and the 40,000-file self-test that fails a build on a 2-second stall.

@@ -90,3 +90,25 @@ func TestJunkFoundSendsOnlyWhatIsNew(t *testing.T) {
 		t.Errorf("%+v", p)
 	}
 }
+
+// The index already knows empty files and empty folders: listed at once.
+func TestJunkFromTheIndex(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	root := filepath.Join(base, "home")
+	writeAged(t, filepath.Join(root, "Docs/empty.txt"), nil)
+	writeAged(t, filepath.Join(root, "Docs/real.txt"), []byte("kept"))
+	os.MkdirAll(filepath.Join(root, "Old/Nested"), 0o755)
+	ld, _ := Open(filepath.Join(base, "data", "i.db"))
+	defer ld.Close()
+	if _, err := ld.Index(root); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, j := range ld.JunkIndexed(root) {
+		rel, _ := filepath.Rel(root, j.Path)
+		got[rel] = j.Why
+	}
+	if got["Docs/empty.txt"] != "empty_file" || got["Old/Nested"] != "empty_folder" || got["Docs/real.txt"] != "" || got["Docs"] != "" {
+		t.Errorf("%v", got)
+	}
+}

@@ -39,6 +39,12 @@ struct ResultsList: View {
             TableColumn(L("column.where")) { h in Text(whereText(h.path)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
                 .width(min: 50, ideal: 200)
         }
+        // ⌫ / ⌦ on the list itself, whatever has the keyboard inside it.
+        .onDeleteCommand { model.trashSelected(model.selectedHits, undo: undo) }
+        .onKeyPress(.delete) {
+            model.trashSelected(model.selectedHits, undo: undo)
+            return .handled
+        }
         .contextMenu(forSelectionType: String.self) { ids in
             FileMenu(model: model, hits: model.results.filter { ids.contains($0.path) }, undo: undo)
         } primaryAction: { ids in
@@ -82,7 +88,7 @@ struct FileMenu: View {
             OpenWithMenu(model: model, hits: hits, url: URL(fileURLWithPath: first.path))
         }
         Divider()
-        Button(n > 1 ? String(format: L("action.trashMany"), n) : L("action.trash")) { model.trash(hits, undo: undo) }
+        Button(n > 1 ? String(format: L("action.trashMany"), n) : L("action.trash")) { model.trashSelected(hits, undo: undo) }
         Divider()
         Button(L("action.getInfo")) { model.getInfo(hits) }
         if n == 1, let h = hits.first {
