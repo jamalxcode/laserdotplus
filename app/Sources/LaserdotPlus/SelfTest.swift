@@ -394,9 +394,10 @@ final class SelfTestRunner {
                     self.report["scale_files"] = Int(self.model.total)
                     self.model.text = "clip"
                     // The search for "clip" itself must be done (a search that
-                    // lands after Select All rightly clears the selection).
-                    self.waitFor(30, { !self.model.searching && self.model.total >= 40_000
-                                     && self.model.results.allSatisfy { $0.name.contains("clip") } }) { _ in
+                    // lands after Select All rightly clears the selection):
+                    // past the typing pause, then not searching.
+                    self.after(1.5) {
+                    self.waitFor(30, { !self.model.searching && self.model.total >= 40_000 }) { _ in
                         self.model.selectAll()
                         self.waitFor(30, { self.model.selection.count >= 40_000 }) { _ in
                             self.report["scale_selected"] = self.model.selection.count
@@ -411,6 +412,7 @@ final class SelfTestRunner {
                                 self.finish("")
                             }
                         }
+                    }
                     }
                 }
             }
