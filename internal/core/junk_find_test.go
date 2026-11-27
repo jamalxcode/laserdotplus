@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -110,5 +111,55 @@ func TestJunkFromTheIndex(t *testing.T) {
 	}
 	if got["Docs/empty.txt"] != "empty_file" || got["Old/Nested"] != "empty_folder" || got["Docs/real.txt"] != "" || got["Docs"] != "" {
 		t.Errorf("%v", got)
+	}
+}
+
+// The system files and old downloads indexing leaves out are noted as it
+// passes them: Junk lists them without walking again; a removed one leaves.
+func TestJunkNotedWhileIndexing(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	root := filepath.Join(base, "home")
+	writeAged(t, filepath.Join(root, "Photos/.DS_Store"), []byte("x"))
+	writeAged(t, filepath.Join(root, "Photos/beach.jpg"), []byte("jpeg"))
+	old := filepath.Join(root, "Downloads/film.mkv.part")
+	writeAged(t, old, []byte("partial"))
+	past(t, old, 48*time.Hour)
+	ld, _ := Open(filepath.Join(base, "data", "i.db"))
+	defer ld.Close()
+	if _, err := ld.Index(root); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, j := range ld.JunkIndexed(root) {
+		rel, _ := filepath.Rel(root, j.Path)
+		got[rel] = j.Why
+	}
+	if got["Photos/.DS_Store"] != "system" || got["Downloads/film.mkv.part"] != "partial" {
+		t.Errorf("%v", got)
+	}
+	os.Remove(filepath.Join(root, "Photos/.DS_Store"))
+	for _, j := range ld.JunkIndexed(root) {
+		if filepath.Base(j.Path) == ".DS_Store" {
+			t.Error("a removed file is still listed")
+		}
+	}
+}
+
+// A stopped walk offers no empty folders: folders it had not finished reading
+// would look empty.
+func TestAStoppedWalkOffersNoEmptyFolders(t *testing.T) {
+	root := t.TempDir()
+	for i := 0; i < 50; i++ {
+		p := filepath.Join(root, fmt.Sprintf("Films %02d", i), "film.mkv")
+		os.MkdirAll(filepath.Dir(p), 0o755)
+		os.WriteFile(p, []byte("a film"), 0o644)
+	}
+	os.WriteFile(filepath.Join(root, "Films 00", ".DS_Store"), []byte("x"), 0o644)
+	n := 0
+	stop := func() bool { n++; return n > 10 } // stops partway
+	for _, j := range findJunk(root, stop, nil) {
+		if j.Why == "empty_folder" {
+			t.Errorf("offered %s as empty after a stop", j.Path)
+		}
 	}
 }

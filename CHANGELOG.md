@@ -2,6 +2,17 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.30
+
+- **Important fix — stopping Clean Up Junk early.** A walk stopped partway could list folders it had not finished
+  reading as "empty folders" (ticked, like all junk), including folders full of media. A stopped walk now offers no
+  empty folders at all. (Nothing was deleted by Laserdot+ — it only ever moves to the Trash — but check your Trash if
+  you moved junk to it after a Stop, and put back any folder that isn't empty.)
+- **No freeze after Stop**, however many finds: clean-up lists draw at most 2,000 rows (a line says how many more);
+  all of them are still counted, ticked and moved together.
+- **Junk is faster from the start:** the system files (.DS_Store, ._…) and unfinished downloads that indexing skips are
+  now noted as it passes them — kept on the drive itself for a drive — so Junk lists them at once.
+
 ## 0.1.29
 
 - **Delete in bulk, visibly:** ⌘-click files one by one (or drag a box, or ⇧-click a range), then press ⌫ — or use

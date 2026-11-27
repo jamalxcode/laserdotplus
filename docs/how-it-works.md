@@ -97,6 +97,10 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **0.1.30:** `findJunk` returns no empty folders when its walk was stopped. Clean-up lists draw `shownRows`
+  (2,000) rows plus a "…and N more" line. `scan.AddJunkHook`: the walk reports each system file / partial download it
+  skips; `junkNotes` files them per place (`<drive>/.laserdot/junk.list`, paths on the drive; this Mac's beside its
+  index; none for encrypted drives), saved every 30 s; `JunkIndexed` adds those still there (checked with lstat).
 - **0.1.29:** `trashSelected` (⌫ in the grids and list, ⌘⌫, the menu and the bottom bar's **Move N to Trash**) uses
   `trashInBackground` for more than one file. `junk_indexed` (engine `JunkIndexed`: empty files, old partial
   downloads, folders with no indexed child) shows at once; the walk adds system files. `by_opened` (engine

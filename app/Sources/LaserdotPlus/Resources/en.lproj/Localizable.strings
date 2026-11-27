@@ -480,3 +480,4 @@
 "bulk.trash" = "Move %d to Trash";
 "bulk.trash.help" = "Move the selected files to the Trash (⌫ does the same). Edit ▸ Undo puts them back.";
 "bulk.deselect" = "Deselect";
+"cleanup.moreRows" = "…and %d more not shown here (the count above includes those ticked).";

@@ -153,6 +153,8 @@ type Laserdot struct {
 	// dupeFound: the groups the running scan has found so far (shown as they
 	// come, the owner: "a detection as soon as it happens").
 	dupeFound atomic.Pointer[[]DupeGroup]
+	// jn: junk files the walk left out, noted for Clean Up Junk.
+	jn junkNotes
 	// ck: the running checksum save or check (bit rot).
 	ck checksumState
 	// junk: the running junk walk (what it found so far); junkStop ends it.
@@ -235,6 +237,7 @@ func OpenAt(dbPath string, now time.Time) (*Laserdot, error) {
 	}
 	ld := &Laserdot{dbPath: dbPath, db: db, report: OpenReport{Reindexed: []string{}, Purged: []string{}},
 		volumes: DefaultVolumeConfig(), keys: map[string]string{}, creating: map[string]bool{}, attaching: map[string]bool{}, attachErr: map[string]string{}}
+	ld.startJunkNotes()
 	if ld.content, err = index.OpenContent(contentPath(dbPath)); err != nil {
 		db.Close()
 		return nil, err
@@ -300,6 +303,7 @@ func (ld *Laserdot) requeueForNewDetails() (int64, error) {
 // Close closes the databases.
 func (ld *Laserdot) Close() error {
 	ld.background.Wait()
+	ld.stopJunkNotes()
 	ld.closeDrives()
 	ld.streams.Wait()
 	ld.content.Close()

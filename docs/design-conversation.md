@@ -385,3 +385,11 @@ Notarization runs on the build machine with Apple's tool; the app itself still h
   many files go to the Trash in the background.
 - 0.1.29 also: Junk from the index at once, whole-drive Last Opened, Clean Up in the files' place, the engine's change
   notice, and the 40,000-file self-test that fails a build on a 2-second stall.
+
+## 46. Stopping Junk early (0.1.30)
+
+The owner: "i tried to do a stop on a junk find so i can delete what was found so far, and i got a beach ball", then
+"laserdot+ under force quit got a not responding after that". Found: a walk stopped partway reported every folder it
+had entered but not finished as an empty folder — ticked like all junk — including folders full of media; and the
+list of all of them was drawn at once. Fixed: a stopped walk offers no empty folders (test), lists draw 2,000 rows.
+Also: junk files are noted as indexing skips them (`junk.list`, on the drive for a drive), so Junk lists them at once.

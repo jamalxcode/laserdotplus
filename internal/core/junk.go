@@ -102,6 +102,14 @@ func findJunk(root string, stop func() bool, w *junkWatch) []JunkItem {
 		}
 		return nil
 	})
+	// A walk that was stopped has not seen every folder's contents: a folder
+	// it left before reaching its files would look empty. So a stopped walk
+	// offers no empty folders at all (the owner stopped one on a big drive;
+	// folders full of media must never be offered as junk).
+	if stop != nil && stop() {
+		sort.SliceStable(out, func(i, j int) bool { return out[i].Size > out[j].Size })
+		return out
+	}
 	// Empty folders: deepest first, so a folder whose only content is empty
 	// folders is empty too. The root itself is never offered.
 	sort.Slice(dirs, func(i, j int) bool { return len(dirs[i]) > len(dirs[j]) })
@@ -197,9 +205,10 @@ func (ld *Laserdot) StopJunk() { ld.junkStop.Store(true) }
 // counts: those are never indexed) — under root ("" every place). Instant: no
 // disk is read. The walk (Junk) adds the system files (.DS_Store, ._…).
 func (ld *Laserdot) JunkIndexed(root string) []JunkItem {
+	noted := ld.notedJunk(root) // system files and old downloads the walk noted
 	ld.mu.RLock()
 	defer ld.mu.RUnlock()
-	out := []JunkItem{}
+	out := noted
 	dayAgo := time.Now().Add(-24 * time.Hour).Unix()
 	stores := []*index.Store{ld.store}
 	for _, d := range ld.drives {

@@ -262,8 +262,44 @@ func readDir(dir string, parent int, rootDev uint64, opts Options) ([]Entry, []E
 	return readDirStat(dir, parent, opts)
 }
 
+// junkHooks: who wants to hear of the junk files the walk leaves out (system
+// files, unfinished downloads) — Laserdot+'s Clean Up Junk lists them without
+// walking the drive again.
+var (
+	junkHooksMu sync.RWMutex
+	junkHooks   = map[int]func(path string){}
+	junkHookN   int
+)
+
+// AddJunkHook registers f (called from walk goroutines); the returned
+// function removes it.
+func AddJunkHook(f func(path string)) (remove func()) {
+	junkHooksMu.Lock()
+	junkHookN++
+	n := junkHookN
+	junkHooks[n] = f
+	junkHooksMu.Unlock()
+	return func() {
+		junkHooksMu.Lock()
+		delete(junkHooks, n)
+		junkHooksMu.Unlock()
+	}
+}
+
+func noteJunk(path string) {
+	junkHooksMu.RLock()
+	defer junkHooksMu.RUnlock()
+	for _, f := range junkHooks {
+		f(path)
+	}
+}
+
 // skip: the ignore rules for a child of dir.
 func skip(dir, name, path string, isDir bool, opts Options) bool {
+	if !isDir && (IsSystemJunk(name) || IsPartialDownload(name)) {
+		noteJunk(path)
+		return true
+	}
 	only, restricted := opts.OnlyChildren[dir]
 	return (isDir && (contains(opts.IgnoredDirs, name) || IsHiddenPackage(name, opts))) || IsPartialDownload(name) || (!isDir && IsSystemJunk(name)) ||
 		contains(opts.ExcludedPaths, path) ||

@@ -7,6 +7,21 @@ import SwiftUI
 /// place — Duplicates, Junk (system files, unfinished downloads, empty files
 /// and folders) and Big & old (large files untouched for years) — each with
 /// the space it frees and one Move to Trash (never deletes; Edit ▸ Undo).
+/// Rows drawn in a clean-up list (the owner's Junk on an 8 TB drive had tens of
+/// thousands; drawing them all froze the window). All are kept, ticked and
+/// trashed together; a line says how many more there are.
+let shownRows = 2000
+
+/// "and 23,412 more — ticked with the rest" under a long list.
+func moreRows(_ total: Int) -> some View {
+    Group {
+        if total > shownRows {
+            Text(String(format: L("cleanup.moreRows"), total - shownRows))
+                .font(.caption).foregroundStyle(.secondary).padding(.vertical, 4)
+        }
+    }
+}
+
 enum CleanupTab: String, CaseIterable { case duplicates, junk, bigOld, space, broken, unwanted }
 
 /// Junk: found by the engine walking the place's folders (junk is never
@@ -253,12 +268,13 @@ struct CleanupView: View {
                 if junk.items.isEmpty {
                     message("checkmark.circle", L("cleanup.junk.none"))
                 } else {
-                    List(junk.items, id: \.path) { j in
+                    List(Array(junk.items.prefix(shownRows)), id: \.path) { j in
                         row(path: j.path, size: j.size, note: L("cleanup.why." + j.why),
                             chosen: junk.chosen.contains(j.path), isDir: j.why == "empty_folder") {
                             if junk.chosen.contains(j.path) { junk.chosen.remove(j.path) } else { junk.chosen.insert(j.path) }
                         }
                     }
+                    moreRows(junk.items.count)
                     footer(count: junk.chosen.count, bytes: junk.chosenBytes, enabled: junk.phase == .done) {
                         // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(junk.chosen)
@@ -303,7 +319,7 @@ struct CleanupView: View {
                 if big.items.isEmpty {
                     message("checkmark.circle", L("cleanup.big.none"))
                 } else {
-                    List(big.items, id: \.path) { h in
+                    List(Array(big.items.prefix(shownRows)), id: \.path) { h in
                         row(path: h.path, size: h.size, note: big.byOpened
                             ? (big.opened[h.path].flatMap { $0 > 0 ? String(format: L("bar.opened"), dateText($0)) : nil } ?? L("cleanup.neverOpened"))
                             : String(format: L("bar.modified"), dateText(h.modified)),
@@ -311,6 +327,7 @@ struct CleanupView: View {
                             if big.chosen.contains(h.path) { big.chosen.remove(h.path) } else { big.chosen.insert(h.path) }
                         }
                     }
+                    moreRows(big.items.count)
                     footer(count: big.chosen.count, bytes: big.chosenBytes) {
                         // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(big.chosen)

@@ -110,11 +110,12 @@ struct BrokenView: View {
                 } else if broken.items.isEmpty {
                     empty("checkmark.circle", L("broken.none"))
                 } else {
-                    List(broken.items, id: \.path) { b in
+                    List(Array(broken.items.prefix(shownRows)), id: \.path) { b in
                         row(b.path, b.size, L("broken.why." + b.why), broken.chosen.contains(b.path)) {
                             if broken.chosen.contains(b.path) { broken.chosen.remove(b.path) } else { broken.chosen.insert(b.path) }
                         }
                     }
+                    moreRows(broken.items.count)
                     footer(broken.chosen.count, broken.chosenBytes) {
                         // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(broken.chosen)
@@ -154,11 +155,12 @@ struct UnwantedView: View {
                 if unwanted.items.isEmpty {
                     empty("checkmark.circle", L("unwanted.none"))
                 } else {
-                    List(unwanted.items, id: \.hit.path) { f in
+                    List(Array(unwanted.items.prefix(shownRows)), id: \.hit.path) { f in
                         row(f.hit.path, f.hit.size, L("unwanted.why." + f.why), unwanted.chosen.contains(f.hit.path)) {
                             if unwanted.chosen.contains(f.hit.path) { unwanted.chosen.remove(f.hit.path) } else { unwanted.chosen.insert(f.hit.path) }
                         }
                     }
+                    moreRows(unwanted.items.count)
                     footer(unwanted.chosen.count, unwanted.chosenBytes) {
                         // Off the main thread: thousands of files must not freeze the window.
                         let paths = Array(unwanted.chosen)
