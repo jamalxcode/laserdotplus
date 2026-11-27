@@ -47,9 +47,20 @@ final class JunkModel: ObservableObject {
     /// The running root's finds so far, fetched a piece at a time.
     private var live: [JunkItem] = []
 
-    func scan(roots: [String]) {
+    /// Whether the last look walked every folder (Look Deeper) or only
+    /// listed what indexing noted.
+    @Published var walked = false
+    /// Finds are merged here, off the main thread (a hang report: merging
+    /// tens of thousands of finds on the main thread every second).
+    private let merge = DispatchQueue(label: "laserdotplus.junk", qos: .userInitiated)
+
+    /// What indexing noted — instant, any drive size (the critique: Junk walked
+    /// the whole 8 TB drive each time). `deeper` also walks every folder, for
+    /// what indexing has not seen (a drive indexed by an older version).
+    func scan(roots: [String], deeper: Bool = false) {
         guard phase != .scanning else { return }
         phase = .scanning
+        walked = deeper
         items = []
         chosen = []
         earlier = []
@@ -59,34 +70,36 @@ final class JunkModel: ObservableObject {
         folders = 0
         current = ""
         let engine = self.engine
-        // What is found shows as it is found (the owner: "show results as soon
-        // as something is found rather than finish the whole drive").
         poll?.invalidate()
-        poll = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            guard let self, self.phase == .scanning else { return }
-            let from = self.live.count
-            DispatchQueue.global(qos: .utility).async {
-                guard let p = engine.junkFound(from: from), p.running else { return }
-                DispatchQueue.main.async {
-                    guard self.phase == .scanning else { return }
-                    if p.from == self.live.count { self.live += p.items } // only what is new
-                    if p.total < self.live.count { self.live = [] } // the next root's walk began
-                    if !p.items.isEmpty { self.take(self.earlier + self.live) }
-                    self.folders = p.folders
-                    self.current = p.current
+        if deeper {
+            // What is found shows as it is found (the owner: "show results as
+            // soon as something is found rather than finish the whole drive").
+            poll = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                guard let self, self.phase == .scanning, self.poll != nil else { return }
+                let from = self.live.count
+                DispatchQueue.global(qos: .utility).async {
+                    guard let p = engine.junkFound(from: from), p.running else { return }
+                    DispatchQueue.main.async {
+                        guard self.phase == .scanning, self.poll != nil else { return }
+                        if p.from == self.live.count { self.live += p.items } // only what is new
+                        if p.total < self.live.count { self.live = [] } // the next root's walk began
+                        if !p.items.isEmpty { self.take(self.earlier + self.live) }
+                        self.folders = p.folders
+                        self.current = p.current
+                    }
                 }
             }
         }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             // First what the index knows — empty files and folders, old
-            // partial downloads — at once (the critique: the walk of an 8 TB
-            // drive takes long); the walk goes on for the system files.
+            // partial downloads, the system files indexing passed — at once.
             let indexed = roots.flatMap { engine.junkIndexed(path: $0) }
             DispatchQueue.main.async {
                 guard let self, self.phase == .scanning else { return }
                 self.known = indexed
-                self.take([])
+                self.take([], last: !deeper)
             }
+            guard deeper else { return }
             var found: [JunkItem] = []
             for r in roots {
                 if DispatchQueue.main.sync(execute: { self?.stopped ?? true }) { break }
@@ -97,28 +110,35 @@ final class JunkModel: ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.poll?.invalidate()
-                self.take(found)
-                self.items.sort { $0.size > $1.size }
-                self.phase = .done
+                self.poll = nil // a poll still on its way adds nothing now
+                self.take(found, last: true)
             }
         }
     }
 
     /// Show these, ticking new ones (junk: all ticked) and keeping the
-    /// user's untickings.
-    /// Built aside and set once (the owner's 8 TB drive: ticking tens of
-    /// thousands of finds one at a time copied the whole set each time and
-    /// froze the window for 20 seconds).
-    private func take(_ found: [JunkItem]) {
-        FreezeWatch.mark("junk finds")
-        // The index's finds and the walk's, once each.
-        var seen = Set<String>()
-        let all = (known + found).filter { seen.insert($0.path).inserted }
-        let shown = Set(items.map(\.path))
-        var next = chosen
-        for j in all where !shown.contains(j.path) { next.insert(j.path) }
-        items = all
-        chosen = next
+    /// user's untickings. Merged and sorted off the main thread, then set once
+    /// (ticking tens of thousands of finds one at a time froze the window).
+    /// `last`: the look is over once they are shown.
+    private func take(_ found: [JunkItem], last: Bool = false) {
+        let known = self.known, items = self.items, chosen = self.chosen
+        merge.async { [weak self] in
+            var seen = Set<String>()
+            var all = (known + found).filter { seen.insert($0.path).inserted }
+            if last { all.sort { $0.size > $1.size } }
+            let shown = Set(items.map(\.path))
+            var next = chosen
+            for j in all where !shown.contains(j.path) { next.insert(j.path) }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                FreezeWatch.mark("junk finds")
+                // The user's tickings and untickings since this merge began stay.
+                let untick = chosen.subtracting(self.chosen), tick = self.chosen.subtracting(chosen)
+                self.items = all
+                self.chosen = next.subtracting(untick).union(tick)
+                if last { self.phase = .done }
+            }
+        }
     }
 
     func stop() {
@@ -242,9 +262,19 @@ struct CleanupView: View {
             ModeHeader(symbol: "trash.slash", title: L("cleanup.junk"), detail: model.placeTitle, done: { model.showDupes = false }) {
                 Button(junk.phase == .idle ? L("cleanup.find") : L("dupes.again")) { junk.scan(roots: junkRoots) }
                     .disabled(junk.phase == .scanning)
+                Button(L("cleanup.junk.deeper")) { junk.scan(roots: junkRoots, deeper: true) }
+                    .help(L("cleanup.junk.deeper.help"))
+                    .disabled(junk.phase == .scanning)
             }
             Divider()
-            if junk.phase == .scanning {
+            if junk.phase == .done && !junk.walked {
+                // Quick look: say what it covered, and how to look further.
+                Text(L("cleanup.junk.quick"))
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12).padding(.vertical, 5)
+            }
+            if junk.phase == .scanning && junk.walked {
                 // How far it has got, what it is reading, and Stop.
                 HStack(spacing: 10) {
                     ProgressView().controlSize(.small)

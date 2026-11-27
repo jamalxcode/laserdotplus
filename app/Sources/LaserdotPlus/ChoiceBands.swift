@@ -8,8 +8,23 @@ import SwiftUI
 /// leaves it out. Chosen values move into the search box as pills. The calm
 /// view shows each group's biggest values and the first bands; More choices
 /// shows the rest.
-struct ChoiceBands: View {
+/// Only the values the bands show are watched (the critique: every change in
+/// the window — a click, a selection — redrew every chip): the bands redraw
+/// when their choices change, nothing else.
+struct ChoicesArea: View {
     @ObservedObject var model: LibraryModel
+
+    var body: some View {
+        ChoiceBands(model: model, open: model.openGroups, allChoices: model.allChoices).equatable()
+    }
+}
+
+struct ChoiceBands: View, Equatable {
+    let model: LibraryModel
+    let open: [RefineGroup]
+    let allChoices: Bool
+
+    static func == (a: ChoiceBands, b: ChoiceBands) -> Bool { a.allChoices == b.allChoices && a.open == b.open }
     /// Groups whose quiet values (no results now) are unfolded.
     @State private var revealed: Set<String> = []
 
@@ -17,8 +32,7 @@ struct ChoiceBands: View {
     static func hasLive(_ g: RefineGroup) -> Bool { g.options.contains(where: isLive) }
 
     var body: some View {
-        let open = model.openGroups
-        let calm = RefineLogic.compact(RefineLogic.arranged(open), expanded: model.allChoices)
+        let calm = RefineLogic.compact(RefineLogic.arranged(open), expanded: allChoices)
         if !open.isEmpty {
             // The top area scrolls (it can be made smaller or bigger).
             Group {
@@ -85,8 +99,8 @@ struct ChoiceBands: View {
                             .lineLimit(2)
                             .padding(.leading, 6)
                     }
-                    if calm.hidden > 0 || model.allChoices {
-                        Button(model.allChoices ? L("choices.fewer") : String(format: L("choices.more"), calm.hidden)) {
+                    if calm.hidden > 0 || allChoices {
+                        Button(allChoices ? L("choices.fewer") : String(format: L("choices.more"), calm.hidden)) {
                             model.allChoices.toggle()
                         }
                         .buttonStyle(.link)

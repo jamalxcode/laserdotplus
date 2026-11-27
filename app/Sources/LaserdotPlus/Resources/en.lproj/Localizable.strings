@@ -10,6 +10,8 @@
 "sort.reverse" = "Reverse order";
 "sort.modified" = "Date modified";
 "sort.created" = "Date created";
+"sort.opened" = "Last opened";
+"sort.opened.reading" = "Reading when each file was last opened…";
 "sort.name" = "Name";
 "sort.size" = "Size";
 "sort.kind" = "Kind";
@@ -404,6 +406,9 @@
 "views.moveLeft" = "Move Left";
 "views.moveRight" = "Move Right";
 "cleanup.junk.progress" = "%llu folders looked through";
+"cleanup.junk.deeper" = "Look Deeper";
+"cleanup.junk.deeper.help" = "Also walk through every folder for leftovers indexing hasn't seen — for a drive indexed by an earlier version. Slow on a big drive; Stop keeps what was found.";
+"cleanup.junk.quick" = "Listed from the index, at once. Drive indexed before version 0.1.30? Look Deeper finds the system files in it too.";
 "cleanup.junk.stop.help" = "Stop now: what has been found so far stays, and you can put it in the Trash.";
 "sidebar.places" = "Places";
 "sidebar.drives" = "Drives";
@@ -413,7 +418,6 @@
 "drive.moveHere" = "Move %@ to “%@”?";
 "drive.moveHere.help" = "They are moved to the top of the drive. Edit ▸ Undo puts them back.";
 "drive.moveHere.button" = "Move";
-"notice.moving" = "Moving %d…";
 "action.getInfo" = "Get Info";
 "action.rename" = "Rename…";
 "action.openWith" = "Open With";
@@ -481,3 +485,15 @@
 "bulk.trash.help" = "Move the selected files to the Trash (⌫ does the same). Edit ▸ Undo puts them back.";
 "bulk.deselect" = "Deselect";
 "cleanup.moreRows" = "…and %d more not shown here (the count above includes those ticked).";
+
+"dupes.preset" = "How thorough";
+"dupes.preset.quick" = "Quick — files over 1 GB, exact copies";
+"dupes.preset.thorough" = "Thorough — files over 100 MB, look-alikes too";
+"dupes.preset.everything" = "Everything — every file, look-alikes too";
+"dupes.presetShort.quick" = "Quick";
+"dupes.presetShort.thorough" = "Thorough";
+"dupes.presetShort.everything" = "Everything";
+"dupes.presetShort.custom" = "Custom";
+"cleanup.move.progress" = "Moving to %@: %d of %d…";
+"cleanup.move.stopped" = "Stopped: %@ moved to %@; the rest stayed where they were.";
+"cleanup.move.unplugged" = "%@ was disconnected while moving. %@ had moved; the rest stayed where they were — nothing was lost.";

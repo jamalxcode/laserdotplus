@@ -393,3 +393,12 @@ The owner: "i tried to do a stop on a junk find so i can delete what was found s
 had entered but not finished as an empty folder — ticked like all junk — including folders full of media; and the
 list of all of them was drawn at once. Fixed: a stopped walk offers no empty folders (test), lists draw 2,000 rows.
 Also: junk files are noted as indexing skips them (`junk.list`, on the drive for a drive), so Junk lists them at once.
+
+## 47. The rest of the critique, and ⌘-click (0.1.31)
+
+The owner: "do 1 (find another way to do 2) (3 save anything needed on actual drive to maintain privacy) 4 6 7", then,
+mid-way, "command click stopped working, i need it to choose duplicates to delete". Found: a refresh during indexing
+cut the list to its first page, dropping ⌘-clicked rows further down (and Delete left them out) — refreshes now keep
+what was loaded. The scale test is the engine at 300,000 files on Linux in every build (instead of a nightly Mac run).
+Last-opened dates are remembered on the drive itself (privacy). Junk lists what indexing noted; Look Deeper walks.
+Duplicates: Quick / Thorough / Everything. Moving to a drive: progress, Stop, a clear unplug message.

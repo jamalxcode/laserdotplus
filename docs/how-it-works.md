@@ -97,6 +97,14 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **0.1.31:** A keep-selection refresh asks for as many rows as are loaded (up to 20,000). Junk: `scan(roots:)`
+  lists `JunkIndexed` only; `deeper: true` adds the walk; finds are merged off the main thread. Dupes presets set
+  `minMB`/`similar`. `moveInBackground` publishes `moving` (done/total/drive), checks Stop and the drive before each
+  file. Last opened: `openedDates` (internal/core/opened.go) remembers dates per place — `<drive>/.laserdot/opened.list`
+  (paths on the drive), this Mac's beside its index, encrypted/read-only drives in memory only; `ByOpened` answers from
+  it and re-reads in the background. `ChoicesArea` passes only the open groups to an `Equatable` `ChoiceBands`.
+  `TestDriveScale` (LASERDOT_SCALE=300000, CI's Ubuntu job) times index, search, Select All, choices, Junk, Space and
+  Last Opened at an 8 TB drive's scale.
 - **0.1.30:** `findJunk` returns no empty folders when its walk was stopped. Clean-up lists draw `shownRows`
   (2,000) rows plus a "…and N more" line. `scan.AddJunkHook`: the walk reports each system file / partial download it
   skips; `junkNotes` files them per place (`<drive>/.laserdot/junk.list`, paths on the drive; this Mac's beside its

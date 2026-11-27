@@ -64,6 +64,9 @@ jobs:
           else
             go test -race ./...
           fi
+      - name: engine at a drive's scale (300,000 files)
+        if: runner.os == 'Linux'
+        run: LASERDOT_SCALE=300000 go test ./internal/core -run TestDriveScale -v -count=1 -timeout 15m
 
   app:
     needs: tested

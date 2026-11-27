@@ -155,6 +155,10 @@ type Laserdot struct {
 	dupeFound atomic.Pointer[[]DupeGroup]
 	// jn: junk files the walk left out, noted for Clean Up Junk.
 	jn junkNotes
+	// od: last-opened dates remembered (on the drive for a drive).
+	od openedDates
+	// closing: Close has begun (background readers stop).
+	closing atomic.Bool
 	// ck: the running checksum save or check (bit rot).
 	ck checksumState
 	// junk: the running junk walk (what it found so far); junkStop ends it.
@@ -302,7 +306,9 @@ func (ld *Laserdot) requeueForNewDetails() (int64, error) {
 
 // Close closes the databases.
 func (ld *Laserdot) Close() error {
+	ld.closing.Store(true)
 	ld.background.Wait()
+	ld.saveOpened()
 	ld.stopJunkNotes()
 	ld.closeDrives()
 	ld.streams.Wait()

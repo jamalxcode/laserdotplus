@@ -2,6 +2,22 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.31
+
+- **⌘-click picks stay picked.** While a drive was indexing, the list refreshed itself every 15 seconds and cut back
+  to its first 500 files: files you had ⌘-clicked further down vanished, and Move to Trash left them out. A refresh now
+  keeps every row you had loaded.
+- **Junk is instant on any drive:** it lists what indexing noted (empty files and folders, unfinished downloads,
+  .DS_Store and ._ files) at once. **Look Deeper** walks every folder too — for a drive indexed by an earlier version.
+- **Find Duplicates presets:** Quick (files over 1 GB, exact copies), Thorough (over 100 MB, look-alikes too),
+  Everything (every file). The size and look-alike settings are still in the same menu for a mix.
+- **Moving files to a drive shows progress, with Stop.** If the drive is unplugged midway, Laserdot+ says so; files not
+  yet moved stay where they were.
+- **Last opened in the Sort menu**, with a tick and the toolbar saying so; the list says when it is reading the dates.
+  The dates are remembered — on the drive itself for a drive — so the next sort is instant (and checked again quietly).
+- **Calmer window:** the filter choices redraw only when they change; long lists no longer ask macOS for the same
+  file-type icon row after row.
+
 ## 0.1.30
 
 - **Important fix — stopping Clean Up Junk early.** A walk stopped partway could list folders it had not finished

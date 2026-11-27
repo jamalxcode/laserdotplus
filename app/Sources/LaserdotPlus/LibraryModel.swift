@@ -459,11 +459,16 @@ final class LibraryModel: ObservableObject {
         let gen = generation
         let q = effectiveQuery
         let (sort, reverse, engine, opened) = (self.sort, self.reverse, self.engine, self.openedOrder)
+        // A refresh brings back as many rows as were loaded (the owner's
+        // ⌘-clicked files further down vanished when a refresh, every 15 s
+        // while a drive indexed, cut the list back to its first page — and
+        // Delete then left them out).
+        let limit = keepSelection ? max(Self.page, min(results.count, 20_000)) : Self.page
         searching = true
         searchQueue.async { [weak self] in
             let outcome = Result {
-                if let o = opened { return try engine.byOpened(query: q, limit: Self.page, reverse: o) }
-                return try engine.search(query: q, limit: Self.page, sort: sort, reverse: reverse)
+                if let o = opened { return try engine.byOpened(query: q, limit: limit, reverse: o) }
+                return try engine.search(query: q, limit: limit, sort: sort, reverse: reverse)
             }
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
@@ -515,7 +520,9 @@ final class LibraryModel: ObservableObject {
                 guard let self, gen == self.generation else { return }
                 FreezeWatch.mark("choices")
                 // Drives are the sidebar's Places, not filters.
-                self.groups = g.filter { $0.id != "drive" }
+                // Assigned only when different: an equal list redrew every chip.
+                let shown = g.filter { $0.id != "drive" }
+                if shown != self.groups { self.groups = shown }
             }
         }
     }
@@ -887,11 +894,31 @@ final class LibraryModel: ObservableObject {
 
     /// Move files into a folder off the main thread (a move to another drive
     /// copies the whole file), undoable, then tell the engine.
+    /// A move to a drive under way: how far, where to, and Stop (the
+    /// critique: a big move said nothing until it ended).
+    struct Moving: Equatable {
+        var done: Int
+        let total: Int
+        let to: String
+    }
+    @Published private(set) var moving: Moving?
+    private var stopMove = false
+    func stopMoving() { stopMove = true }
+
     func moveInBackground(_ paths: [String], to folder: URL, undo: UndoManager?) {
-        notice = String(format: L("notice.moving"), paths.count)
+        guard moving == nil else { return }
+        let dest = placeName(folder.path)
+        moving = Moving(done: 0, total: paths.count, to: dest)
+        stopMove = false
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             var moved: [(from: URL, to: URL)] = []
-            for path in paths {
+            var unplugged = false, stopped = false
+            var lastShown = Date.distantPast
+            for (i, path) in paths.enumerated() {
+                if DispatchQueue.main.sync(execute: { self?.stopMove ?? true }) { stopped = true; break }
+                // The drive went away: stop, and say so (a move between disks
+                // copies first, so a file not yet moved stays where it was).
+                if !FileManager.default.fileExists(atPath: folder.path) { unplugged = true; break }
                 let from = URL(fileURLWithPath: path)
                 var to = folder.appendingPathComponent(from.lastPathComponent)
                 var n = 2
@@ -900,16 +927,33 @@ final class LibraryModel: ObservableObject {
                     to = folder.appendingPathComponent(ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)")
                     n += 1
                 }
-                if (try? FileManager.default.moveItem(at: from, to: to)) != nil { moved.append((from, to)) }
+                if (try? FileManager.default.moveItem(at: from, to: to)) != nil {
+                    moved.append((from, to))
+                } else if !FileManager.default.fileExists(atPath: folder.path) {
+                    unplugged = true
+                    break
+                }
+                if Date().timeIntervalSince(lastShown) > 0.25 {
+                    lastShown = Date()
+                    DispatchQueue.main.async { self?.moving?.done = i + 1 }
+                }
             }
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.moving = nil
                 let gone = Set(moved.map(\.from.path))
                 self.results.removeAll { gone.contains($0.path) }
                 self.selection.subtract(gone)
-                self.notice = String(format: L("notice.moved"), moved.count)
-                if moved.count < paths.count {
-                    self.trouble = String(format: L("notice.movedSome"), moved.count, paths.count - moved.count)
+                let movedText = countText(moved.count, "file")
+                if unplugged {
+                    self.trouble = String(format: L("cleanup.move.unplugged"), dest, movedText)
+                } else if stopped {
+                    self.notice = String(format: L("cleanup.move.stopped"), movedText, dest)
+                } else {
+                    self.notice = String(format: L("notice.moved"), moved.count)
+                    if moved.count < paths.count {
+                        self.trouble = String(format: L("notice.movedSome"), moved.count, paths.count - moved.count)
+                    }
                 }
                 if !moved.isEmpty {
                     undo?.registerUndo(withTarget: self) { m in
@@ -924,6 +968,13 @@ final class LibraryModel: ObservableObject {
                 self.tellEngine(moved.flatMap { [$0.from, $0.to] })
             }
         }
+    }
+
+    /// A folder's place as the window names it: a drive's name, or the folder's.
+    private func placeName(_ path: String) -> String {
+        let parts = path.split(separator: "/").map(String.init)
+        if parts.first == "Volumes", parts.count > 1 { return parts[1] }
+        return (path as NSString).lastPathComponent
     }
 
     /// Move files into a folder (a new name when one is taken), undoable.

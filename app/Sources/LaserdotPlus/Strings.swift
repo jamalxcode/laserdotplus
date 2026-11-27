@@ -59,9 +59,11 @@ func friendlyPath(_ path: String) -> String { placeParts(path).joined(separator:
 
 /// The parts of a path, from its drive or Home (macOS's own /private and
 /// temporary folders left out).
+private let homeParts = NSHomeDirectory().split(separator: "/").map(String.init)
+
 func placeParts(_ path: String) -> [String] {
     var parts = path.split(separator: "/").map(String.init)
-    let home = NSHomeDirectory().split(separator: "/").map(String.init)
+    let home = homeParts
     if parts.starts(with: home) {
         parts = [L("path.home")] + parts.dropFirst(home.count)
     } else if parts.first == "Volumes", parts.count > 1 {

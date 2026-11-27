@@ -30,6 +30,28 @@ final class DupesModel: ObservableObject {
     }
     static let sizes = [0, 10, 100, 1000]
 
+    /// Three ready-made looks (the critique: two settings to work out before
+    /// the first search): Quick — big files, exact copies; Thorough — 100 MB
+    /// and up, look-alikes too; Everything — every file. Remembered, as the
+    /// two settings they set.
+    enum Preset: String, CaseIterable { case quick, thorough, everything }
+    static func settings(_ p: Preset) -> (minMB: Int, similar: Bool) {
+        switch p {
+        case .quick: return (1000, false)
+        case .thorough: return (100, true)
+        case .everything: return (0, true)
+        }
+    }
+    var preset: Preset? {
+        get { Preset.allCases.first { Self.settings($0) == (minMB, similar) } }
+        set {
+            guard let newValue else { return }
+            let s = Self.settings(newValue)
+            minMB = s.minMB
+            similar = s.similar
+        }
+    }
+
     /// The search the comparison is limited to: the place, and the size.
     func scope(place: String) -> String {
         let size = minMB > 0 ? (minMB >= 1000 ? "fsize:>\(minMB / 1000)gb" : "fsize:>\(minMB)mb") : ""
@@ -266,14 +288,26 @@ struct DuplicatesView: View {
         VStack(spacing: 0) {
             ModeHeader(symbol: "square.on.square", title: L("dupes.title"), detail: model.placeTitle,
                        done: { model.showDupes = false }) {
-                Picker(L("dupes.larger"), selection: $dupes.minMB) {
-                    ForEach(DupesModel.sizes, id: \.self) { mb in
-                        Text(mb == 0 ? L("dupes.anySize") : mb >= 1000 ? "\(mb / 1000) GB" : "\(mb) MB").tag(mb)
+                // The look as one choice; the two settings inside, for a mix.
+                Menu {
+                    Picker(L("dupes.preset"), selection: $dupes.preset) {
+                        ForEach(DupesModel.Preset.allCases, id: \.self) { p in
+                            Text(L("dupes.preset." + p.rawValue)).tag(Optional(p))
+                        }
                     }
+                    .pickerStyle(.inline)
+                    Divider()
+                    Picker(L("dupes.larger"), selection: $dupes.minMB) {
+                        ForEach(DupesModel.sizes, id: \.self) { mb in
+                            Text(mb == 0 ? L("dupes.anySize") : mb >= 1000 ? "\(mb / 1000) GB" : "\(mb) MB").tag(mb)
+                        }
+                    }
+                    Toggle(L("dupes.similar"), isOn: $dupes.similar)
+                } label: {
+                    Text(dupes.preset.map { L("dupes.presetShort." + $0.rawValue) } ?? L("dupes.presetShort.custom"))
                 }
                 .fixedSize()
                 .help(L("dupes.larger.help"))
-                Toggle(L("dupes.similar"), isOn: $dupes.similar).toggleStyle(.checkbox)
                 Button(dupes.phase == .idle ? L("dupes.find") : L("dupes.again")) { dupes.scan(scope: dupes.scope(place: model.dupesScope)) }
                     .disabled(dupes.phase == .scanning || dupes.phase == .cleaning)
             }

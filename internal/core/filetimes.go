@@ -28,13 +28,17 @@ func (ld *Laserdot) FileTimes(paths []string) []FileTime {
 		paths = paths[:MaxFileTimes]
 	}
 	out := make([]FileTime, 0, len(paths))
-	for _, p := range paths {
+	read := map[int]int64{}
+	for i, p := range paths {
 		t, err := scan.FileTimes(p)
 		if err != nil {
 			continue
 		}
+		read[i] = t.Opened
 		out = append(out, FileTime{Path: p, Created: t.Created, Modified: t.Modified, Opened: t.Opened, Added: t.Added})
 	}
+	// What was just read is remembered for the next last-opened sort.
+	ld.rememberOpened(ld.openedPlaces(), paths, read)
 	return out
 }
 
@@ -51,10 +55,20 @@ func (ld *Laserdot) ByOpened(q string, offset, limit int, reverse bool) (*Search
 	if err != nil || r == nil {
 		return r, err
 	}
+	paths := make([]string, len(r.Hits))
 	for i := range r.Hits {
-		if t, err := scan.FileTimes(r.Hits[i].Path); err == nil {
-			r.Hits[i].Opened = t.Opened
+		paths[i] = r.Hits[i].Path
+	}
+	// Remembered dates at once (on the drive for a drive); read again in the
+	// background so a file opened since is right next time.
+	dates, ok, fromMemory := ld.openedDatesOf(paths)
+	for i := range r.Hits {
+		if ok[i] {
+			r.Hits[i].Opened = dates[i]
 		}
+	}
+	if fromMemory {
+		ld.refreshOpened(paths)
 	}
 	sort.SliceStable(r.Hits, func(i, j int) bool {
 		if reverse {

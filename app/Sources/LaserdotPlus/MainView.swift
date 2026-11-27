@@ -88,14 +88,23 @@ struct MainToolbar: ToolbarContent {
                     .help(L("view.size"))
             }
             Menu {
-                Picker(L("sort.by"), selection: $model.sort) {
-                    ForEach([SortKey.modified, .created, .name, .size, .kind, .relevance], id: \.self) { k in
+                // The usual sorts; Last Opened (dates read from the files)
+                // shows as chosen in its own line (the critique: nothing said
+                // the list was in last-opened order).
+                Picker(L("sort.by"), selection: Binding(get: { model.openedOrder == nil ? model.sort : SortKey.opened },
+                                                        set: { k in
+                                                            if k == .opened { model.sortByOpened(reverse: model.reverse) } else { model.openedOrder = nil; model.sort = k; model.schedule(now: true) }
+                                                        })) {
+                    ForEach([SortKey.modified, .created, .opened, .name, .size, .kind, .relevance], id: \.self) { k in
                         Text(L("sort." + k.rawValue)).tag(k)
                     }
                 }
-                Toggle(L("sort.reverse"), isOn: $model.reverse)
+                Toggle(L("sort.reverse"), isOn: Binding(get: { model.openedOrder ?? model.reverse },
+                                                        set: { r in
+                                                            if model.openedOrder != nil { model.sortByOpened(reverse: r) } else { model.reverse = r }
+                                                        }))
             } label: {
-                Label(L("sort.by"), systemImage: "arrow.up.arrow.down")
+                Label(model.openedOrder != nil ? L("sort.opened") : L("sort.by"), systemImage: "arrow.up.arrow.down")
             }
             .help(L("sort.by"))
             Menu {
@@ -134,7 +143,7 @@ struct TopArea: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             ScrollView(.vertical) {
-                ChoiceBands(model: model)
+                ChoicesArea(model: model)
                     .background(GeometryReader { g in
                         Color.clear.preference(key: ChoicesHeightKey.self, value: g.size.height)
                     })
@@ -295,7 +304,16 @@ struct BottomBar: View {
                 Button(L("results.more")) { model.loadMore() }.buttonStyle(.link)
             }
             Spacer(minLength: 8)
-            if let t = model.trouble {
+            if model.openedOrder != nil && model.searching {
+                // Reading each file's last-opened date (remembered after the first time).
+                ProgressView().controlSize(.small)
+                Text(L("sort.opened.reading")).foregroundStyle(.secondary).lineLimit(1)
+            }
+            if let m = model.moving {
+                ProgressView(value: Double(m.done), total: Double(max(m.total, 1))).frame(width: 90)
+                Text(String(format: L("cleanup.move.progress"), m.to, m.done, m.total)).foregroundStyle(.secondary).lineLimit(1).monospacedDigit()
+                Button(L("dupes.stop")) { model.stopMoving() }
+            } else if let t = model.trouble {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                     Text(t).lineLimit(2).textSelection(.enabled)

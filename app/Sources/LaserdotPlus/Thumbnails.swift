@@ -18,11 +18,18 @@ final class Thumbs {
     private let iconQueue = DispatchQueue(label: "laserdotplus.icons", qos: .utility)
 
     /// The icon for a name's type, from the name alone (no disk read).
+    private var typeIcons: [String: NSImage] = [:]
+
     func typeIcon(for path: String) -> NSImage {
         if let img = icons.object(forKey: path as NSString) { return img }
-        let ext = (path as NSString).pathExtension
+        let ext = (path as NSString).pathExtension.lowercased()
+        // One icon per kind of file, made once (a hang report: a long list
+        // asked macOS for the same type's icon row after row).
+        if let img = typeIcons[ext] { return img }
         let type = ext.isEmpty ? UTType.folder : (UTType(filenameExtension: ext) ?? .data)
-        return NSWorkspace.shared.icon(for: type)
+        let img = NSWorkspace.shared.icon(for: type)
+        typeIcons[ext] = img
+        return img
     }
 
     /// An app's or folder's own icon (custom icons), read off the main thread.
