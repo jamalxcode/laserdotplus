@@ -205,6 +205,13 @@ func (ld *Laserdot) StopJunk() { ld.junkStop.Store(true) }
 // counts: those are never indexed) — under root ("" every place). Instant: no
 // disk is read. The walk (Junk) adds the system files (.DS_Store, ._…).
 func (ld *Laserdot) JunkIndexed(root string) []JunkItem {
+	// The index holds real paths (macOS's /var is /private/var): the self-test
+	// asked for a temporary folder by its short name and got nothing.
+	if root != "" {
+		if r, err := filepath.EvalSymlinks(root); err == nil {
+			root = r
+		}
+	}
 	noted := ld.notedJunk(root) // system files and old downloads the walk noted
 	ld.mu.RLock()
 	defer ld.mu.RUnlock()

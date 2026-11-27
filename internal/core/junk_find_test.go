@@ -163,3 +163,25 @@ func TestAStoppedWalkOffersNoEmptyFolders(t *testing.T) {
 		}
 	}
 }
+
+// A place asked for through a symlink (macOS's /var → /private/var) finds the
+// same junk as its real path.
+func TestJunkIndexedThroughASymlink(t *testing.T) {
+	base, _ := filepath.EvalSymlinks(t.TempDir())
+	root := filepath.Join(base, "real")
+	os.MkdirAll(root, 0o755)
+	os.WriteFile(filepath.Join(root, "empty.txt"), nil, 0o644)
+	os.WriteFile(filepath.Join(root, "full.txt"), []byte("x"), 0o644)
+	link := filepath.Join(base, "link")
+	if err := os.Symlink(root, link); err != nil {
+		t.Skip(err)
+	}
+	ld, _ := Open(filepath.Join(base, "data", "i.db"))
+	defer ld.Close()
+	if _, err := ld.Index(root); err != nil {
+		t.Fatal(err)
+	}
+	if got := ld.JunkIndexed(link); len(got) != 1 || got[0].Why != "empty_file" {
+		t.Fatalf("%+v", got)
+	}
+}
