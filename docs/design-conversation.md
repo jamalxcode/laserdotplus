@@ -402,3 +402,10 @@ cut the list to its first page, dropping ⌘-clicked rows further down (and Dele
 what was loaded. The scale test is the engine at 300,000 files on Linux in every build (instead of a nightly Mac run).
 Last-opened dates are remembered on the drive itself (privacy). Junk lists what indexing noted; Look Deeper walks.
 Duplicates: Quick / Thorough / Everything. Moving to a drive: progress, Stop, a clear unplug message.
+
+## 48. ⌘-click in the grid (0.1.32)
+
+The owner, on 0.1.31: "command click still does not work", then: "when i do a command click i get a fram around the
+selection then as soon as i move the cursor the selection goes, all under 1 second". The grid's background tap gesture
+(deselect on empty space) was removed — on the owner's macOS it fired for clicks on the tiles too. The self-test now
+sends the ⌘-click through the window's event queue and moves the pointer; Report a Problem traces shrinking selections.

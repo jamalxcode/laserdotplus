@@ -117,7 +117,9 @@ final class MouseCatcherView: NSView, NSDraggingSource {
             if e.type == .leftMouseDown, e.modifierFlags.contains(.control) { return nil } // a context menu
             let p = convert(point, from: sv)
             let bottom = frames.frames.values.map(\.maxY).max() ?? 0
-            guard bounds.contains(p), p.y <= bottom + 12 else { return nil }
+            // Below the files: "Load more" takes its own clicks; without it, a
+            // click there empties the selection, as in Finder.
+            guard bounds.contains(p), p.y <= bottom + 12 || !(model?.canLoadMore ?? true) else { return nil }
             return self
         default:
             return nil
@@ -205,11 +207,14 @@ final class MouseCatcherView: NSView, NSDraggingSource {
     /// A click put in the app's event queue, as macOS delivers a real one:
     /// it is taken from the queue and routed by hit-testing (the self-test
     /// checks that clicks reach this view through SwiftUI's layers).
-    func postClick(at p: CGPoint) {
+    func postClick(at p: CGPoint, flags: NSEvent.ModifierFlags = [], thenMove: Bool = false) {
         guard let w = window else { return }
         let loc = convert(p, to: nil)
-        for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
-            if let e = NSEvent.mouseEvent(with: type, location: loc, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+        var types: [NSEvent.EventType] = [.leftMouseDown, .leftMouseUp]
+        if thenMove { types += [.mouseMoved, .mouseMoved] } // the pointer moves on, as the owner's did
+        for (i, type) in types.enumerated() {
+            let at = type == .mouseMoved ? CGPoint(x: loc.x + CGFloat(i) * 6, y: loc.y) : loc
+            if let e = NSEvent.mouseEvent(with: type, location: at, modifierFlags: type == .mouseMoved ? [] : flags, timestamp: ProcessInfo.processInfo.systemUptime,
                                           windowNumber: w.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
                 NSApp.postEvent(e, atStart: false)
             }

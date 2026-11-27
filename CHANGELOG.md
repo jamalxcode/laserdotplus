@@ -2,6 +2,14 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.32
+
+- **⌘-click in the grid keeps every file you pick.** On newer macOS, the grid's "click empty space to deselect" also
+  caught clicks on the files, a moment later, and emptied the selection as soon as the pointer moved. It is gone; a
+  click in empty space still clears the selection.
+- Help ▸ Report a Problem… also says what made a selection of several files smaller (counts and the app's own step
+  names only — never a file's name), in case anything else ever does.
+
 ## 0.1.31
 
 - **⌘-click picks stay picked.** While a drive was indexing, the list refreshed itself every 15 seconds and cut back

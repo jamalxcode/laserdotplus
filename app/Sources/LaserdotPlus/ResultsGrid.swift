@@ -24,8 +24,10 @@ struct ResultsGrid: View {
             }
             .marqueeSelect(model)
         }
-        .background(Color(nsColor: .textBackgroundColor).opacity(0.001))
-        .onTapGesture { model.selection = [] }
+        // No tap gesture here: on the owner's macOS it also caught clicks on
+        // the tiles, a moment later, and emptied a ⌘-click selection ("as soon
+        // as I move the cursor the selection goes"). The click view clears the
+        // selection on a click in empty space itself.
     }
 
     private func tile(_ i: Int, _ h: Hit) -> some View {

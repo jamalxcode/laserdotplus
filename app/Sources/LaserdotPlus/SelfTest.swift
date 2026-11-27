@@ -149,6 +149,16 @@ final class SelfTestRunner {
                     }
                     self.after(1) {
                     self.report["window_click"] = firstTile.map { self.model.selection == [$0.key] } ?? false
+                    // ⌘-click another, through the event queue too, and move
+                    // the pointer on: both stay selected (the owner: the
+                    // selection went as soon as the cursor moved).
+                    let second = MarqueeSelect.lastFrames.sorted { ($0.value.minY, $0.value.minX) < ($1.value.minY, $1.value.minX) }.dropFirst().first
+                    if let v = MouseCatcherView.current, let s = second {
+                        v.postClick(at: CGPoint(x: s.value.midX, y: s.value.midY), flags: .command, thenMove: true)
+                    }
+                    self.after(1.5) {
+                    self.report["window_cmd_click"] = self.model.selection.count
+                    self.report["selection_trace"] = LibraryModel.selectionTrace
                     self.model.clearFilters()
                     self.model.viewMode = .sheet
                     self.after(3) {
@@ -160,6 +170,7 @@ final class SelfTestRunner {
                             self.model.viewMode = .list
                             self.details()
                         }
+                    }
                     }
                     }
                     }

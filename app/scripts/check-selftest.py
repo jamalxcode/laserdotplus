@@ -44,6 +44,7 @@ check(r.get("checksums_saved", 0) > 0 and r.get("checksums_damage") == 0 and r.g
       f"the drive's fingerprints are saved on it and checked without damage (got {r.get('checksums_saved')}, {r.get('checksums_damage')})")
 check(r.get("inspector_shown") is True, "the inspector stays on (Review and Clean Up hide it only while they show)")
 check(r.get("window_click") is True, "a click delivered by the window reaches the file under it")
+check(r.get("window_cmd_click") == 2, f"a ⌘-click delivered by the window adds a file, and the pointer moving on keeps both (got {r.get('window_cmd_click')}, trace {r.get('selection_trace')})")
 check(r.get("arrow_moves") is True, "→ moves the selection to the next file")
 check(r.get("keep_oldest") is True, "Keep ▸ The Oldest Copy keeps one copy per group, the oldest")
 check(r.get("double_click_opens_first") is True, "a double click opens the file its first click was on")

@@ -97,6 +97,10 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **0.1.32:** The grid has no SwiftUI tap gesture (on macOS 27 it also fired for clicks the click view handled,
+  emptying ⌘-click selections); the click view takes clicks below the tiles when there is no "Load more".
+  `LibraryModel.selectionTrace`: when a multi-file selection shrinks, the counts and the app's calling symbols (no
+  paths), shown in Report a Problem. The self-test ⌘-clicks through the event queue and moves the pointer after.
 - **0.1.31:** A keep-selection refresh asks for as many rows as are loaded (up to 20,000). Junk: `scan(roots:)`
   lists `JunkIndexed` only; `deeper: true` adds the walk; finds are merged off the main thread. Dupes presets set
   `minMB`/`similar`. `moveInBackground` publishes `moving` (done/total/drive), checks Stop and the drive before each

@@ -106,7 +106,30 @@ final class LibraryModel: ObservableObject {
     @Published private(set) var groups: [RefineGroup] = []
     @Published private(set) var searching = false
     @Published private(set) var problem: String?
-    @Published var selection: Set<String> = [] { didSet { if selection != oldValue { selectionChanged() } } }
+    @Published var selection: Set<String> = [] {
+        didSet {
+            guard selection != oldValue else { return }
+            if selection.count < oldValue.count, oldValue.count > 1 { Self.noteShrink(oldValue.count, selection.count) }
+            selectionChanged()
+        }
+    }
+
+    /// What shrank a selection of several files lately: the counts and the
+    /// app's own steps that did it — never a file's name — for Help ▸ Report a
+    /// Problem (the owner's ⌘-click selections vanished; this says why).
+    static var selectionTrace: [String] = []
+    private static func noteShrink(_ from: Int, _ to: Int) {
+        let steps = Thread.callStackSymbols.dropFirst(2)
+            .filter { $0.contains("LaserdotPlus") && !$0.contains("selection") }
+            .prefix(4)
+            .compactMap { line -> String? in
+                // "3 LaserdotPlus 0x… $s12LaserdotPlus…mangled + 12": the symbol only.
+                let parts = line.split(separator: " ", omittingEmptySubsequences: true)
+                return parts.count > 3 ? String(parts[3]) : nil
+            }
+        selectionTrace.append("\(from)→\(to): " + steps.joined(separator: " < "))
+        if selectionTrace.count > 8 { selectionTrace.removeFirst(selectionTrace.count - 8) }
+    }
     @Published private(set) var details: FileDetails?
     @Published private(set) var status: DaemonStatus?
     /// Something the window should say for a moment ("Moved 3 items to the Trash").

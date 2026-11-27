@@ -97,6 +97,10 @@ enum FreezeWatch {
         let list = entries()
         lines.append(list.isEmpty ? L("report.noFreezes") : L("report.freezes"))
         for e in list.reversed() { lines.append("• \(f.string(from: e.at)) — \(String(format: "%.1f", e.seconds)) s — \(e.step)") }
+        if !LibraryModel.selectionTrace.isEmpty {
+            lines.append("Selections made smaller:")
+            lines += LibraryModel.selectionTrace.map { "• " + $0 }
+        }
         let text = lines.joined(separator: "\n")
         let a = NSAlert()
         a.messageText = L("report.title")
