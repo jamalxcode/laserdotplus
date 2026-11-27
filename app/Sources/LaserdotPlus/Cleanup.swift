@@ -82,6 +82,7 @@ final class JunkModel: ObservableObject {
     /// thousands of finds one at a time copied the whole set each time and
     /// froze the window for 20 seconds).
     private func take(_ found: [JunkItem]) {
+        FreezeWatch.mark("junk finds")
         let shown = Set(items.map(\.path))
         var next = chosen
         for j in found where !shown.contains(j.path) { next.insert(j.path) }

@@ -14,7 +14,7 @@ struct ResultsGrid: View {
             VStack(spacing: 0) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: model.tileSize + 24), spacing: 10)], spacing: 12) {
                     ForEach(Array(model.results.enumerated()), id: \.element.path) { i, h in
-                        tile(i, h)
+                        tile(i, h).onAppear { model.reached(h) }
                     }
                 }
                 .padding(12)

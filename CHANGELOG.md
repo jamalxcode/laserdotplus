@@ -2,6 +2,20 @@
 
 What's new in each version, in plain words. A new `## x.y.z` section is released when CI passes on main.
 
+## 0.1.28
+
+- **Uses much less memory.** Pictures and video frames kept for quick redrawing are now held to about 260 MB in all
+  (they were counted, not measured — the app reached about 1 GB), and macOS can empty them when memory runs short.
+- **The list keeps going as you scroll** — no more stopping at 500 with "Load more" (the button stays for the keyboard).
+- **The tray's Apply runs in the background**, so a tray of thousands of files doesn't freeze the window.
+- **Saved views stay highlighted** in the sidebar while they are shown.
+- **Help ▸ Report a Problem…**: if the window ever stops answering for more than 2 seconds, Laserdot+ notes when, for
+  how long and in which step (never a file's name); copy it from there to send it.
+- **Settings ▸ Look for updates**: as soon as they are out, once a day (the default), once a week, or only when you
+  ask.
+- Ready for a Developer ID: once the certificate and notarization keys are added to the project, builds are signed and
+  notarized by themselves (no more right-click ▸ Open the first time).
+
 ## 0.1.27
 
 - **Clean Up Junk no longer freezes on a big drive.** Ticking tens of thousands of finds one at a time froze the window

@@ -13,7 +13,7 @@ struct ContactSheet: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 6) {
                 ForEach(Array(model.results.enumerated()), id: \.element.path) { i, h in
-                    row(i, h)
+                    row(i, h).onAppear { model.reached(h) }
                 }
                 if model.canLoadMore {
                     Button(L("results.more")) { model.loadMore() }.padding(8)

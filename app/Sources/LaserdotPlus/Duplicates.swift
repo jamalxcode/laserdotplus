@@ -72,6 +72,7 @@ final class DupesModel: ObservableObject {
     /// Show these groups, keeping the user's Keep choices for files already
     /// shown and the engine's recommendation for new ones.
     private func take(_ found: [DuplicateGroup]) {
+        FreezeWatch.mark("duplicate finds")
         let shown = Set(groups.flatMap { $0.files.map(\.path) })
         // Built aside and set once: one update, not one per file.
         var next = keep

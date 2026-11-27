@@ -11,12 +11,8 @@ import UniformTypeIdentifiers
 /// videos through `VideoFrames` (macOS's reader or the bundled ffmpeg).
 final class Thumbs {
     static let shared = Thumbs()
-    private let cache: NSCache<NSString, NSImage> = {
-        let c = NSCache<NSString, NSImage>()
-        c.countLimit = 800
-        return c
-    }()
-    private let icons = NSCache<NSString, NSImage>()
+    private let cache = pictureCache(megabytes: 120)
+    private let icons = pictureCache(megabytes: 20)
     /// Three files read at a time, newest first (what is on screen now).
     private let gate = AsyncGate(3)
     private let iconQueue = DispatchQueue(label: "laserdotplus.icons", qos: .utility)
@@ -36,7 +32,7 @@ final class Thumbs {
         if let img = icons.object(forKey: path as NSString) { return done(img) }
         iconQueue.async { [icons] in
             let img = NSWorkspace.shared.icon(forFile: path)
-            icons.setObject(img, forKey: path as NSString)
+            cachePut(icons, img, path as NSString)
             DispatchQueue.main.async { done(img) }
         }
     }
@@ -46,7 +42,7 @@ final class Thumbs {
         if let img = cache.object(forKey: key) { return img }
         if VideoFrames.isVideo(path) {
             let img = await VideoFrames.poster(path, edge: edge)
-            if let img { cache.setObject(img, forKey: key) }
+            if let img { cachePut(cache, img, key) }
             return img
         }
         let ext = (path as NSString).pathExtension.lowercased()
@@ -77,7 +73,7 @@ final class Thumbs {
             return page.thumbnail(of: NSSize(width: edge * 2, height: edge * 2), for: .mediaBox)
         }.value
         await gate.leave()
-        if let img { cache.setObject(img, forKey: key) }
+        if let img { cachePut(cache, img, key) }
         return img
     }
 }

@@ -10,9 +10,13 @@ import AppKit
 /// (on by default; the View menu turns it off).
 final class Updates: ObservableObject {
     static let shared = Updates()
-    @Published var daily = (UserDefaults.standard.object(forKey: "updates.daily") as? Bool) ?? true {
-        didSet { UserDefaults.standard.set(daily, forKey: "updates.daily") }
+    /// How often to look for a newer version (the critique: releases came
+    /// many times a day). "hourly" (as soon as out), "daily", "weekly", "off".
+    @Published var rhythm = UserDefaults.standard.string(forKey: "updates.rhythm")
+        ?? ((UserDefaults.standard.object(forKey: "updates.daily") as? Bool) == false ? "off" : "daily") {
+        didSet { UserDefaults.standard.set(rhythm, forKey: "updates.rhythm") }
     }
+    static let rhythms = ["hourly", "daily", "weekly", "off"]
     private var checking = false
     private var installing = false
 
@@ -29,9 +33,16 @@ final class Updates: ObservableObject {
     }
 
     func checkIfDue() {
-        guard daily, !SelfTest.active else { return }
+        let every: Double
+        switch rhythm {
+        case "hourly": every = 3_500
+        case "weekly": every = 7 * 86_400
+        case "off": return
+        default: every = 86_400
+        }
+        guard !SelfTest.active else { return }
         let last = UserDefaults.standard.double(forKey: "updates.last")
-        guard Date().timeIntervalSince1970 - last > 86_400 else { return }
+        guard Date().timeIntervalSince1970 - last > every else { return }
         check(quiet: true)
     }
 

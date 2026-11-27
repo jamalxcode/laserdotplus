@@ -466,3 +466,14 @@
 "protect.damaged" = "%@ damaged — same size and date, different contents.";
 "protect.other" = "%llu edited since (not damage), %d missing.";
 "status.indexingShort" = "indexing…";
+"updates.rhythm" = "Look for updates";
+"updates.rhythm.hourly" = "As soon as they are out";
+"updates.rhythm.daily" = "Once a day";
+"updates.rhythm.weekly" = "Once a week";
+"updates.rhythm.off" = "Only when I ask";
+"report.menu" = "Report a Problem…";
+"report.title" = "Report a Problem";
+"report.noFreezes" = "No freezes noted.";
+"report.freezes" = "Times the window stopped answering (newest first):";
+"report.help" = "Nothing about your files is included. Copy it and send it with a few words about what you were doing.";
+"report.copy" = "Copy";

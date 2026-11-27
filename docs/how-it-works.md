@@ -97,6 +97,15 @@
   Trash call (`FileManager.trashItem`, off the main thread) — so they appear in the Finder's Trash, Put Back works and
   ⌘Z brings them back (0.1.17; before, the engine renamed them into the drive's `.Trashes` itself, which the Finder
   did not always show). Moved copies leave the panel. The self-test finds the fixtures' one picture at four sizes.
+- **0.1.28:** picture caches are limited by bytes (`pictureCache`, `cachePut` with pixel cost; 120 MB thumbnails,
+  120 MB frames, 20 MB icons). Rows call `model.reached(h)` on appear; the last 40 rows load the next page (one at a
+  time). `applyTray` uses `trashInBackground` then `moveInBackground`. `activeView` highlights a saved view until the
+  words, choices or place change. `FreezeWatch`: a thread pings the main queue every 0.5 s; a wait over 2 s is noted
+  (time, seconds, the step last set with `FreezeWatch.mark`) in this Mac's preferences, shown with the version and
+  memory in Help ▸ Report a Problem…; `takeLongest()` gives the self-test the longest stall. Update rhythm:
+  `Updates.rhythm` (hourly/daily/weekly/off). Signing: with `DEVELOPER_ID` set (CI imports the `DEVELOPER_ID_P12` /
+  `DEVELOPER_ID_PASSWORD` secrets), `bundle.sh` signs each piece with the hardened runtime; with `NOTARY_KEY_P8`,
+  `NOTARY_KEY_ID`, `NOTARY_ISSUER`, `make-dmg.sh` notarizes and staples the disk image. Without them: ad hoc, as before.
 - **Big lists (0.1.27):** published sets, dictionaries and arrays (`chosen`, `keep`, `tray`, `results`) are built
   aside and assigned once — never mutated per item in a loop (each mutation copies the whole collection and
   redraws). `junk_found` takes an offset and returns only new finds (`from`, `total`); removals use a `Set`; clean-up

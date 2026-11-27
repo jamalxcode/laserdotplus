@@ -27,7 +27,10 @@ enum Place: Hashable {
 final class LibraryModel: ObservableObject {
     let engine: Engine
 
-    @Published var text = "" { didSet { if text != oldValue { schedule() } } }
+    @Published var text = "" { didSet { if text != oldValue { activeView = nil; schedule() } } }
+    /// The saved view now shown (highlighted in the sidebar) until the words
+    /// or choices change.
+    @Published var activeView: String?
     /// The Find Duplicates panel is open over the files.
     @Published var showDupes = false
     lazy var dupes = DupesModel(engine: engine)
@@ -62,7 +65,7 @@ final class LibraryModel: ObservableObject {
     /// drive's name is not kept on this Mac (privacy).
     @Published var place: Place = UserDefaults.standard.string(forKey: "place") == "thisMac" ? .thisMac : .everywhere {
         didSet {
-            if place != oldValue { filters = [:]; schedule(now: true) }
+            if place != oldValue { filters = [:]; activeView = nil; schedule(now: true) }
             switch place {
             case .thisMac: UserDefaults.standard.set("thisMac", forKey: "place")
             default: UserDefaults.standard.set("everywhere", forKey: "place")
@@ -301,6 +304,7 @@ final class LibraryModel: ObservableObject {
     func isOn(_ group: String, _ token: String) -> Bool { filters[group]?.contains(token) ?? false }
 
     func toggle(_ group: String, _ token: String, label: String? = nil) {
+        activeView = nil
         if let label { labels[token] = label }
         var toks = filters[group] ?? []
         if let i = toks.firstIndex(of: token) { toks.remove(at: i) } else { toks.append(token) }
@@ -309,6 +313,7 @@ final class LibraryModel: ObservableObject {
     }
 
     func exclude(_ group: String, _ token: String, label: String) {
+        activeView = nil
         labels[token] = label
         if var toks = filters[group], let i = toks.firstIndex(of: token) {
             toks.remove(at: i)
@@ -329,9 +334,11 @@ final class LibraryModel: ObservableObject {
         excluded = v.excluded
         text = v.text
         schedule(now: true)
+        activeView = v.name
     }
 
     func clearFilters() {
+        activeView = nil
         filters = [:]
         excluded = []
         place = .everywhere
@@ -428,6 +435,7 @@ final class LibraryModel: ObservableObject {
             let outcome = Result { try engine.search(query: q, limit: Self.page, sort: sort, reverse: reverse) }
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
+                FreezeWatch.mark("search results")
                 if keepSelection, NSEvent.pressedMouseButtons & 1 != 0 {
                     // A click or a selection box is under way: new results
                     // would move the files under the mouse. Shortly after.
@@ -469,6 +477,7 @@ final class LibraryModel: ObservableObject {
             let g = engine.refinements(query: q)
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
+                FreezeWatch.mark("choices")
                 // Drives are the sidebar's Places, not filters.
                 self.groups = g.filter { $0.id != "drive" }
             }
@@ -477,14 +486,27 @@ final class LibraryModel: ObservableObject {
 
     var canLoadMore: Bool { UInt64(results.count) < total }
 
+    /// Loading the next page now (one at a time).
+    private var loadingMore = false
+
+    /// Called when a row near the end shows (the owner's lists keep going as
+    /// you scroll, as in Finder; the button stays for keyboard users).
+    func reached(_ h: Hit) {
+        guard canLoadMore, !loadingMore, let i = results.firstIndex(where: { $0.path == h.path }), i >= results.count - 40 else { return }
+        loadMore()
+    }
+
     func loadMore() {
+        guard !loadingMore else { return }
+        loadingMore = true
         let gen = generation
         let q = effectiveQuery
         let (sort, reverse, engine, offset) = (self.sort, self.reverse, self.engine, results.count)
         searchQueue.async { [weak self] in
-            guard let r = try? engine.search(query: q, limit: Self.page, offset: offset, sort: sort, reverse: reverse) else { return }
+            let r = try? engine.search(query: q, limit: Self.page, offset: offset, sort: sort, reverse: reverse)
             DispatchQueue.main.async {
-                guard let self, gen == self.generation else { return }
+                self?.loadingMore = false
+                guard let self, let r, gen == self.generation else { return }
                 VideoFrames.noteDurations(r.hits)
                 self.results += r.hits
                 self.fillOpened(r.hits.map(\.path), gen: gen)
@@ -516,6 +538,7 @@ final class LibraryModel: ObservableObject {
 
     private func apply(_ opened: [String: Int64], gen: Int) {
         guard !opened.isEmpty else { return }
+        FreezeWatch.mark("last-opened dates")
         // Built aside, then set once: one redraw, not one per row.
         var next = results
         var changed = false
@@ -787,12 +810,13 @@ final class LibraryModel: ObservableObject {
             guard panel.runFront() == .OK, let url = panel.url else { return }
             folder = url
         }
-        undo?.beginUndoGrouping()
-        trashPaths(toTrash, undo: undo)
-        if let folder { movePaths(toMove, to: folder, undo: undo) }
-        undo?.endUndoGrouping()
-        undo?.setActionName(L("tray.apply"))
+        // Off the main thread (a tray of thousands must not freeze the
+        // window); each part is undone on its own (Edit ▸ Undo twice).
         clearTray()
+        trashInBackground(toTrash, undo: undo) { [weak self] _, _ in
+            if let folder, let self, !toMove.isEmpty { self.moveInBackground(toMove, to: folder, undo: undo) }
+        }
+        if toTrash.isEmpty, let folder { moveInBackground(toMove, to: folder, undo: undo) }
     }
 
     /// Move files into a folder off the main thread (a move to another drive

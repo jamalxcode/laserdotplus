@@ -10,7 +10,9 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             Form {
-                Toggle(L("updates.daily"), isOn: $updates.daily)
+                Picker(L("updates.rhythm"), selection: $updates.rhythm) {
+                    ForEach(Updates.rhythms, id: \.self) { r in Text(L("updates.rhythm." + r)).tag(r) }
+                }
                 Toggle(L("inspector.show"), isOn: $model.showInspector)
             }
             .tabItem { Label(L("settings.general"), systemImage: "gearshape") }

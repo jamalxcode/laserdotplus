@@ -19,6 +19,7 @@ struct Sidebar: View {
     private var selection: Binding<SidebarItem?> {
         Binding(get: {
             if model.showDupes { return .tool(model.cleanupTab) }
+            if let v = model.activeView, views.views.contains(where: { $0.name == v }) { return .view(v) }
             switch model.place {
             case .everywhere: return .everywhere
             case .thisMac: return .thisMac

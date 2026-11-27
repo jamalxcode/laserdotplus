@@ -54,6 +54,7 @@ struct LaserdotPlusApp: App {
             CommandGroup(replacing: .help) {
                 Button(L("shortcuts.title")) { WhatsNew.showShortcuts() }.keyboardShortcut("/", modifiers: .command)
                 Button(L("whatsNew.menu")) { WhatsNew.show(after: nil) }
+                Button(L("report.menu")) { FreezeWatch.showReport() }
             }
         }
         // Settings… (⌘,), as every Mac app has.
@@ -138,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Laserdot+'s own recent documents stay empty (privacy).
         NSDocumentController.shared.clearRecentDocuments(nil)
         NSApp.setActivationPolicy(.regular)
+        FreezeWatch.start()
         model.start()
         drives.start()
         NotificationCenter.default.addObserver(forName: .updateProgress, object: nil, queue: .main) { [weak self] n in

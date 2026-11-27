@@ -17,6 +17,7 @@ struct ResultsList: View {
                     FileIcon(path: h.path, size: 18, thumbnail: h.kind == "image" || h.kind == "video")
                     Text(h.name).lineLimit(1).truncationMode(.middle)
                 }
+                .onAppear { model.reached(h) }
             }
             .width(min: 120, ideal: 260)
             TableColumn(L("column.size"), value: \Hit.size) { h in

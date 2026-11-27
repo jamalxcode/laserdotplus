@@ -49,11 +49,7 @@ final class ProcessBox: @unchecked Sendable {
 /// runs at a time, each ended after twenty seconds (a slow external or network
 /// drive needs that long to seek; "on a different volume it stopped working").
 enum VideoFrames {
-    private static let cache: NSCache<NSString, NSImage> = {
-        let c = NSCache<NSString, NSImage>()
-        c.countLimit = 600
-        return c
-    }()
+    private static let cache = pictureCache(megabytes: 120)
     private static let lock = NSLock()
     private static var durations: [String: Double] = [:]
     /// Two ffmpeg runs and two macOS readers at a time: a big video on a
@@ -97,7 +93,7 @@ enum VideoFrames {
         if Task.isCancelled { return nil }
         var img = await avFrame(path, fraction, edge)
         if img == nil, !Task.isCancelled { img = await ffmpegFrame(path, fraction, edge) }
-        if let img { cache.setObject(img, forKey: key) }
+        if let img { cachePut(cache, img, key) }
         return img
     }
 

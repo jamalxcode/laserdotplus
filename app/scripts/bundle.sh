@@ -44,6 +44,19 @@ for s in 16 32 128 256 512; do
   sips -z $((s * 2)) $((s * 2)) Resources/AppIcon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
-codesign --force --deep --sign - "$APP"
+# Signed with a Developer ID when one is set up (DEVELOPER_ID = the identity's
+# name, its certificate in the keychain; see docs/how-it-works.md ▸ Signing),
+# ad hoc otherwise. With a Developer ID, every piece inside is signed first,
+# with the hardened runtime, as notarization requires.
+if [ -n "${DEVELOPER_ID:-}" ]; then
+  for f in "$APP"/Contents/MacOS/* "$APP"/Contents/Resources/*.bundle; do
+    [ -e "$f" ] || continue
+    [ "$(basename "$f")" = LaserdotPlus ] && continue
+    codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$f"
+  done
+  codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$APP"
+else
+  codesign --force --deep --sign - "$APP"
+fi
 codesign --verify --deep --strict "$APP"
 echo "built $APP ($VERSION, build $BUILD)"

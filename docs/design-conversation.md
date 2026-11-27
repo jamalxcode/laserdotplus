@@ -373,3 +373,9 @@ find into the published `chosen` set — a copy of the whole set per insert, ten
 8 TB drive. Fixed there and in every similar loop (Keep, the tray), the engine now sends only new finds, removals use a
 set, and the lists' Move to Trash runs in the background. Lesson (in how-it-works): never mutate a published
 collection per item in a loop.
+
+## 45. The third critique: scale, memory, signing (0.1.28–0.1.29)
+
+The owner: "do all". The update rhythm was not chosen, so it became a setting (default once a day) and releases are
+batched. Developer ID needs the owner's Apple account: the build signs and notarizes by itself once the secrets exist.
+Notarization runs on the build machine with Apple's tool; the app itself still has no network code.
